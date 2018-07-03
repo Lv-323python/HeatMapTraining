@@ -1,0 +1,11 @@
+language: python
+python:
+  - 3.6.5
+
+#check code
+script:
+  - pylint --rcfile=.pylintrc request_sender/
+
+# command to install dependencies
+install:
+  - pip install -r requirements.txt
