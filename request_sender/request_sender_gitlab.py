@@ -1,8 +1,17 @@
-from request_sender_base import RequestSender
+"""
+Contains RequestSenderGitLab class that provides realisation for sending API requests
+to web-based hosting services for version control using Git
+"""
+
 import requests
+from request_sender_base import RequestSender
 
 
 class RequestSenderGitLab(RequestSender):
+    """
+        GitLab class that provides realisation for sending API requests
+        to web-based hosting services for version control using Git
+    """
     def get_repo(self):
         """
         Takes repository name on GitLab and owner as parameters and
@@ -107,7 +116,8 @@ class RequestSenderGitLab(RequestSender):
         :return: string - JSON formatted response
         """
         # get url of remote repository given as input
-        url_contributors = self.base_url + self.owner + "%2F" + self.name + "/repository/contributors"
+        url_contributors = self.base_url + self.owner + "%2F" + self.name + \
+                           "/repository/contributors"
 
         # get JSON about contributors
         contributors_info = requests.get(url_contributors).json()
