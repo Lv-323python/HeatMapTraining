@@ -1,7 +1,29 @@
-from request_sender_base import RequestSender
+from .request_sender_base import RequestSender
 import requests
 
+
 class GitLab(RequestSender):
+    def get_repo(self, name, owner):
+        """
+        Takes repository name on GitLab and owner as parameters and
+        returns repository info in JSON format
+        ex:
+        {
+            "id": "unique id",
+            "repo_name": "repository name",
+            "creation_date": "date",
+            "owner": "repository owner",
+            "url": "repository url"
+        }
+
+        :param name: string - repository name
+        :param owner: string - repository owner
+        :return: string - JSON formatted response
+        """
+        url_repo = self.base_url + self.owner + "%2F" + self.name
+        repo_info = requests.get(url_repo).json()
+        #repo = [{"id": repo_info}]
+
     def get_branches(self):
         """
         get branches of given repository on GitLab

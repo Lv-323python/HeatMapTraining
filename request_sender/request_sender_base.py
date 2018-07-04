@@ -15,7 +15,7 @@ class RequestSender:
         self.owner = owner
         self.name = name
 
-    def get_repo(self):
+    def get_repo(self, name, owner):
         """
         Takes repository name and owner as parameters and
         returns repository info in JSON format
