@@ -28,8 +28,6 @@ class RequestSender:
             "url": "repository url"
         }
 
-        :param name: string - repository name
-        :param owner: string - repository owner
         :return: string - JSON formatted response
         """
 
@@ -46,8 +44,6 @@ class RequestSender:
             ...
         ]
 
-        :param name: string - repository name
-        :param owner: string - repository owner
         :return: string - JSON formatted response
         """
 
@@ -68,8 +64,6 @@ class RequestSender:
             ...
         ]
 
-        :param name: string - repository name
-        :param owner: string - repository owner
         :return: string - JSON formatted response
         """
 
@@ -89,8 +83,6 @@ class RequestSender:
             ...
         ]
 
-        :param name: string - repository name
-        :param owner: string - repository owner
         :return: string - JSON formatted response
         """
 

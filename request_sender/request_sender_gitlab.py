@@ -1,9 +1,9 @@
-from .request_sender_base import RequestSender
+from request_sender_base import RequestSender
 import requests
 
 
-class GitLab(RequestSender):
-    def get_repo(self, name, owner):
+class RequestSenderGitLab(RequestSender):
+    def get_repo(self):
         """
         Takes repository name on GitLab and owner as parameters and
         returns repository info in JSON format
@@ -16,13 +16,21 @@ class GitLab(RequestSender):
             "url": "repository url"
         }
 
-        :param name: string - repository name
-        :param owner: string - repository owner
         :return: string - JSON formatted response
         """
+        # get url of remote repository given as input
         url_repo = self.base_url + self.owner + "%2F" + self.name
+
+        # get JSON with repository info
         repo_info = requests.get(url_repo).json()
-        #repo = [{"id": repo_info}]
+
+        # retrieve only info about repository
+        repo = [{"id": repo_info['id'],
+                 "repo_name": repo_info['name'],
+                 "creation_date": repo_info['created_at'],
+                 "url": repo_info['web_url']}]
+
+        return repo
 
     def get_branches(self):
         """
@@ -34,8 +42,7 @@ class GitLab(RequestSender):
             },
             ...
         ]
-        :param name: string - repository name
-        :param owner: string - repository owner
+
         :return: list of dicts
         """
 
@@ -66,8 +73,6 @@ class GitLab(RequestSender):
             ...
         ]
 
-        :param name: string - repository name
-        :param owner: string - repository owner
         :return: string - list of dictionaries
         """
         # get url of remote repository given as input
@@ -83,3 +88,35 @@ class GitLab(RequestSender):
                     'date': commits_info[i]['created_at']} for i in range(len(commits_info))]
 
         return commits
+
+    def get_contributors(self):
+        """
+        Takes repository name and owner as parameters and returns
+        information about contributors in JSON format
+        ex
+        [
+            {
+                "name": "contributor name",
+                "number_of_commits": "number of commits",
+                "email": "contributor email",
+                "url": "contributor url"
+            },
+            ...
+        ]
+
+        :return: string - JSON formatted response
+        """
+        # get url of remote repository given as input
+        url_contributors = self.base_url + self.owner + "%2F" + self.name + "/repository/contributors"
+
+        # get JSON about contributors
+        contributors_info = requests.get(url_contributors).json()
+
+        # retrieve only info about contributors
+        contributors = [{'name': contributors_info[i]['name'],
+                         'number_of_commits': contributors_info[i]['commits'],
+                         'email': contributors_info[i]['email'],
+                         'url': 'https://gitlab.com/' + str(contributors_info[i]['name'])}
+                        for i in range(len(contributors_info))]
+
+        return contributors
