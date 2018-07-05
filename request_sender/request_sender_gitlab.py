@@ -4,6 +4,7 @@ to web-based hosting services for version control using Git
 """
 
 import requests
+import json
 from request_sender_base import RequestSender
 
 
@@ -12,6 +13,7 @@ class RequestSenderGitLab(RequestSender):
         GitLab class that provides realisation for sending API requests
         to web-based hosting services for version control using Git
     """
+
     def get_repo(self):
         """
         Takes repository name on GitLab and owner as parameters and
@@ -39,7 +41,7 @@ class RequestSenderGitLab(RequestSender):
                  "creation_date": repo_info['created_at'],
                  "url": repo_info['web_url']}]
 
-        return repo
+        return json.dumps(repo)
 
     def get_branches(self):
         """
@@ -52,7 +54,7 @@ class RequestSenderGitLab(RequestSender):
             ...
         ]
 
-        :return: list of dicts
+        :return: JSON formatted response
         """
 
         # get url of remote repository given as input
@@ -64,7 +66,7 @@ class RequestSenderGitLab(RequestSender):
         # retrieve only info about name of the branches
         branches = [{"name": branches_info[i]['name']} for i in range(len(branches_info))]
 
-        return branches
+        return json.dumps(branches)
 
     def get_commits(self):
         """
@@ -82,11 +84,10 @@ class RequestSenderGitLab(RequestSender):
             ...
         ]
 
-        :return: string - list of dictionaries
+        :return: string - JSON formatted response
         """
         # get url of remote repository given as input
         url_commits = self.base_url + self.owner + "%2F" + self.name + "/repository/commits"
-
         # get JSON about commits
         commits_info = requests.get(url_commits).json()
 
@@ -96,7 +97,7 @@ class RequestSenderGitLab(RequestSender):
                     'message': commits_info[i]['message'],
                     'date': commits_info[i]['created_at']} for i in range(len(commits_info))]
 
-        return commits
+        return json.dumps(commits)
 
     def get_contributors(self):
         """
@@ -129,4 +130,4 @@ class RequestSenderGitLab(RequestSender):
                          'url': 'https://gitlab.com/' + str(contributors_info[i]['name'])}
                         for i in range(len(contributors_info))]
 
-        return contributors
+        return json.dumps(contributors)
