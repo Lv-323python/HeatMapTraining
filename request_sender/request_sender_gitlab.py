@@ -16,7 +16,7 @@ class RequestSenderGitLab(RequestSender):
         """
         Takes repository name on GitLab and owner as parameters and
         returns repository info in JSON format
-        ex:
+        example:
         {
             "id": "unique id",
             "repo_name": "repository name",
@@ -44,7 +44,7 @@ class RequestSenderGitLab(RequestSender):
     def get_branches(self):
         """
         get branches of given repository on GitLab
-        ex:
+        example:
         [
             {
                 "name": "branch name"
@@ -70,7 +70,7 @@ class RequestSenderGitLab(RequestSender):
         """
         Takes repository name and owner as parameters and
         returns information about commits in list of dictionaries
-        ex
+        example
         [
             {
                 "hash": "commit hash",
@@ -102,7 +102,7 @@ class RequestSenderGitLab(RequestSender):
         """
         Takes repository name and owner as parameters and returns
         information about contributors in JSON format
-        ex
+        example
         [
             {
                 "name": "contributor name",
