@@ -12,6 +12,7 @@ class RequestSenderGitLab(RequestSender):
         GitLab class that provides realisation for sending API requests
         to web-based hosting services for version control using Git
     """
+
     def get_repo(self):
         """
         Takes repository name on GitLab and owner as parameters and
@@ -34,10 +35,11 @@ class RequestSenderGitLab(RequestSender):
         repo_info = requests.get(url_repo).json()
 
         # retrieve only info about repository
-        repo = [{"id": repo_info['id'],
-                 "repo_name": repo_info['name'],
-                 "creation_date": repo_info['created_at'],
-                 "url": repo_info['web_url']}]
+        repo = {"id": repo_info['id'],
+                "repo_name": repo_info['name'],
+                "creation_date": repo_info['created_at'],
+                "owner": repo_info['path_with_namespace'].split('/')[0],
+                "url": repo_info['web_url']}
 
         return repo
 
@@ -97,36 +99,3 @@ class RequestSenderGitLab(RequestSender):
                     'date': commits_info[i]['created_at']} for i in range(len(commits_info))]
 
         return commits
-
-    def get_contributors(self):
-        """
-        Takes repository name and owner as parameters and returns
-        information about contributors in JSON format
-        example
-        [
-            {
-                "name": "contributor name",
-                "number_of_commits": "number of commits",
-                "email": "contributor email",
-                "url": "contributor url"
-            },
-            ...
-        ]
-
-        :return: string - JSON formatted response
-        """
-        # get url of remote repository given as input
-        url_contributors = self.base_url + self.owner + "%2F" + self.name + \
-                           "/repository/contributors"
-
-        # get JSON about contributors
-        contributors_info = requests.get(url_contributors).json()
-
-        # retrieve only info about contributors
-        contributors = [{'name': contributors_info[i]['name'],
-                         'number_of_commits': contributors_info[i]['commits'],
-                         'email': contributors_info[i]['email'],
-                         'url': 'https://gitlab.com/' + str(contributors_info[i]['name'])}
-                        for i in range(len(contributors_info))]
-
-        return contributors
