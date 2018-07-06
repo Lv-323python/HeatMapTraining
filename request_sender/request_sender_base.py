@@ -17,7 +17,6 @@ class RequestSender:
 
     def get_repo(self):
         """
-        Takes repository name and owner as parameters and
         returns repository info in JSON format
         Example:
         {
@@ -34,8 +33,7 @@ class RequestSender:
 
     def get_branches(self):
         """
-        Takes repository name and owner as parameters and returns
-        information about branches in JSON format
+        returns information about branches in JSON format
         Example:
         [
             {
@@ -44,15 +42,12 @@ class RequestSender:
             ...
         ]
 
-        :param name: string - repository name
-        :param owner: string - repository owner
         :return: string - JSON formatted response
         """
 
-    def get_commits(self, name, owner):
+    def get_commits(self):
         """
-        Takes repository name and owner as parameters and
-        returns information about commits in JSON format
+        Returns information about commits in JSON format
         Example:
         [
             {
@@ -65,7 +60,5 @@ class RequestSender:
             ...
         ]
 
-        :param name: string - repository name
-        :param owner: string - repository owner
         :return: string - JSON formatted response
         """
