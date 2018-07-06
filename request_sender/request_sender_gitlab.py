@@ -3,6 +3,7 @@ Contains RequestSenderGitLab class that provides realisation for sending API req
 to web-based hosting services for version control using Git
 """
 
+from datetime import datetime
 import requests
 from request_sender_base import RequestSender
 
@@ -64,7 +65,7 @@ class RequestSenderGitLab(RequestSender):
         branches_info = requests.get(url_branches).json()
 
         # retrieve only info about name of the branches
-        branches = [{"name": branches_info[i]['name']} for i in range(len(branches_info))]
+        branches = [{"name": branch['name']} for branch in branches_info]
 
         return branches
 
@@ -92,10 +93,13 @@ class RequestSenderGitLab(RequestSender):
         # get JSON about commits
         commits_info = requests.get(url_commits).json()
 
+        pat_time = "%Y-%m-%dT%H:%M:%S"
+
         # retrieve only info about commits
-        commits = [{'hash': commits_info[i]['id'],
-                    'author': commits_info[i]['committer_name'],
-                    'message': commits_info[i]['message'],
-                    'date': commits_info[i]['created_at']} for i in range(len(commits_info))]
+        commits = [{'hash': commit['id'],
+                    'author': commit['committer_name'],
+                    'message': commit['message'],
+                    'date': int(datetime.strptime(commit['created_at'][:-5], pat_time).timestamp())}
+                   for commit in commits_info]
 
         return commits

@@ -85,5 +85,3 @@ class RequestSender:
 
         :return: string - JSON formatted response
         """
-
-
