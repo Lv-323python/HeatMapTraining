@@ -119,8 +119,8 @@ class BitbucketRequestSender(RequestSender):
     for version control using Git
     """
 
-    def __init__(self, owner, name, base_url='https://api.bitbucket.org/2.0'):
-        super().__init__(base_url=base_url, owner=owner, name=name)
+    def __init__(self, owner, repo, base_url='https://api.bitbucket.org/2.0'):
+        super().__init__(base_url=base_url, owner=owner, repo=repo)
 
     def _get_request(self, endpoint):
         return requests.get(self.base_url + endpoint).text
@@ -140,7 +140,7 @@ class BitbucketRequestSender(RequestSender):
         :return: string - JSON formatted response
         """
 
-        repo_endpoint = f'/repositories/{self.owner}/{self.name}'
+        repo_endpoint = f'/repositories/{self.owner}/{self.repo}'
         response = self._get_request(repo_endpoint)
         return _parse_repo_response(response)
 
@@ -158,7 +158,7 @@ class BitbucketRequestSender(RequestSender):
         :return: string - JSON formatted response
         """
 
-        branches_endpoint = f'/repositories/{self.owner}/{self.name}/refs/branches'
+        branches_endpoint = f'/repositories/{self.owner}/{self.repo}/refs/branches'
         response = self._get_request(branches_endpoint)
         return _parse_branches_response(response)
 
@@ -179,6 +179,6 @@ class BitbucketRequestSender(RequestSender):
         :return: string - JSON formatted response
         """
 
-        commits_endpoint = f'/repositories/{self.owner}/{self.name}/commits'
+        commits_endpoint = f'/repositories/{self.owner}/{self.repo}/commits'
         response = self._get_request(commits_endpoint)
         return _parse_commits_response(response)
