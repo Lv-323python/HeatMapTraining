@@ -30,7 +30,7 @@ class RequestSenderGitLab(RequestSender):
         :return: string - JSON formatted response
         """
         # get url of remote repository given as input
-        url_repo = self.base_url + self.owner + "%2F" + self.name
+        url_repo = self.base_url + self.owner + "%2F" + self.repo
 
         # get JSON with repository info
         repo_info = requests.get(url_repo).json()
@@ -59,7 +59,7 @@ class RequestSenderGitLab(RequestSender):
         """
 
         # get url of remote repository given as input
-        url_branches = self.base_url + self.owner + "%2F" + self.name + "/repository/branches"
+        url_branches = self.base_url + self.owner + "%2F" + self.repo + "/repository/branches"
 
         # get JSON about branches
         branches_info = requests.get(url_branches).json()
@@ -88,7 +88,7 @@ class RequestSenderGitLab(RequestSender):
         :return: string - list of dictionaries
         """
         # get url of remote repository given as input
-        url_commits = self.base_url + self.owner + "%2F" + self.name + "/repository/commits"
+        url_commits = self.base_url + self.owner + "%2F" + self.repo + "/repository/commits"
 
         # get JSON about commits
         commits_info = requests.get(url_commits).json()

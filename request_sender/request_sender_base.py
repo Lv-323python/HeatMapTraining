@@ -10,15 +10,15 @@ class RequestSender:
     to web-based hosting services for version control using Git
     """
 
-    def __init__(self, base_url, owner, name):
+    def __init__(self, base_url, owner, repo):
         self.base_url = base_url
         self.owner = owner
-        self.name = name
+        self.repo = repo
 
     def get_repo(self):
         """
-        returns repository info in JSON format
-        Example:
+        Gets repository info in JSON format
+        ex:
         {
             "id": "unique id",
             "repo_name": "repository name",
@@ -30,11 +30,10 @@ class RequestSender:
         :return: string - JSON formatted response
         """
 
-
     def get_branches(self):
         """
-        returns information about branches in JSON format
-        Example:
+        Gets information about branches in JSON format
+        ex:
         [
             {
                 "name": "branch name"
@@ -42,13 +41,14 @@ class RequestSender:
             ...
         ]
 
+
         :return: string - JSON formatted response
         """
 
     def get_commits(self):
         """
-        Returns information about commits in JSON format
-        Example:
+        Gets information about commits in JSON format
+        ex
         [
             {
                 "hash": "commit hash",
