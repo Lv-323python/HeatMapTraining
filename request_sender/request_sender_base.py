@@ -17,7 +17,7 @@ class RequestSender:
         """
         Takes repository name and owner as parameters and
         returns repository info in JSON format
-        ex:
+        Example:
         {
             "id": "unique id",
             "repo_name": "repository name",
@@ -36,7 +36,7 @@ class RequestSender:
         """
         Takes repository name and owner as parameters and returns
         information about branches in JSON format
-        ex:
+        Example:
         [
             {
                 "name": "branch name"
@@ -54,7 +54,7 @@ class RequestSender:
         """
         Takes repository name and owner as parameters and
         returns information about commits in JSON format
-        ex
+        Example:
         [
             {
                 "hash": "commit hash",
@@ -71,25 +71,3 @@ class RequestSender:
         :return: string - JSON formatted response
         """
         pass
-
-    def get_contributors(self, name, owner):
-        """
-        Takes repository name and owner as parameters and returns
-        information about contributors in JSON format
-        ex
-        [
-            {
-                "name": "contributor name",
-                "number_of_commits": "number of commits",
-                "email": "contributor email",
-                "url": "contributor url"
-            },
-            ...
-        ]
-
-        :param name: string - repository name
-        :param owner: string - repository owner
-        :return: string - JSON formatted response
-        """
-        pass
-
