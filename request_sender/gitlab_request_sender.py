@@ -103,3 +103,36 @@ class RequestSenderGitLab(RequestSender):
                    for commit in commits_info]
 
         return commits
+
+    def get_contributors(self):
+        """
+        Takes repository name and owner as parameters and returns
+        information about contributors in JSON format
+        ex
+        [
+            {
+                "name": "contributor name",
+                "number_of_commits": "number of commits",
+                "email": "contributor email",
+                "url": "contributor url"
+            },
+            ...
+        ]
+
+        :return: string - JSON formatted response
+        """
+        # get url of remote repository given as input
+        url_contributors = (self.base_url + self.owner + "%2F" + self.repo +
+                            "/repository/contributors")
+
+        # get JSON about contributors
+        contributors_info = requests.get(url_contributors).json()
+
+        # retrieve only info about contributors
+        contributors = [{'name': contributors_info[i]['name'],
+                         'number_of_commits': contributors_info[i]['commits'],
+                         'email': contributors_info[i]['email'],
+                         'url': 'https://gitlab.com/' + str(contributors_info[i]['name'])}
+                        for i in range(len(contributors_info))]
+
+        return contributors
