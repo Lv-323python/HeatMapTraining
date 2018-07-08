@@ -259,3 +259,27 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(commit_endpoint)
         deserialized_commit = _deserialize(response)
         return _parse_commit(deserialized_commit)
+
+    def get_commits_by_branch(self, branch_name):
+        """
+        Returns information about commits (in branch specified)
+
+        example:
+        [
+            {
+                "hash": "commit hash",
+                "author": "commit author",
+                "message": "commit message",
+                "date": "date when committed"
+
+            },
+            ...
+        ]
+
+        :param branch_name: string
+        :return: list of dicts
+        """
+        branch_commits_endpoint = f'/repositories/{self.owner}/{self.repo}/commits/{branch_name}'
+        response = self._get_request(branch_commits_endpoint)
+        deserialized_branch_commits = _deserialize(response)
+        return _parse_commits(deserialized_branch_commits)
