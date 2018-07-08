@@ -103,3 +103,36 @@ class RequestSenderGitLab(RequestSender):
                    for commit in commits_info]
 
         return commits
+
+    def get_commit_by_hash(self, hash_of_commit):
+        """
+        Takes has of the commit and returns info about it in JSON format
+        example:
+        {
+            "hash": "commit hash",
+            "author": "commit author",
+            "message": "commit message",
+            "date": "date when committed"
+
+        }
+
+        :param hash_of_commit: string
+        :return: dictionary
+        """
+        # get url of remote repository given as input
+        url_commit = self.base_url + self.owner + "%2F" + self.repo + \
+                     "/repository/commits/" + hash_of_commit
+
+        # get JSON about one commit
+        commit_info = requests.get(url_commit).json()
+
+        pat_time = "%Y-%m-%dT%H:%M:%S"
+
+        # retrieve only info about one commit
+        commit = {"hash": commit_info['id'],
+                  "author": commit_info['author_name'],
+                  "message": commit_info['message'],
+                  "date": int(datetime.strptime(
+                      commit_info['committed_date'][:-5], pat_time).timestamp())}
+
+        return commit
