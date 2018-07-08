@@ -189,7 +189,7 @@ class BitbucketRequestSender(RequestSender):
             "url": "repository url"
         }
 
-        :return: string - JSON formatted response
+        :return: dict - contains information about repository in specified format
         """
 
         repo_endpoint = f'/repositories/{self.owner}/{self.repo}'
@@ -209,7 +209,7 @@ class BitbucketRequestSender(RequestSender):
             ...
         ]
 
-        :return: string - JSON formatted response
+        :return: list of dicts
         """
 
         branches_endpoint = f'/repositories/{self.owner}/{self.repo}/refs/branches'
@@ -232,10 +232,30 @@ class BitbucketRequestSender(RequestSender):
             ...
         ]
 
-        :return: string - JSON formatted response
+        :return: list of dicts
         """
 
         commits_endpoint = f'/repositories/{self.owner}/{self.repo}/commits'
         response = self._get_request(commits_endpoint)
         deserialized_commits = _deserialize(response)
         return _parse_commits(deserialized_commits)
+
+    def get_commit_by_hash(self, hash_of_commit):
+        """
+        returns JSON formatted information about commit by its hash
+
+        Example:
+        {
+                "hash": "commit hash",
+                "author": "commit author",
+                "message": "commit message",
+                "date": "date when committed"
+        }
+
+        :return: dict - contains information about commit in specified format
+        """
+
+        commit_endpoint = f'/repositories/{self.owner}/{self.repo}/commit/{hash_of_commit}'
+        response = self._get_request(commit_endpoint)
+        deserialized_commit = _deserialize(response)
+        return _parse_commit(deserialized_commit)
