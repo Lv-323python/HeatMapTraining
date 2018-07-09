@@ -120,6 +120,7 @@ class RequestSenderGitLab(RequestSender):
         {
             "branch_name":
                 [{
+
                     "hash": "commit hash",
                     "author": "commit author",
                     "message": "commit message",
