@@ -98,6 +98,42 @@ class GithubRequestSender(RequestSender):
                             'message': commit['commit']['message'],
                             'date': date})
 
+    def get_commits_by_branch(self, branch_name):
+        """
+                Gets information about commits (in branch specified) in JSON format
+        example:
+        [
+            {
+                "hash": "commit hash",
+                "author": "commit author",
+                "message": "commit message",
+                "date": "date when committed"
+
+            },
+            ...
+        ]
+
+        :param branch_name: string
+        :return: string - JSON formatted response
+        """
+        endpoint = '/repos/{owner}/{repo}/commits?sha={branch}'.format(owner=self.owner,
+                                                                       repo=self.repo,
+                                                                       branch=branch_name)
+        url = self.base_url + endpoint
+        response = requests.get(url)
+        commits = []
+        if not response.status_code == 200:
+            return commits
+        response = response.json()
+        for raw in response:
+            date = datetime.strptime(raw['commit']['author']['date'],
+                                     GITHUB_TIME_FORMAT).timestamp()
+            one_commit = {
+                'hash': raw['sha'],
+                'author': raw['commit']['author']['name'],
+                'message': raw['commit']['message'],
+                'date': date}
+            commits.append(one_commit)
         return commits
 
     def get_commit_by_hash(self, hash_of_commit):
@@ -127,3 +163,32 @@ class GithubRequestSender(RequestSender):
                                    'date': date})
 
         return commit_by_hash
+
+    def get_contributors(self):
+        """
+         Gets information about contributors
+           example:
+           [
+                {
+                    "name": "contributor name",
+                    "number_of_commits": "number of commits",
+                    "email": "contributor email",
+                    "url": "contributor url"
+                },
+                ...
+            ]
+
+            :return: string - JSON formatted response
+         """
+        endpoint = '/repos/{owner}/{repo}/contributors'.format(owner=self.owner, repo=self.repo)
+        url = self.base_url + endpoint
+        response = requests.get(url).json()
+        contributors = []
+
+        for raw in response:
+            contributor = {'name': raw['login'],
+                           'number_of_commits': raw['contributions'],
+                           'email': raw['login'],
+                           'url': raw['url']}
+            contributors.append(contributor)
+        return contributors
