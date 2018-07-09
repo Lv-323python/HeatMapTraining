@@ -8,6 +8,15 @@ import requests
 from request_sender_base import RequestSender
 
 
+def _timestamp(date):
+    """
+    Converts datetime string to timestamp
+    :param date_time_str: string - datetime string
+    :return: int - timestamp
+    """
+    return int(datetime.strptime(date[:-5], '%Y-%m-%dT%H:%M:%S').timestamp())
+
+
 class RequestSenderGitLab(RequestSender):
     """
         GitLab class that provides realisation for sending API requests
@@ -93,13 +102,46 @@ class RequestSenderGitLab(RequestSender):
         # get JSON about commits
         commits_info = requests.get(url_commits).json()
 
-        pat_time = "%Y-%m-%dT%H:%M:%S"
-
         # retrieve only info about commits
         commits = [{'hash': commit['id'],
                     'author': commit['committer_name'],
                     'message': commit['message'],
-                    'date': int(datetime.strptime(commit['created_at'][:-5], pat_time).timestamp())}
+                    'date': _timestamp(commit['created_at'])}
                    for commit in commits_info]
 
+        return commits
+
+    def get_commits_by_branch(self, branch_name):
+        """
+        Takes repository branches as parameters and
+        returns information about last 20 commits per branch
+        in dictionary
+        example
+        {
+            "branch_name":
+                [{
+
+                    "hash": "commit hash",
+                    "author": "commit author",
+                    "message": "commit message",
+                    "date": "date when committed"
+
+                },
+                ...]
+        }
+
+        :return: dictionary
+        """
+        commits = {}
+        api_commits_by_branch = self.base_url + self.owner + "%2F" + self.repo + \
+                                "/repository/commits?ref_name=" + branch_name
+
+        commits_json = requests.get(api_commits_by_branch).json()
+        # make a list of dicts concerning commits per branch
+        commits[branch_name] = [{"hash": commit['id'],
+                                 'author': commit['committer_name'],
+                                 'message': commit['message'],
+                                 "date": _timestamp(commit['created_at'])}
+
+                                for commit in commits_json]
         return commits
