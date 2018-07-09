@@ -5,7 +5,7 @@ to web-based hosting services for version control using Git
 
 from datetime import datetime
 import requests
-from request_sender_base import RequestSender
+from request_sender_base import RequestSender  # pylint: disable=import-error
 
 
 def _timestamp(date):

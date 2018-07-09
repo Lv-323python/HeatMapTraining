@@ -7,7 +7,7 @@ import datetime
 import json
 import requests
 
-from request_sender_base import RequestSender
+from request_sender_base import RequestSender  # pylint: disable=import-error
 
 
 def _timestamp(date_time_str):
