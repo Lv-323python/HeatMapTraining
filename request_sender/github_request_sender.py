@@ -3,7 +3,6 @@ Contains GithubRequestSender class that provides implementation of
 interface for sending API requests
 to web-based hosting services for version control using GitHub
 """
-
 from datetime import datetime
 import requests
 from request_sender_base import RequestSender  # pylint: disable=import-error
@@ -39,8 +38,12 @@ class GithubRequestSender(RequestSender):
 
     def get_repo(self):
         """
-        Gets repository info in JSON format
-        example:
+        Gets information about repository
+        in dict format with response body and status code
+
+        :return: dict,
+        :raise NotImplementedError
+        :Example:
         {
             "id": "unique id",
             "repo_name": "repository name",
@@ -48,8 +51,6 @@ class GithubRequestSender(RequestSender):
             "owner": "repository owner",
             "url": "repository url"
         }
-
-        :return: string - JSON formatted response
         """
 
         endpoint = self.repos_api_url
@@ -63,16 +64,18 @@ class GithubRequestSender(RequestSender):
 
     def get_branches(self):
         """
-        Gets information about branches in JSON format
-        example:
+        Gets list of branches in a repository
+        in dict format with response body and status code
+
+        :return: dict
+        :raise NotImplementedError
+        :Example:
         [
             {
                 "name": "branch name"
             },
             ...
         ]
-
-        :return: string - JSON formatted response
         """
         endpoint = self.repos_api_url + '/branches'
         url = self.base_url + endpoint
@@ -85,20 +88,22 @@ class GithubRequestSender(RequestSender):
 
     def get_commits(self):
         """
-        Gets information about commits in JSON format
-        example:
+        Gets information about all commits in repository
+        in dict format with response body and status code
+
+        :return: dict
+        :raise NotImplementedError
+        :Example:
         [
             {
                 "hash": "commit hash",
                 "author": "commit author",
                 "message": "commit message",
-                "date": "date when committed"
+                "date": "date when committed converted to int"
 
             },
             ...
         ]
-
-        :return: string - JSON formatted response
         """
         endpoint = self.repos_api_url + '/commits'
         response = requests.get(self.base_url + endpoint).json()
@@ -111,21 +116,23 @@ class GithubRequestSender(RequestSender):
 
     def get_commits_by_branch(self, branch_name):
         """
-                Gets information about commits (in branch specified) in JSON format
-        example:
+        Gets information about commits of a specific branch
+        in dict format with response body and status code
+
+        :param branch_name: string
+        :return: dict
+        :raise NotImplementedError
+        :Example:
         [
             {
                 "hash": "commit hash",
                 "author": "commit author",
                 "message": "commit message",
-                "date": "date when committed"
+                "date": "date when committed converted to int"
 
             },
             ...
         ]
-
-        :param branch_name: string
-        :return: string - JSON formatted response
         """
         endpoint = self.repos_api_url + f'/commits?sha={branch_name}'
         url = self.base_url + endpoint
@@ -150,18 +157,20 @@ class GithubRequestSender(RequestSender):
 
     def get_commit_by_hash(self, hash_of_commit):
         """
-        Gets information about the commit by hash in JSON format
-        example:
+        Gets information about the commit by hash
+        in dict format with response body
+
+        :param hash_of_commit: string
+        :return: dict
+        :raise NotImplementedError
+        :Example:
         {
             "hash": "commit hash",
             "author": "commit author",
             "message": "commit message",
-            "date": "date when committed"
+            "date": "date when committed converted to int"
 
         }
-
-        :param hash_of_commit: string
-        :return: string - JSON formatted response
         """
         endpoint = self.repos_api_url + f'/commits/{hash_of_commit}'
         response = requests.get(self.base_url + endpoint).json()
@@ -172,20 +181,22 @@ class GithubRequestSender(RequestSender):
 
     def get_contributors(self):
         """
-         Gets information about contributors
-           example:
-           [
-                {
-                    "name": "contributor name",
-                    "number_of_commits": "number of commits",
-                    "email": "contributor email",
-                    "url": "contributor url"
-                },
-                ...
-            ]
+        Gets information about all contributors to repository
+        in dict format with response body
 
-            :return: string - JSON formatted response
-         """
+        :return: dict
+        :raise NotImplementedError
+        :Example:
+        [
+             {
+                 "name": "contributor name",
+                 "number_of_commits": "number of commits",
+                 "email": "contributor email",
+                 "url": "contributor url"
+             },
+             ...
+        ]
+        """
         endpoint = self.repos_api_url + '/contributors'
         url = self.base_url + endpoint
         response = requests.get(url).json()
