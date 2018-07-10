@@ -80,11 +80,7 @@ class GithubRequestSender(RequestSender):
         endpoint = self.repos_api_url + '/branches'
         url = self.base_url + endpoint
         response = requests.get(url).json()
-        branches = []
-        for raw in response:
-            if raw['name']:
-                branches.append({'name': raw['name']})
-        return branches
+        return list(map(lambda x: {'name': x['name']}, response))
 
     def get_commits(self):
         """
@@ -141,19 +137,12 @@ class GithubRequestSender(RequestSender):
         if not response.status_code == 200:
             return commits
         response = response.json()
-        for raw in response:
-            try:
-                date = int(datetime.strptime(raw['commit']['author']['date'],
-                                             GITHUB_TIME_FORMAT).timestamp())
-            except ValueError:
-                date = 0
-            one_commit = {
-                'hash': raw['sha'],
-                'author': raw['commit']['author']['name'],
-                'message': raw['commit']['message'],
-                'date': date}
-            commits.append(one_commit)
-        return commits
+        return list(map(lambda x: {
+            'hash': x['sha'],
+            'author': x['commit']['author']['name'],
+            'message': x['commit']['message'],
+            'date': format_date_to_int(x['commit']['author']['date'])
+        }, response))
 
     def get_commit_by_hash(self, hash_of_commit):
         """
@@ -174,10 +163,12 @@ class GithubRequestSender(RequestSender):
         """
         endpoint = self.repos_api_url + f'/commits/{hash_of_commit}'
         response = requests.get(self.base_url + endpoint).json()
-        return {'hash': response['sha'],
-                'author': response['commit']['author']['name'],
-                'message': response['commit']['message'],
-                'date': format_date_to_int(response['commit']['author']['date'])}
+        return {
+            'hash': response['sha'],
+            'author': response['commit']['author']['name'],
+            'message': response['commit']['message'],
+            'date': format_date_to_int(response['commit']['author']['date'])
+        }
 
     def get_contributors(self):
         """
@@ -200,12 +191,8 @@ class GithubRequestSender(RequestSender):
         endpoint = self.repos_api_url + '/contributors'
         url = self.base_url + endpoint
         response = requests.get(url).json()
-        contributors = []
-
-        for raw in response:
-            contributor = {'name': raw['login'],
-                           'number_of_commits': raw['contributions'],
-                           'email': raw['login'],
-                           'url': raw['url']}
-            contributors.append(contributor)
-        return contributors
+        return list(map(lambda x: {
+            'name': x['login'],
+            'number_of_commits': x['contributions'],
+            'email': x['login'],
+            'url': x['url']}, response))
