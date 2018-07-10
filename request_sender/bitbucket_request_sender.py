@@ -30,6 +30,21 @@ def _deserialize(json_text):
     return json.loads(json_text)
 
 
+def _get_username(commit):
+    """
+    Returns username after check for user field.
+
+    :param commit: dict - commit information
+    :return: str - commit username from 'user' or from 'raw'
+    """
+
+    if 'user' in commit:
+        result_name = commit['user']['username']
+    else:
+        result_name = commit['raw'][1:commit['raw'].find('<') - 1]
+    return result_name
+
+
 def _parse_repo(repo):
     """
     Returns information about repository so that it matches specified format
@@ -158,6 +173,43 @@ def _parse_commits(commits_page):
     return _parse_paginated(deserialized_page_obj=commits_page, parser=_parse_commit)
 
 
+def _parse_contributors(deserialized_commits):
+    """
+    Returns list of dicts that contain information about contributors
+    so that it matches specified format
+
+    Example:
+    [
+        {
+            "name": "contributor name",
+            "number_of_commits": "number of commits",
+            "email": "contributor email",
+            "url": "contributor url"
+        },
+        ...
+    ]
+    :param response: string
+    :return: list of dicts
+    """
+
+    commits = [repo_name['author'] for repo_name in deserialized_commits['values']]
+
+    contributors_inf = \
+        {_get_username(contrib): {
+            'raw': contrib['raw'],
+            'href': contrib['user']['links']['html']['href'] if 'user' in contrib else 'None'
+        } for contrib in commits}
+
+    result = \
+        [{'name': contrib,
+          'number_of_commits':
+              len(list(filter(lambda x, cont=contrib: _get_username(x) == cont, commits))),
+          'email':
+              contributors_inf[contrib]['raw'][contributors_inf[contrib]['raw'].find('<') + 1:-1],
+          'url': contributors_inf[contrib]['href']} for contrib in contributors_inf.keys()]
+    return result
+
+
 class BitbucketRequestSender(RequestSender):
     """
     Provides methods for sending API requests to web-based hosting service Bitbucket
@@ -283,3 +335,25 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(branch_commits_endpoint)
         deserialized_branch_commits = _deserialize(response)
         return _parse_commits(deserialized_branch_commits)
+
+    def get_contributors(self):
+        """
+        Returns information about contributors in JSON format
+        Example:
+        [
+            {
+                "name": "contributor name",
+                "number_of_commits": "number of commits",
+                "email": "contributor email",
+                "url": "contributor url"
+            },
+            ...
+        ]
+
+        :return: list of dicts
+        """
+
+        commits_endpoint = f'/repositories/{self.owner}/{self.repo}/commits'
+        response = self._get_request(commits_endpoint)
+        deserialized_commits = _deserialize(response)
+        return _parse_contributors(deserialized_commits)
