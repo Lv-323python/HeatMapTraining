@@ -4,7 +4,6 @@ to web-based hosting service Bitbucket for version control using Git
 """
 
 import datetime
-import json
 import requests
 
 from request_sender_base import RequestSender  # pylint: disable=import-error
@@ -20,194 +19,24 @@ def _timestamp(date_time_str):
     return int(datetime.datetime.strptime(date_time_str[0:19], "%Y-%m-%dT%H:%M:%S").timestamp())
 
 
-def _deserialize(json_text):
+def _get_gitname(author_raw):
     """
-    Deserializes JSON formatted text
+    Extracts author gitname from author_raw string
 
-    :param json_text: string - text in JSON format
-    :return: deserialized python objects
+    :param author_raw: string
+    :return: string
     """
-    return json.loads(json_text)
+    return author_raw[:author_raw.find('<')-1]
 
 
-def _get_username(commit):
+def _get_email(author_raw):
     """
-    Returns username after check for user field.
+    Extracts author email from author_raw string
 
-    :param commit: dict - commit information
-    :return: str - commit username from 'user' or from 'raw'
+    :param author_raw: string
+    :return: string
     """
-
-    if 'user' in commit:
-        result_name = commit['user']['username']
-    else:
-        result_name = commit['raw'][1:commit['raw'].find('<') - 1]
-    return result_name
-
-
-def _parse_repo(repo):
-    """
-    Returns information about repository so that it matches specified format
-
-    Example:
-    {
-        "id": "unique id",
-        "repo_name": "repository name",
-        "creation_date": "date",
-        "owner": "repository owner",
-        "url": "repository url"
-    }
-
-    :param repo: dict - contains information about repository
-    :return: dict - contains information about repository in specified format
-    """
-
-    return {
-        'id': repo['uuid'],
-        'repo_name': repo['name'],
-        'creation_date': str(_timestamp(repo['created_on'])),
-        'owner': repo['owner']['username'],
-        'url': repo['links']['self']['href']
-    }
-
-
-def _parse_branch(branch):
-    """
-    Returns information about branch so that it matches specified format
-
-    Example:
-    {
-        "id": "unique id",
-        "repo_name": "repository name",
-        "creation_date": "date",
-        "owner": "repository owner",
-        "url": "repository url"
-    }
-
-    :param branch: dict - contains information about branch
-    :return: dict - contains information about branch in specified format
-    """
-    return {
-        'name': branch['name']
-    }
-
-
-def _parse_commit(commit):
-    """
-    Returns information about commit so that it matches specified format
-
-    Example:
-    {
-        "id": "unique id",
-        "repo_name": "repository name",
-        "creation_date": "date",
-        "owner": "repository owner",
-        "url": "repository url"
-    }
-
-    :param repo: dict - contains information about commit
-    :return: dict - contains information about commit in specified format
-    """
-    return {
-        'hash': commit['hash'],
-        'author': (
-            commit['author']['user']['username'] if 'user' in commit['author']
-            else commit['author']['raw']
-        ),
-        'message': commit['message'],
-        'date': str(_timestamp(commit['date']))
-    }
-
-
-def _parse_paginated(deserialized_page_obj, parser):
-    """
-    Returns list of parsed values using specified parser function
-
-    :param deserialized_page_obj: dict - that represents deserialized page of values
-    :param parser: function - will be applied to each element on the page
-    :return: list of parsed values
-    """
-
-    values = []
-    for value in deserialized_page_obj['values']:
-        values.append(parser(value))
-    return values
-
-
-def _parse_branches(branches_page):
-    """
-    Returns list of dicts that contain information about branch so that it matches specified format
-
-    Example:
-    [
-        {
-            "name": "branch name"
-        },
-        ...
-    ]
-
-    :param response: string
-    :return: list of dicts
-    """
-    return _parse_paginated(deserialized_page_obj=branches_page, parser=_parse_branch)
-
-
-def _parse_commits(commits_page):
-    """
-    Returns list of dicts that contain information about commmit so that it matches specified format
-
-    Example:
-    [
-        {
-            "hash": "commit hash",
-            "author": "commit author",
-            "message": "commit message",
-            "date": "date when committed"
-        },
-        ...
-    ]
-
-    :param response: string
-    :return: list of dicts
-    """
-    return _parse_paginated(deserialized_page_obj=commits_page, parser=_parse_commit)
-
-
-def _parse_contributors(deserialized_commits):
-    """
-    Returns list of dicts that contain information about contributors
-    so that it matches specified format
-
-    Example:
-    [
-        {
-            "name": "contributor name",
-            "number_of_commits": "number of commits",
-            "email": "contributor email",
-            "url": "contributor url"
-        },
-        ...
-    ]
-    :param response: string
-    :return: list of dicts
-    """
-
-    commits = [repo_name['author'] for repo_name in deserialized_commits['values']]
-
-    contributors_inf = \
-        {_get_username(contrib): {
-            'raw': contrib['raw'],
-            'href': contrib['user']['links']['html']['href'] if 'user' in contrib else 'None'
-        } for contrib in commits}
-
-    result = \
-        [{'name': contrib,
-          'number_of_commits':
-              len(list(filter(lambda x, cont=contrib: _get_username(x) == cont, commits))),
-          'email':
-              contributors_inf[contrib]['raw'][contributors_inf[contrib]['raw'].find('<') + 1:-1],
-          'url': contributors_inf[contrib]['href']} for contrib in contributors_inf.keys()]
-    return result
+    return author_raw[author_raw.find('<')+1:-1]
 
 
 class BitbucketRequestSender(RequestSender):
@@ -224,9 +53,9 @@ class BitbucketRequestSender(RequestSender):
         Sends GET request to URL
 
         :param endpoint: string - endpoint url
-        :return: string - in JSON format
+        :return: response object
         """
-        return requests.get(self.base_url + endpoint).text
+        return requests.get(self.base_url + endpoint)
 
     def get_repo(self):
         """
@@ -243,11 +72,21 @@ class BitbucketRequestSender(RequestSender):
 
         :return: dict - contains information about repository in specified format
         """
-
         repo_endpoint = f'/repositories/{self.owner}/{self.repo}'
         response = self._get_request(repo_endpoint)
-        deserialized_repo = _deserialize(response)
-        return _parse_repo(deserialized_repo)
+
+        # guard condition
+        if response.status_code != 200:
+            return {}, response.status_code
+
+        repo = response.json()
+        return {
+            'id': repo['uuid'],
+            'repo_name': repo['name'],
+            'creation_date': str(_timestamp(repo['created_on'])),
+            'owner': repo['owner']['username'],
+            'url': repo['links']['self']['href']
+        }
 
     def get_branches(self):
         """
@@ -266,8 +105,17 @@ class BitbucketRequestSender(RequestSender):
 
         branches_endpoint = f'/repositories/{self.owner}/{self.repo}/refs/branches'
         response = self._get_request(branches_endpoint)
-        deserialized_branches = _deserialize(response)
-        return _parse_branches(deserialized_branches)
+
+        # guard condition
+        if response.status_code != 200:
+            return None
+
+        branches_page = response.json()
+        return [
+            {
+                'name': branch['name']
+            } for branch in branches_page['values']
+        ]
 
     def get_commits(self):
         """
@@ -289,8 +137,23 @@ class BitbucketRequestSender(RequestSender):
 
         commits_endpoint = f'/repositories/{self.owner}/{self.repo}/commits'
         response = self._get_request(commits_endpoint)
-        deserialized_commits = _deserialize(response)
-        return _parse_commits(deserialized_commits)
+
+        # guard condition
+        if response.status_code != 200:
+            return None
+
+        commits_page = response.json()
+        return [
+            {
+                'hash': commit['hash'],
+                'author': (
+                    commit['author']['user']['username'] if 'user' in commit['author']
+                    else commit['author']['raw']
+                ),
+                'message': commit['message'],
+                'date': str(_timestamp(commit['date']))
+            } for commit in commits_page['values']
+        ]
 
     def get_commit_by_hash(self, hash_of_commit):
         """
@@ -309,8 +172,22 @@ class BitbucketRequestSender(RequestSender):
 
         commit_endpoint = f'/repositories/{self.owner}/{self.repo}/commit/{hash_of_commit}'
         response = self._get_request(commit_endpoint)
-        deserialized_commit = _deserialize(response)
-        return _parse_commit(deserialized_commit)
+
+        # guard condition
+        if response.status_code != 200:
+            return None
+
+        # deserialize commit
+        commit = response.json()
+        return {
+            'hash': commit['hash'],
+            'author': (
+                commit['author']['user']['username'] if 'user' in commit['author']
+                else commit['author']['raw']
+            ),
+            'message': commit['message'],
+            'date': str(_timestamp(commit['date']))
+        }
 
     def get_commits_by_branch(self, branch_name):
         """
@@ -333,8 +210,23 @@ class BitbucketRequestSender(RequestSender):
         """
         branch_commits_endpoint = f'/repositories/{self.owner}/{self.repo}/commits/{branch_name}'
         response = self._get_request(branch_commits_endpoint)
-        deserialized_branch_commits = _deserialize(response)
-        return _parse_commits(deserialized_branch_commits)
+
+        # guard condition
+        if response.status_code != 200:
+            return None
+
+        commits_page = response.json()
+        return [
+            {
+                'hash': commit['hash'],
+                'author': (
+                    commit['author']['user']['username'] if 'user' in commit['author']
+                    else commit['author']['raw']
+                ),
+                'message': commit['message'],
+                'date': str(_timestamp(commit['date']))
+            } for commit in commits_page['values']
+        ]
 
     def get_contributors(self):
         """
@@ -355,5 +247,34 @@ class BitbucketRequestSender(RequestSender):
 
         commits_endpoint = f'/repositories/{self.owner}/{self.repo}/commits'
         response = self._get_request(commits_endpoint)
-        deserialized_commits = _deserialize(response)
-        return _parse_contributors(deserialized_commits)
+
+        # guard condition
+        if response.status_code != 200:
+            return None
+
+        commits_page = response.json()
+        contributors = {}
+
+        # for each commit
+        for commit in commits_page['values']:
+            author = commit['author']  # dict with author's properties
+
+            # if we haven't tracked commit author yet
+            if author['raw'] not in contributors:  # author['raw'] - unique string 'user_git_name <user_email>'
+
+                # check if author has key 'user' means check if author has bitbucket account, if doesn't return  None
+                user = author.get('user')
+
+                # start tracking commit author
+                contributors[author['raw']] = {
+                    # if has account assign account's username else author's gitname
+                    'name': user['username'] if user else _get_gitname(author['raw']),
+                    'number_of_commits': 1,  # count number of commits
+                    'email': _get_email(author['raw']),
+                    'url': user['links']['html']['href'] if user else None
+                }
+            else:
+                # if author is already being tracked increment number of commits by one
+                contributors[commit['author']['raw']]['number_of_commits'] += 1
+
+        return list(contributors.values())
