@@ -11,6 +11,19 @@ from request_sender_base import RequestSender  # pylint: disable=import-error
 GITHUB_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
+def format_date_to_int(date):
+    """
+    Formats date from "%Y-%m-%dT%H:%M:%SZ" to int(timestamp)
+    :param date:
+    :return: int
+    """
+    try:
+        formatted_date = int(datetime.strptime(date, GITHUB_TIME_FORMAT).timestamp())
+    except ValueError:
+        formatted_date = 0
+    return formatted_date
+
+
 class GithubRequestSender(RequestSender):
     """
     Class that provides implementation of interface for sending API requests
@@ -22,6 +35,7 @@ class GithubRequestSender(RequestSender):
                                base_url=base_url,
                                owner=owner,
                                repo=repo)
+        self.repos_api_url = f'/repos/{self.owner}/{self.repo}'
 
     def get_repo(self):
         """
@@ -38,12 +52,11 @@ class GithubRequestSender(RequestSender):
         :return: string - JSON formatted response
         """
 
-        endpoint = '/repos/{owner}/{repo}'.format(owner=self.owner, repo=self.repo)
+        endpoint = self.repos_api_url
         response = requests.get(self.base_url + endpoint).json()
-        creation_date = datetime.strptime(response['created_at'], GITHUB_TIME_FORMAT).timestamp()
         repo = {'id': response['id'],
                 'repo_name': response['name'],
-                'creation_date': creation_date,
+                'creation_date': format_date_to_int(response['created_at']),
                 'owner': response['owner']['login'],
                 'url': response['url']}
         return repo
@@ -61,7 +74,7 @@ class GithubRequestSender(RequestSender):
 
         :return: string - JSON formatted response
         """
-        endpoint = '/repos/{owner}/{repo}/branches'.format(owner=self.owner, repo=self.repo)
+        endpoint = self.repos_api_url + '/branches'
         url = self.base_url + endpoint
         response = requests.get(url).json()
         branches = []
@@ -87,16 +100,14 @@ class GithubRequestSender(RequestSender):
 
         :return: string - JSON formatted response
         """
-        endpoint = '/repos/{owner}/{repo}/commits'.format(owner=self.owner, repo=self.repo)
-        response = list(requests.get(self.base_url + endpoint).json())
-        commits = []
-        for _, commit in enumerate(response):
-            date = datetime.strptime(commit['commit']['author']['date'],
-                                     GITHUB_TIME_FORMAT).timestamp()
-            commits.append({'hash': commit['sha'],
-                            'author': commit['commit']['author']['name'],
-                            'message': commit['commit']['message'],
-                            'date': date})
+        endpoint = self.repos_api_url + '/commits'
+        response = requests.get(self.base_url + endpoint).json()
+        return [
+            {'hash': commit['sha'],
+             'author': commit['commit']['author']['name'],
+             'message': commit['commit']['message'],
+             'date': format_date_to_int(commit['commit']['author']['date'])}
+            for commit in response]
 
     def get_commits_by_branch(self, branch_name):
         """
@@ -116,9 +127,7 @@ class GithubRequestSender(RequestSender):
         :param branch_name: string
         :return: string - JSON formatted response
         """
-        endpoint = '/repos/{owner}/{repo}/commits?sha={branch}'.format(owner=self.owner,
-                                                                       repo=self.repo,
-                                                                       branch=branch_name)
+        endpoint = self.repos_api_url + f'/commits?sha={branch_name}'
         url = self.base_url + endpoint
         response = requests.get(url)
         commits = []
@@ -126,8 +135,11 @@ class GithubRequestSender(RequestSender):
             return commits
         response = response.json()
         for raw in response:
-            date = datetime.strptime(raw['commit']['author']['date'],
-                                     GITHUB_TIME_FORMAT).timestamp()
+            try:
+                date = int(datetime.strptime(raw['commit']['author']['date'],
+                                             GITHUB_TIME_FORMAT).timestamp())
+            except ValueError:
+                date = 0
             one_commit = {
                 'hash': raw['sha'],
                 'author': raw['commit']['author']['name'],
@@ -151,18 +163,12 @@ class GithubRequestSender(RequestSender):
         :param hash_of_commit: string
         :return: string - JSON formatted response
         """
-        endpoint = '/repos/{owner}/{repo}/commits'.format(owner=self.owner, repo=self.repo)
-        response = list(requests.get(self.base_url + endpoint).json())
-        for _, commit in enumerate(response):
-            date = datetime.strptime(commit['commit']['author']['date'],
-                                     GITHUB_TIME_FORMAT).timestamp()
-            if hash_of_commit == commit['sha']:
-                commit_by_hash = ({'hash': commit['sha'],
-                                   'author': commit['commit']['author']['name'],
-                                   'message': commit['commit']['message'],
-                                   'date': date})
-
-        return commit_by_hash
+        endpoint = self.repos_api_url + f'/commits/{hash_of_commit}'
+        response = requests.get(self.base_url + endpoint).json()
+        return {'hash': response['sha'],
+                'author': response['commit']['author']['name'],
+                'message': response['commit']['message'],
+                'date': format_date_to_int(response['commit']['author']['date'])}
 
     def get_contributors(self):
         """
@@ -180,7 +186,7 @@ class GithubRequestSender(RequestSender):
 
             :return: string - JSON formatted response
          """
-        endpoint = '/repos/{owner}/{repo}/contributors'.format(owner=self.owner, repo=self.repo)
+        endpoint = self.repos_api_url + '/contributors'
         url = self.base_url + endpoint
         response = requests.get(url).json()
         contributors = []
