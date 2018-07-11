@@ -259,10 +259,12 @@ class BitbucketRequestSender(RequestSender):
         for commit in commits_page['values']:
             author = commit['author']  # dict with author's properties
 
+            # author['raw'] - unique string 'user_gitname <user_email>'
             # if we haven't tracked commit author yet
-            if author['raw'] not in contributors:  # author['raw'] - unique string 'user_git_name <user_email>'
+            if author['raw'] not in contributors:
 
-                # check if author has key 'user' means check if author has bitbucket account, if doesn't return  None
+                # check if author has key 'user' means check if author has bitbucket account,
+                #  if doesn't return  None
                 user = author.get('user')
 
                 # start tracking commit author
