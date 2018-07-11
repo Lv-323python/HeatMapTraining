@@ -26,8 +26,11 @@ class RequestSenderGitLab(RequestSender):
     def get_repo(self):
         """
         Takes repository name on GitLab and owner as parameters and
-        returns repository info in JSON format
-        example:
+        returns repository info in dictionary
+
+        :return: string - JSON formatted response
+
+        example of output:
         {
             "id": "unique id",
             "repo_name": "repository name",
@@ -36,7 +39,6 @@ class RequestSenderGitLab(RequestSender):
             "url": "repository url"
         }
 
-        :return: string - JSON formatted response
         """
         # get url of remote repository given as input
         url_repo = self.base_url + self.owner + "%2F" + self.repo
@@ -45,26 +47,29 @@ class RequestSenderGitLab(RequestSender):
         repo_info = requests.get(url_repo).json()
 
         # retrieve only info about repository
-        repo = {"id": repo_info['id'],
-                "repo_name": repo_info['name'],
-                "creation_date": _timestamp(repo_info['created_at']),
-                "owner": repo_info['path_with_namespace'].split('/')[0],
-                "url": repo_info['web_url']}
+        repo = {
+            "id": repo_info['id'],
+            "repo_name": repo_info['name'],
+            "creation_date": _timestamp(repo_info['created_at']),
+            "owner": repo_info['path_with_namespace'].split('/')[0],
+            "url": repo_info['web_url']
+        }
 
         return repo
 
     def get_branches(self):
         """
         get branches of given repository on GitLab
-        example:
+
+        :return: list of dicts
+
+        example of output:
         [
             {
                 "name": "branch name"
             },
             ...
         ]
-
-        :return: list of dicts
         """
 
         # get url of remote repository given as input
@@ -82,6 +87,9 @@ class RequestSenderGitLab(RequestSender):
         """
         Takes repository name and owner as parameters and
         returns information about commits in list of dictionaries
+
+        :return: list of dictionaries
+
         example
         [
             {
@@ -93,8 +101,6 @@ class RequestSenderGitLab(RequestSender):
             },
             ...
         ]
-
-        :return: string - list of dictionaries
         """
         # get url of remote repository given as input
         url_commits = self.base_url + self.owner + "%2F" + self.repo + "/repository/commits"
@@ -103,10 +109,12 @@ class RequestSenderGitLab(RequestSender):
         commits_info = requests.get(url_commits).json()
 
         # retrieve only info about commits
-        commits = [{'hash': commit['id'],
-                    'author': commit['committer_name'],
-                    'message': commit['message'],
-                    'date': _timestamp(commit['created_at'])}
+        commits = [{
+                'hash': commit['id'],
+                'author': commit['committer_name'],
+                'message': commit['message'],
+                'date': _timestamp(commit['created_at'])
+        }
                    for commit in commits_info]
 
         return commits
@@ -114,8 +122,11 @@ class RequestSenderGitLab(RequestSender):
     def get_contributors(self):
         """
         Takes repository name and owner as parameters and returns
-        information about contributors in JSON format
-        ex
+        information about contributors in list of dictionaries
+
+        :return: list of dictionaries
+
+        example of output
         [
             {
                 "name": "contributor name",
@@ -125,8 +136,6 @@ class RequestSenderGitLab(RequestSender):
             },
             ...
         ]
-
-        :return: string - JSON formatted response
         """
         # get url of remote repository given as input
         url_contributors = (self.base_url + self.owner + "%2F" + self.repo +
@@ -136,18 +145,24 @@ class RequestSenderGitLab(RequestSender):
         contributors_info = requests.get(url_contributors).json()
 
         # retrieve only info about contributors
-        contributors = [{'name': contributors_info[i]['name'],
-                         'number_of_commits': contributors_info[i]['commits'],
-                         'email': contributors_info[i]['email'],
-                         'url': 'https://gitlab.com/' + str(contributors_info[i]['name'])}
+        contributors = [{
+                     'name': contributors_info[i]['name'],
+                     'number_of_commits': contributors_info[i]['commits'],
+                     'email': contributors_info[i]['email'],
+                     'url': 'https://gitlab.com/' + str(contributors_info[i]['name'])
+        }
                         for i in range(len(contributors_info))]
 
         return contributors
 
     def get_commit_by_hash(self, hash_of_commit):
         """
-        Takes hash of the commit and returns info about it in JSON format
-        example:
+        Takes hash of the commit and returns info about it in dictionary:
+
+        :param hash_of_commit: string
+        :return: dictionary
+
+        example of output:
         {
             "hash": "commit hash",
             "author": "commit author",
@@ -155,9 +170,6 @@ class RequestSenderGitLab(RequestSender):
             "date": "date when committed"
 
         }
-
-        :param hash_of_commit: string
-        :return: dictionary
         """
         # get url of remote repository given as input
         url_commit = self.base_url + self.owner + "%2F" + self.repo + \
@@ -167,10 +179,12 @@ class RequestSenderGitLab(RequestSender):
         commit_info = requests.get(url_commit).json()
 
         # retrieve only info about one commit
-        commit = {"hash": commit_info['id'],
-                  "author": commit_info['author_name'],
-                  "message": commit_info['message'],
-                  "date": int(_timestamp(commit_info['committed_date']))}
+        commit = {
+                "hash": commit_info['id'],
+                "author": commit_info['author_name'],
+                "message": commit_info['message'],
+                "date": int(_timestamp(commit_info['committed_date']))
+        }
 
         return commit
 
@@ -178,33 +192,47 @@ class RequestSenderGitLab(RequestSender):
         """
         Takes repository branches as parameters and
         returns information about last 20 commits per branch
-        in dictionary
-        example
-        {
-            "branch_name":
-                [{
+        in list of dictionries
 
-                    "hash": "commit hash",
-                    "author": "commit author",
-                    "message": "commit message",
-                    "date": "date when committed"
-
-                },
-                ...]
-        }
 
         :return: dictionary
+
+        example of output:
+        [{
+
+            "hash": "commit hash",
+            "author": "commit author",
+            "message": "commit message",
+            "date": "date when committed"
+
+        },
+        ...]
         """
-        commits = {}
+
         api_commits_by_branch = self.base_url + self.owner + "%2F" + self.repo + \
                                 "/repository/commits?ref_name=" + branch_name
 
         commits_json = requests.get(api_commits_by_branch).json()
         # make a list of dicts concerning commits per branch
-        commits[branch_name] = [{"hash": commit['id'],
-                                 'author': commit['committer_name'],
-                                 'message': commit['message'],
-                                 "date": _timestamp(commit['created_at'])}
-
+        commits = [{
+                 "hash": commit['id'],
+                 'author': commit['committer_name'],
+                 'message': commit['message'],
+                 "date": _timestamp(commit['created_at'])
+        }
                                 for commit in commits_json]
         return commits
+
+a = RequestSenderGitLab('https://gitlab.com/api/v4/projects/', 'mixa1901', 'test-public')
+
+print(a.get_commits_by_branch('test'))
+print()
+print(a.get_commits())
+print()
+print(a.get_branches())
+print()
+print(a.get_repo())
+print()
+print(a.get_commit_by_hash('1e6e8c7213dfca19f9dc6467f55a84918e5a4e10'))
+print()
+print(a.get_contributors())
