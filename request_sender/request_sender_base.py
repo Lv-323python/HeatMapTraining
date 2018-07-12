@@ -11,6 +11,9 @@ class RequestSender:
     """
 
     def __init__(self, base_url, owner, repo):
+        assert isinstance(base_url, str), 'Inputted "base_url" type is not str'
+        assert isinstance(owner, str), 'Inputted "owner" type is not str'
+        assert isinstance(repo, str), 'Inputted "repo" type is not str'
         self.base_url = base_url
         self.owner = owner
         self.repo = repo
@@ -20,7 +23,7 @@ class RequestSender:
         Gets information about repository
         in dict format with response body and status code
 
-        :return: dict,
+        :return: dict
         :raise NotImplementedError
         :Example:
         {
@@ -38,7 +41,7 @@ class RequestSender:
         Gets list of branches in a repository
         in dict format with response body and status code
 
-        :return: dict
+        :return: list of dicts
         :raise NotImplementedError
         :Example:
         [
@@ -55,7 +58,7 @@ class RequestSender:
         Gets information about all commits in repository
         in dict format with response body and status code
 
-        :return: dict
+        :return: list of dicts
         :raise NotImplementedError
         :Example:
         [
@@ -77,7 +80,7 @@ class RequestSender:
         in dict format with response body and status code
 
         :param branch_name: string
-        :return: dict
+        :return: list of dicts
         :raise NotImplementedError
         :Example:
         [
@@ -91,6 +94,7 @@ class RequestSender:
             ...
         ]
         """
+
         raise NotImplementedError
 
     def get_commit_by_hash(self, hash_of_commit):
@@ -110,6 +114,7 @@ class RequestSender:
 
         }
         """
+
         raise NotImplementedError
 
     def get_contributors(self):
@@ -117,7 +122,7 @@ class RequestSender:
         Gets information about all contributors to repository
         in dict format with response body
 
-        :return: dict
+        :return: list of dicts
         :raise NotImplementedError
         :Example:
         [

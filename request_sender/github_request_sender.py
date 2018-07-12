@@ -3,24 +3,11 @@ Contains GithubRequestSender class that provides implementation of
 interface for sending API requests
 to web-based hosting services for version control using GitHub
 """
-from datetime import datetime
 import requests
 from request_sender_base import RequestSender  # pylint: disable=import-error
+from utils.helper import format_date_to_int
 
 GITHUB_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
-
-
-def format_date_to_int(date):
-    """
-    Formats date from "%Y-%m-%dT%H:%M:%SZ" to int(timestamp)
-    :param date:
-    :return: int
-    """
-    try:
-        formatted_date = int(datetime.strptime(date, GITHUB_TIME_FORMAT).timestamp())
-    except ValueError:
-        formatted_date = 0
-    return formatted_date
 
 
 class GithubRequestSender(RequestSender):
@@ -57,7 +44,7 @@ class GithubRequestSender(RequestSender):
         response = requests.get(self.base_url + endpoint).json()
         repo = {'id': response['id'],
                 'repo_name': response['name'],
-                'creation_date': format_date_to_int(response['created_at']),
+                'creation_date': format_date_to_int(response['created_at'], GITHUB_TIME_FORMAT),
                 'owner': response['owner']['login'],
                 'url': response['url']}
         return repo
@@ -107,7 +94,7 @@ class GithubRequestSender(RequestSender):
             {'hash': commit['sha'],
              'author': commit['commit']['author']['name'],
              'message': commit['commit']['message'],
-             'date': format_date_to_int(commit['commit']['author']['date'])}
+             'date': format_date_to_int(commit['commit']['author']['date'], GITHUB_TIME_FORMAT)}
             for commit in response]
 
     def get_commits_by_branch(self, branch_name):
@@ -141,7 +128,7 @@ class GithubRequestSender(RequestSender):
             'hash': x['sha'],
             'author': x['commit']['author']['name'],
             'message': x['commit']['message'],
-            'date': format_date_to_int(x['commit']['author']['date'])
+            'date': format_date_to_int(x['commit']['author']['date'], GITHUB_TIME_FORMAT)
         }, response))
 
     def get_commit_by_hash(self, hash_of_commit):
@@ -167,7 +154,7 @@ class GithubRequestSender(RequestSender):
             'hash': response['sha'],
             'author': response['commit']['author']['name'],
             'message': response['commit']['message'],
-            'date': format_date_to_int(response['commit']['author']['date'])
+            'date': format_date_to_int(response['commit']['author']['date'], GITHUB_TIME_FORMAT)
         }
 
     def get_contributors(self):
