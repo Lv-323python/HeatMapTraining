@@ -184,7 +184,7 @@ class GithubRequestSender(RequestSender):
                  "url": "contributor url"
              },
              ...
-        ]g
+        ]
         """
         endpoint = self.repos_api_url + '/contributors'
         url = self.base_url + endpoint
