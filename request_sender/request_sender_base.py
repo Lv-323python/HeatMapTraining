@@ -11,6 +11,9 @@ class RequestSender:
     """
 
     def __init__(self, base_url, owner, repo):
+        assert isinstance(base_url, str), 'Inputted "base_url" type is not str'
+        assert isinstance(owner, str), 'Inputted "owner" type is not str'
+        assert isinstance(repo, str), 'Inputted "repo" type is not str'
         self.base_url = base_url
         self.owner = owner
         self.repo = repo
