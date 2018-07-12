@@ -88,6 +88,19 @@ class RequestSenderGitLab(RequestSender):
 
         return branches
 
+    def _get_branch_for_commit(self, commit_hash):
+        """
+        function that gets branch for particular commit
+        :param commit_hash: string
+        :return: string
+        """
+        api_gitlab = (self.base_url + self.owner + "%2F" + self.repo + "/repository/commits/" +
+                      commit_hash + "/refs")
+
+        branch_info = requests.get(api_gitlab).json()
+
+        return branch_info[0]['name']
+
     def get_commits(self):
         """
         Takes repository name and owner as parameters and
@@ -117,7 +130,8 @@ class RequestSenderGitLab(RequestSender):
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
-            "date": _timestamp(commit["created_at"])
+            "date": _timestamp(commit["created_at"]),
+            "branch": self._get_branch_for_commit(commit["id"])
         } for commit in commits_info]
 
         return commits
@@ -182,7 +196,8 @@ class RequestSenderGitLab(RequestSender):
             "hash": commit_info["id"],
             "author": commit_info["author_name"],
             "message": commit_info["message"],
-            "date": int(_timestamp(commit_info["committed_date"]))
+            "date": int(_timestamp(commit_info["committed_date"])),
+            "branch": self._get_branch_for_commit(hash_of_commit)
         }
         # retrieve only info about one commit
 
