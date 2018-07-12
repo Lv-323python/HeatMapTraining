@@ -114,8 +114,7 @@ class RequestSenderGitLab(RequestSender):
             'author': commit['committer_name'],
             'message': commit['message'],
             'date': _timestamp(commit['created_at'])
-        }
-            for commit in commits_info]
+        } for commit in commits_info]
 
         return commits
 
@@ -150,8 +149,7 @@ class RequestSenderGitLab(RequestSender):
             'number_of_commits': contributors_info[i]['commits'],
             'email': contributors_info[i]['email'],
             'url': 'https://gitlab.com/' + str(contributors_info[i]['name'])
-        }
-                        for i in range(len(contributors_info))]
+        } for i in range(len(contributors_info))]
 
         return contributors
 
@@ -220,4 +218,5 @@ class RequestSenderGitLab(RequestSender):
             'message': commit['message'],
             'date': _timestamp(commit['created_at'])
         } for commit in commits_json]
+
         return commits
