@@ -4,7 +4,8 @@ python:
 
 #check code
 script:
-  - pylint --rcfile=.pylintrc request_sender/
+  - pylint --rcfile=.pylintrc heat_map_training/
+  - pylint --rcfile=.pylintrc tests/
 
 # command to install dependencies
 install:
