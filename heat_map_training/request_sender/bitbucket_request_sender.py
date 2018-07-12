@@ -6,7 +6,7 @@ to web-based hosting service Bitbucket for version control using Git
 import requests
 
 from request_sender_base import RequestSender  # pylint: disable=import-error
-from utils.bitbucket_helper import to_timestamp, get_gitname, get_email
+from heat_map_training.utils.bitbucket_helper import to_timestamp, get_gitname, get_email
 
 
 class BitbucketRequestSender(RequestSender):

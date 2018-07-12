@@ -6,7 +6,8 @@ from datetime import datetime
 
 def format_date_to_int(date, format_string):
     """
-    Creates an int(timestamp) from a string representing a date and time and a corresponding format string
+    Creates an int(timestamp) from a string representing a date and time and a corresponding
+    format string
 
     :param date: string
     :param format_string: string
