@@ -3,40 +3,10 @@ Contains BitbucketRequestSender class that provides methods for sending API requ
 to web-based hosting service Bitbucket for version control using Git
 """
 
-import datetime
 import requests
 
 from request_sender_base import RequestSender  # pylint: disable=import-error
-
-
-def _timestamp(date_time_str):
-    """
-    Converts datetime string to timestamp
-
-    :param date_time_str: string - datetime string
-    :return: int - timestamp
-    """
-    return int(datetime.datetime.strptime(date_time_str[0:19], "%Y-%m-%dT%H:%M:%S").timestamp())
-
-
-def _get_gitname(author_raw):
-    """
-    Extracts author gitname from author_raw string
-
-    :param author_raw: string
-    :return: string
-    """
-    return author_raw[:author_raw.find('<')-1]
-
-
-def _get_email(author_raw):
-    """
-    Extracts author email from author_raw string
-
-    :param author_raw: string
-    :return: string
-    """
-    return author_raw[author_raw.find('<')+1:-1]
+from utils.bitbucket_helper import to_timestamp, get_gitname, get_email
 
 
 class BitbucketRequestSender(RequestSender):
@@ -55,13 +25,16 @@ class BitbucketRequestSender(RequestSender):
         :param endpoint: string - endpoint url
         :return: response object
         """
+
         return requests.get(self.base_url + endpoint)
 
     def get_repo(self):
         """
-        returns repository info in JSON format
+        Gets information about repository
+        in dict format with response body and status code
 
-        Example:
+        :return: dict
+        :Example:
         {
             "id": "unique id",
             "repo_name": "repository name",
@@ -69,9 +42,8 @@ class BitbucketRequestSender(RequestSender):
             "owner": "repository owner",
             "url": "repository url"
         }
-
-        :return: dict - contains information about repository in specified format
         """
+
         repo_endpoint = f'/repositories/{self.owner}/{self.repo}'
         response = self._get_request(repo_endpoint)
 
@@ -83,24 +55,24 @@ class BitbucketRequestSender(RequestSender):
         return {
             'id': repo['uuid'],
             'repo_name': repo['name'],
-            'creation_date': str(_timestamp(repo['created_on'])),
+            'creation_date': str(to_timestamp(repo['created_on'])),
             'owner': repo['owner']['username'],
             'url': repo['links']['self']['href']
         }
 
     def get_branches(self):
         """
-        returns information about branches in JSON format
+        Gets list of branches in a repository
+        in dict format with response body and status code
 
-        Example:
+        :return: list of dicts
+        :Example:
         [
             {
                 "name": "branch name"
             },
             ...
         ]
-
-        :return: list of dicts
         """
 
         branches_endpoint = f'/repositories/{self.owner}/{self.repo}/refs/branches'
@@ -115,24 +87,25 @@ class BitbucketRequestSender(RequestSender):
             {
                 'name': branch['name']
             } for branch in branches_page['values']
-        ]
+            ]
 
     def get_commits(self):
         """
-        Returns information about commits in JSON format
+        Gets information about all commits in repository
+        in dict format with response body and status code
 
-        Example:
+        :return: list of dicts
+        :Example:
         [
             {
                 "hash": "commit hash",
                 "author": "commit author",
                 "message": "commit message",
-                "date": "date when committed"
+                "date": "date when committed converted to int"
+
             },
             ...
         ]
-
-        :return: list of dicts
         """
 
         commits_endpoint = f'/repositories/{self.owner}/{self.repo}/commits'
@@ -151,25 +124,28 @@ class BitbucketRequestSender(RequestSender):
                     else commit['author']['raw']
                 ),
                 'message': commit['message'],
-                'date': str(_timestamp(commit['date']))
+                'date': str(to_timestamp(commit['date']))
             } for commit in commits_page['values']
-        ]
+            ]
 
     def get_commit_by_hash(self, hash_of_commit):
         """
-        returns JSON formatted information about commit by its hash
+        Gets information about the commit by hash
+        in dict format with response body
 
-        Example:
+        :param hash_of_commit: string
+        :return: dict
+        :Example:
         {
-                "hash": "commit hash",
-                "author": "commit author",
-                "message": "commit message",
-                "date": "date when committed"
-        }
+            "hash": "commit hash",
+            "author": "commit author",
+            "message": "commit message",
+            "date": "date when committed converted to int"
 
-        :return: dict - contains information about commit in specified format
+        }
         """
 
+        assert isinstance(hash_of_commit, str), 'Inputted "hash_of_commit" type is not str'
         commit_endpoint = f'/repositories/{self.owner}/{self.repo}/commit/{hash_of_commit}'
         response = self._get_request(commit_endpoint)
 
@@ -186,28 +162,30 @@ class BitbucketRequestSender(RequestSender):
                 else commit['author']['raw']
             ),
             'message': commit['message'],
-            'date': str(_timestamp(commit['date']))
+            'date': str(to_timestamp(commit['date']))
         }
 
     def get_commits_by_branch(self, branch_name):
         """
-        Returns information about commits (in branch specified)
+        Gets information about commits of a specific branch
+        in dict format with response body and status code
 
-        example:
+        :param branch_name: string
+        :return: list of dicts
+        :Example:
         [
             {
                 "hash": "commit hash",
                 "author": "commit author",
                 "message": "commit message",
-                "date": "date when committed"
+                "date": "date when committed converted to int"
 
             },
             ...
         ]
-
-        :param branch_name: string
-        :return: list of dicts
         """
+
+        assert isinstance(branch_name, str), 'Inputted "branch_name" type is not str'
         branch_commits_endpoint = f'/repositories/{self.owner}/{self.repo}/commits/{branch_name}'
         response = self._get_request(branch_commits_endpoint)
 
@@ -224,25 +202,26 @@ class BitbucketRequestSender(RequestSender):
                     else commit['author']['raw']
                 ),
                 'message': commit['message'],
-                'date': str(_timestamp(commit['date']))
+                'date': str(to_timestamp(commit['date']))
             } for commit in commits_page['values']
-        ]
+            ]
 
     def get_contributors(self):
         """
-        Returns information about contributors in JSON format
-        Example:
-        [
-            {
-                "name": "contributor name",
-                "number_of_commits": "number of commits",
-                "email": "contributor email",
-                "url": "contributor url"
-            },
-            ...
-        ]
+        Gets information about all contributors to repository
+        in dict format with response body
 
         :return: list of dicts
+        :Example:
+        [
+             {
+                 "name": "contributor name",
+                 "number_of_commits": "number of commits",
+                 "email": "contributor email",
+                 "url": "contributor url"
+             },
+             ...
+        ]
         """
 
         commits_endpoint = f'/repositories/{self.owner}/{self.repo}/commits'
@@ -270,9 +249,9 @@ class BitbucketRequestSender(RequestSender):
                 # start tracking commit author
                 contributors[author['raw']] = {
                     # if has account assign account's username else author's gitname
-                    'name': user['username'] if user else _get_gitname(author['raw']),
+                    'name': user['username'] if user else get_gitname(author['raw']),
                     'number_of_commits': 1,  # count number of commits
-                    'email': _get_email(author['raw']),
+                    'email': get_email(author['raw']),
                     'url': user['links']['html']['href'] if user else None
                 }
             else:
