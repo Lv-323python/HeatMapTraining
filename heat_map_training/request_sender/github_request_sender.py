@@ -41,7 +41,10 @@ class GithubRequestSender(RequestSender):
         """
 
         endpoint = self.repos_api_url
-        response = requests.get(self.base_url + endpoint).json()
+        response = requests.get(self.base_url + endpoint)
+        if not response.status_code == 200:
+            return None
+        response = response.json()
         repo = {'id': response['id'],
                 'repo_name': response['name'],
                 'creation_date': format_date_to_int(response['created_at'], GITHUB_TIME_FORMAT),
@@ -66,7 +69,10 @@ class GithubRequestSender(RequestSender):
         """
         endpoint = self.repos_api_url + '/branches'
         url = self.base_url + endpoint
-        response = requests.get(url).json()
+        response = requests.get(url)
+        if not response.status_code == 200:
+            return None
+        response = response.json()
         return list(map(lambda x: {'name': x['name']}, response))
 
     def get_commits(self):
@@ -89,7 +95,10 @@ class GithubRequestSender(RequestSender):
         ]
         """
         endpoint = self.repos_api_url + '/commits'
-        response = requests.get(self.base_url + endpoint).json()
+        response = requests.get(self.base_url + endpoint)
+        if not response.status_code == 200:
+            return None
+        response = response.json()
         return [
             {'hash': commit['sha'],
              'author': commit['commit']['author']['name'],
@@ -120,9 +129,8 @@ class GithubRequestSender(RequestSender):
         endpoint = self.repos_api_url + f'/commits?sha={branch_name}'
         url = self.base_url + endpoint
         response = requests.get(url)
-        commits = []
         if not response.status_code == 200:
-            return commits
+            return None
         response = response.json()
         return list(map(lambda x: {
             'hash': x['sha'],
@@ -149,7 +157,10 @@ class GithubRequestSender(RequestSender):
         }
         """
         endpoint = self.repos_api_url + f'/commits/{hash_of_commit}'
-        response = requests.get(self.base_url + endpoint).json()
+        response = requests.get(self.base_url + endpoint)
+        if not response.status_code == 200:
+            return None
+        response = response.json()
         return {
             'hash': response['sha'],
             'author': response['commit']['author']['name'],
@@ -177,7 +188,10 @@ class GithubRequestSender(RequestSender):
         """
         endpoint = self.repos_api_url + '/contributors'
         url = self.base_url + endpoint
-        response = requests.get(url).json()
+        response = requests.get(url)
+        if not response.status_code == 200:
+            return None
+        response = response.json()
         return list(map(lambda x: {
             'name': x['login'],
             'number_of_commits': x['contributions'],
