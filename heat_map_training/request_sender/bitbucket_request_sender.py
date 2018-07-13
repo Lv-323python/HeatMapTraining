@@ -5,7 +5,7 @@ to web-based hosting service Bitbucket for version control using Git
 
 import requests
 
-from request_sender_base import RequestSender  # pylint: disable=import-error
+from heat_map_training.request_sender.request_sender_base import RequestSender  # pylint: disable=import-error
 from heat_map_training.utils.bitbucket_helper import to_timestamp, get_gitname, get_email
 
 
@@ -49,7 +49,7 @@ class BitbucketRequestSender(RequestSender):
 
         # guard condition
         if response.status_code != 200:
-            return {}, response.status_code
+            return None
 
         repo = response.json()
         return {
