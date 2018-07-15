@@ -197,3 +197,8 @@ class GithubRequestSender(RequestSender):
             'number_of_commits': x['contributions'],
             'email': x['login'],
             'url': x['url']}, response))
+
+a = GithubRequestSender("mixa1901", "test")
+
+print(a.get_commits())
+print(a.get_commit_by_hash('5a8a11fa7b0fc08d59e0fd7c435c3073459ae87a'))
