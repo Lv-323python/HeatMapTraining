@@ -4,7 +4,7 @@ interface for sending API requests
 to web-based hosting services for version control using GitHub
 """
 import requests
-from request_sender_base import RequestSender  # pylint: disable=import-error
+from heat_map_training.request_sender.request_sender_base import RequestSender  # pylint: disable=import-error
 from heat_map_training.utils.helper import format_date_to_int
 
 GITHUB_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
@@ -197,3 +197,8 @@ class GithubRequestSender(RequestSender):
             'number_of_commits': x['contributions'],
             'email': x['login'],
             'url': x['url']}, response))
+
+a = GithubRequestSender("mixa1901", "test")
+
+print(a.get_commits())
+print(a.get_commit_by_hash('5a8a11fa7b0fc08d59e0fd7c435c3073459ae87a'))
