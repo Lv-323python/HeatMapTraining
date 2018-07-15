@@ -3,6 +3,11 @@ Contains TestsRequestSenderGitHub class that provides methods for testing
 of GitHubRequestSender class which sends API requests to GitHub
 """
 
+from heat_map_training.request_sender import github_request_sender
+
+
+a = github_request_sender.GithubRequestSender('Lv-323python', 'HeatMapTraining')
+print(a.get_contributors())
 
 class TestsRequestSenderGitHub:
     """
