@@ -5,7 +5,7 @@ to web-based hosting services for version control using Git
 
 from datetime import datetime
 import requests
-from request_sender_base import RequestSender  # pylint: disable=import-error
+from heat_map_training.request_sender.request_sender_base import RequestSender  # pylint: disable=import-error
 
 
 def _timestamp(date):
@@ -49,8 +49,14 @@ class RequestSenderGitLab(RequestSender):
         """
         url_repo = self.base_url + self.owner + "%2F" + self.repo
 
-        # get JSON with repository info
-        repo_info = requests.get(url_repo).json()
+        # get response and check it's validation
+        response = requests.get(url_repo)
+
+        if not response.status_code == 200:
+            return None
+
+        # get json of repository
+        repo_info = response.json()
 
         # retrieve only info about repository
         repo = {
@@ -163,15 +169,21 @@ class RequestSenderGitLab(RequestSender):
         url_contributors = (self.base_url + self.owner + "%2F" + self.repo +
                             "/repository/contributors")
 
-        # get JSON about contributors
-        contributors_info = requests.get(url_contributors).json()
+        # get response and check it's validation
+        response = requests.get(url_contributors)
+
+        if not response.status_code == 200:
+            return None
+
+        # get json of contributors
+        contributors_info = response.json()
 
         # retrieve only info about contributors
         contributors = [{
             "name": contributors_info[i]["name"],
             "number_of_commits": contributors_info[i]["commits"],
             "email": contributors_info[i]["email"],
-            "url": "None" # to be continued...
+            "url": "None"  # to be continued...
         } for i in range(len(contributors_info))]
 
         return contributors
@@ -217,20 +229,17 @@ class RequestSenderGitLab(RequestSender):
 
         :return: list of dictionaries.
         Example:
-        {
-            "branch_name":
-                [{
+            [{
 
-                    "hash": "commit hash",
-                    "author": "commit author",
-                    "message": "commit message",
-                    "date": "date when committed"
+                "hash": "commit hash",
+                "author": "commit author",
+                "message": "commit message",
+                "date": "date when committed"
 
-                },
-                ...]
-        }
+             },
+            ...]
         """
-        commits = {}
+
         api_commits_by_branch = (self.base_url + self.owner + "%2F" + self.repo +
                                  "/repository/commits?ref_name=" + branch_name)
 
@@ -244,7 +253,7 @@ class RequestSenderGitLab(RequestSender):
         commits_json = response.json()
 
         # make a list of dicts concerning commits per branch
-        commits[branch_name] = [{
+        commits = [{
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
