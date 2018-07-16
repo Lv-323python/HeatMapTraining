@@ -80,8 +80,14 @@ class RequestSenderGitLab(RequestSender):
         # get url of remote repository given as input
         url_branches = self.base_url + self.owner + "%2F" + self.repo + "/repository/branches"
 
-        # get JSON about branches
-        branches_info = requests.get(url_branches).json()
+        # get response and check it's validation
+        response = requests.get(url_branches)
+
+        if not response.status_code == 200:
+            return None
+
+        # get json of branches
+        branches_info = response.json()
 
         # retrieve only info about name of the branches
         branches = [{"name": branch["name"]} for branch in branches_info]
@@ -228,7 +234,15 @@ class RequestSenderGitLab(RequestSender):
         api_commits_by_branch = (self.base_url + self.owner + "%2F" + self.repo +
                                  "/repository/commits?ref_name=" + branch_name)
 
-        commits_json = requests.get(api_commits_by_branch).json()
+        # get response and check it's validation
+        response = requests.get(api_commits_by_branch)
+
+        if not response.status_code == 200:
+            return None
+
+        # get json of commits
+        commits_json = response.json()
+
         # make a list of dicts concerning commits per branch
         commits[branch_name] = [{
             "hash": commit["id"],
