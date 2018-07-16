@@ -57,6 +57,7 @@ def test_get_commits():
 
     assert GithubRequestSender('unknown', 'unknown').get_commits() is None
 
+
 def test_get_commit_by_hash():
     """
     Unittest function for testing method get_commit_by_hash in GithubRequestSender
@@ -70,3 +71,50 @@ def test_get_commit_by_hash():
            }
 
     assert GithubRequestSender('unknown', 'unknown').get_commit_by_hash('unknown') is None
+
+
+def test_get_branches():
+    """
+    Unittest function for testing method get_branches in GithubRequestSender
+    """
+    assert GithubRequestSender('Freon404', 'test_rep').get_branches() == [
+        {
+            "name": "master",
+        },
+        {
+            "name": "new_branch"
+        }
+    ]
+    assert GithubRequestSender('Freon404', "don't exist").get_branches() is None
+
+
+def test_get_commits_by_branch():
+    """
+    Unittest function for testing method get_commits_by_branch in GithubRequestSender
+    """
+    assert GithubRequestSender('Freon404', 'test_rep').get_commits_by_branch('master') == [
+        {
+            'hash': '159a52c9f395bf7f3b87c092585164976e9aeabc',
+            'author': 'Yura_Vovk',
+            'message': 'remove file.txt',
+            'date': 1528650292
+        },
+        {
+            'hash': '20428ee505b241e151563905420adf4145fe6734',
+            'author': 'Yura_Vovk',
+            'message': 'Last commit in test',
+            'date': 1528646385
+        },
+        {
+            'hash': '092174658c618bcf7fb035a508d7fd626ab232d2',
+            'author': 'Yura_Vovk',
+            'message': "Yeah, it's working",
+            'date': 1528646269
+        },
+        {
+            'hash': 'e547495cbba61b7f766330c04ece889f02cef437',
+            'author': 'Yura_Vovk',
+            'message': 'first commit',
+            'date': 1528530717
+        }]
+    assert GithubRequestSender('Freon404', 'test_rep').get_commits_by_branch('fake') is None
