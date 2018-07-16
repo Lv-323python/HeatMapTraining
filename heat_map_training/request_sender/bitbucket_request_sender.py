@@ -259,7 +259,3 @@ class BitbucketRequestSender(RequestSender):
                 contributors[commit['author']['raw']]['number_of_commits'] += 1
 
         return list(contributors.values())
-
-
-client = BitbucketRequestSender('partsey', 'publicbitbucketrepo')
-print(client.get_commits())
