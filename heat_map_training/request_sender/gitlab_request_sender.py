@@ -171,7 +171,7 @@ class RequestSenderGitLab(RequestSender):
             "name": contributors_info[i]["name"],
             "number_of_commits": contributors_info[i]["commits"],
             "email": contributors_info[i]["email"],
-            "url": "https://gitlab.com/" + str(contributors_info[i]["name"])
+            "url": "None" # to be continued...
         } for i in range(len(contributors_info))]
 
         return contributors
