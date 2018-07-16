@@ -126,6 +126,7 @@ class GithubRequestSender(RequestSender):
             ...
         ]
         """
+        assert isinstance(branch_name, str), "Branch name must be type str, received other"
         endpoint = self.repos_api_url + f'/commits?sha={branch_name}'
         url = self.base_url + endpoint
         response = requests.get(url)
@@ -156,6 +157,7 @@ class GithubRequestSender(RequestSender):
 
         }
         """
+        assert isinstance(hash_of_commit, str), "Hash of commit must be type str, received other"
         endpoint = self.repos_api_url + f'/commits/{hash_of_commit}'
         response = requests.get(self.base_url + endpoint)
         if not response.status_code == 200:
