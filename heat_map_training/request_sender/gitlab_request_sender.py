@@ -217,20 +217,17 @@ class RequestSenderGitLab(RequestSender):
 
         :return: list of dictionaries.
         Example:
-        {
-            "branch_name":
-                [{
+            [{
 
-                    "hash": "commit hash",
-                    "author": "commit author",
-                    "message": "commit message",
-                    "date": "date when committed"
+                "hash": "commit hash",
+                "author": "commit author",
+                "message": "commit message",
+                "date": "date when committed"
 
-                },
-                ...]
-        }
+             },
+            ...]
         """
-        commits = {}
+
         api_commits_by_branch = (self.base_url + self.owner + "%2F" + self.repo +
                                  "/repository/commits?ref_name=" + branch_name)
 
@@ -244,7 +241,7 @@ class RequestSenderGitLab(RequestSender):
         commits_json = response.json()
 
         # make a list of dicts concerning commits per branch
-        commits[branch_name] = [{
+        commits = [{
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
