@@ -4,10 +4,24 @@ interface for sending API requests
 to web-based hosting services for version control using GitHub
 """
 import requests
-from heat_map_training.request_sender.request_sender_base import RequestSender  # pylint: disable=import-error
+from heat_map_training.request_sender.request_sender_base \
+    import RequestSender  # pylint: disable=import-error
 from heat_map_training.utils.helper import format_date_to_int
 
 GITHUB_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+
+
+def match_branch_to_commit(branch_list, sha):
+    """
+    Gets all branches which commit belongs to in a list
+    :param branch_list:
+    :param sha:
+    :return:
+    """
+    matched_branches = [k for k in branch_list if sha in branch_list[k]]
+    if matched_branches:
+        return matched_branches
+    return "unknown"
 
 
 class GithubRequestSender(RequestSender):
@@ -22,6 +36,66 @@ class GithubRequestSender(RequestSender):
                                owner=owner,
                                repo=repo)
         self.repos_api_url = f'/repos/{self.owner}/{self.repo}'
+
+    # returns a dict in which the key is sha of commit
+    # and the value is existing branch it belongs to
+    def _get_existing_commit_branch_map(self, list_of_branches):
+        result = {}
+        if self.get_commits_by_branch(list_of_branches[0]) is None:
+            return None
+        for branch in list_of_branches:
+            for item in self.get_commits_by_branch(branch):
+                result.setdefault(branch, set([])).add(item['hash'])
+        return result
+
+    # returns plain list of all branches of a repository
+    def _get_list_of_branches(self):
+        return [d[k] for d in self.get_branches() for k in d if not self.get_branches() is None]
+
+    # returns dict of all commits with key as 'sha' and value as master
+    def _get_dict_of_commits(self):
+        dict_of_commits = {}
+        all_commits = self.get_commits()
+        if all_commits is None:
+            return None
+        for commit in all_commits:
+            dict_of_commits.update({commit['hash']: 'master'})
+        return dict_of_commits
+
+    # gets all pull requests of repository
+    def _get_pull_requests(self):
+        url = self.base_url + self.repos_api_url + '/pulls?state=all'
+        response = requests.get(url)
+        if response.status_code != 200:
+            return None
+        return response.json()
+
+    # gets all pull requests of a repository and
+    # returns a dict from parsed branch and a matching commit
+    def _get_branches_from_pull_request(self, pull_requests):
+        if pull_requests is None:
+            return None
+        commits_and_branches = {}
+        for item in pull_requests:
+            commits_and_branches.setdefault(item['head']['label']
+                                            .replace(self.owner + ':', ''),
+                                            set([])).add(item['head']['sha'])
+        return commits_and_branches
+
+    # returns concatenated dict of branches
+    # from both pull requests and existing branches with commits
+    def _get_complete_commit_branch_map(self):
+        existing_branches = self._get_existing_commit_branch_map(self._get_list_of_branches())
+        pull_request_branches = self._get_branches_from_pull_request(self._get_pull_requests())
+        for key in pull_request_branches:
+            for item in pull_request_branches[key]:
+                for value in existing_branches.values():
+                    if item in value:
+                        value.remove(item)
+        for key in pull_request_branches:
+            for item in pull_request_branches[key]:
+                existing_branches.setdefault(key, set([])).add(item)
+        return existing_branches
 
     def get_repo(self):
         """
@@ -45,11 +119,14 @@ class GithubRequestSender(RequestSender):
         if not response.status_code == 200:
             return None
         response = response.json()
-        repo = {'id': response['id'],
-                'repo_name': response['name'],
-                'creation_date': format_date_to_int(response['created_at'], GITHUB_TIME_FORMAT),
-                'owner': response['owner']['login'],
-                'url': response['url']}
+        repo = {
+            'id': response['id'],
+            'repo_name': response['name'],
+            'creation_date': format_date_to_int(response['created_at'],
+                                                GITHUB_TIME_FORMAT),
+            'owner': response['owner']['login'],
+            'url': response['url']
+        }
         return repo
 
     def get_branches(self):
@@ -89,7 +166,7 @@ class GithubRequestSender(RequestSender):
                 "author": "commit author",
                 "message": "commit message",
                 "date": "date when committed converted to int"
-
+                "branch": "branch which commit belongs to"
             },
             ...
         ]
@@ -98,13 +175,16 @@ class GithubRequestSender(RequestSender):
         response = requests.get(self.base_url + endpoint)
         if not response.status_code == 200:
             return None
+        branches = self._get_complete_commit_branch_map()
         response = response.json()
-        return [
-            {'hash': commit['sha'],
-             'author': commit['commit']['author']['name'],
-             'message': commit['commit']['message'],
-             'date': format_date_to_int(commit['commit']['author']['date'], GITHUB_TIME_FORMAT)}
-            for commit in response]
+        return [{
+            'hash': commit['sha'],
+            'author': commit['commit']['author']['name'],
+            'message': commit['commit']['message'],
+            'date': format_date_to_int(commit['commit']['author']['date'],
+                                       GITHUB_TIME_FORMAT),
+            'branch': match_branch_to_commit(branches, commit['sha'])
+        } for commit in response]
 
     def get_commits_by_branch(self, branch_name):
         """
@@ -126,7 +206,7 @@ class GithubRequestSender(RequestSender):
             ...
         ]
         """
-        assert isinstance(branch_name, str), "Branch name must be type str, received other"
+        assert isinstance(branch_name, str), "Branch name must be str, received other"
         endpoint = self.repos_api_url + f'/commits?sha={branch_name}'
         url = self.base_url + endpoint
         response = requests.get(url)
@@ -137,7 +217,8 @@ class GithubRequestSender(RequestSender):
             'hash': x['sha'],
             'author': x['commit']['author']['name'],
             'message': x['commit']['message'],
-            'date': format_date_to_int(x['commit']['author']['date'], GITHUB_TIME_FORMAT)
+            'date': format_date_to_int(x['commit']['author']['date'],
+                                       GITHUB_TIME_FORMAT)
         }, response))
 
     def get_commit_by_hash(self, hash_of_commit):
@@ -154,20 +235,23 @@ class GithubRequestSender(RequestSender):
             "author": "commit author",
             "message": "commit message",
             "date": "date when committed converted to int"
-
+            "branch": "branch which commit belongs to"
         }
         """
-        assert isinstance(hash_of_commit, str), "Hash of commit must be type str, received other"
+        assert isinstance(hash_of_commit, str), "Hash of commit must be str, received other"
         endpoint = self.repos_api_url + f'/commits/{hash_of_commit}'
         response = requests.get(self.base_url + endpoint)
         if not response.status_code == 200:
             return None
         response = response.json()
+        branches = self._get_complete_commit_branch_map()
         return {
             'hash': response['sha'],
             'author': response['commit']['author']['name'],
             'message': response['commit']['message'],
-            'date': format_date_to_int(response['commit']['author']['date'], GITHUB_TIME_FORMAT)
+            'date': format_date_to_int(response['commit']['author']['date'],
+                                       GITHUB_TIME_FORMAT),
+            'branch': match_branch_to_commit(branches, response['sha'])
         }
 
     def get_contributors(self):
@@ -198,4 +282,5 @@ class GithubRequestSender(RequestSender):
             'name': x['login'],
             'number_of_commits': x['contributions'],
             'email': x['login'],
-            'url': x['url']}, response))
+            'url': x['url']
+        }, response))
