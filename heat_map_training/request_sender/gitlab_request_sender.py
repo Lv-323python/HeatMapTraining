@@ -5,7 +5,8 @@ to web-based hosting services for version control using Git
 
 from datetime import datetime
 import requests
-from heat_map_training.request_sender.request_sender_base import RequestSender  # pylint: disable=import-error
+from heat_map_training.request_sender.request_sender_base import \
+    RequestSender  # pylint: disable=import-error
 
 
 def _timestamp(date):
@@ -251,6 +252,9 @@ class RequestSenderGitLab(RequestSender):
 
         # get json of commits
         commits_json = response.json()
+
+        if not commits_json:
+            return None
 
         # make a list of dicts concerning commits per branch
         commits = [{
