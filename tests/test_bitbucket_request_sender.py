@@ -82,3 +82,63 @@ def test_get_commits_success():
 
 def test_get_commits_fail():
     assert create_non_existing_repo_data().get_commits() is None, "Bad data request"
+
+
+def test_get_commit_by_hash_success():
+    expected_result={'hash': '35a363addc596e1f3a0580d3dec1b78689be991d',
+                     'author': 'partsey',
+                     'message': "Merge branch 'beautiful-feature'\n",
+                     'date': '1531728161'}
+
+    assert create_repo_data().get_commit_by_hash("35a363addc596e1f3a0580d3dec1b78689be991d") == expected_result, "Received data does not match the expected result"
+
+
+def test_get_commits_by_hash_fail():
+        assert create_non_existing_repo_data().get_commit_by_hash("35a363addc596e1f3a0580d3dec1b78689be991d") is None, "Bad data request"
+
+def test_get_commits_by_branch_success():
+    expected_result = [
+        {'hash': '35a363addc596e1f3a0580d3dec1b78689be991d',
+         'author': 'partsey',
+         'message': "Merge branch 'beautiful-feature'\n",
+         'date': '1531728161'},
+        {'hash': '8b4a937ad98639fa3231cfa4b29dd0e8b25a6dd6',
+         'author': 'partsey', 'message': 'created temp2.txt\n',
+         'date': '1531728062'},
+        {'hash': '967449717d302d6f20d3c800f9964fc467aa8dc5',
+         'author': 'partsey',
+         'message': 'created temp1.txt\n',
+         'date': '1531727950'},
+        {'hash': '992572f32da2743ad8e86ad1cc7338284c3792c6',
+         'author': 'partsey',
+         'message': 'created temp.txt\n',
+         'date': '1531727775'},
+        {'hash': '8333878971e78108e3a3fff76bd44ed308a5fada',
+         'author': 'partsey',
+         'message': 'initial commit + created  README.md\n',
+         'date': '1530189123'}]
+    assert create_non_existing_repo_data().get_commits_by_branch("awesome-feature") is None, "Bad data request"
+
+
+def test_get_commits_by_branch_fail():
+    assert create_non_existing_repo_data().get_commits_by_branch("awesome-feature") is None, "Bad data request"
+
+
+def test_get_contributors_success():
+    expected_result = [
+        {'name': 'partsey',
+         'number_of_commits': 4,
+         'email': 'partsey2412@gmail.com',
+         'url': 'https://bitbucket.org/partsey/'
+        },
+        {'name': 'partsey',
+         'number_of_commits': 1,
+         'email': 'partsey2412@gmail.com',
+         'url': 'https://bitbucket.org/partsey/'
+        }]
+    assert create_repo_data().get_contributors() == expected_result, \
+        "Received data does not match the expected result"
+
+
+def test_get_contributors_fail():
+    assert create_non_existing_repo_data().get_contributors() is None, "Bad data request"
