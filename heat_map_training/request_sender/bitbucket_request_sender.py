@@ -18,7 +18,7 @@ class BitbucketRequestSender(RequestSender):
     def __init__(self, owner, repo, base_url='https://api.bitbucket.org/2.0'):
         super().__init__(base_url=base_url, owner=owner, repo=repo)
 
-    def _get_request(self, endpoint):
+    def _get_request(self, endpoint, params=None, **kwargs):
         """
         Sends GET request to URL
 
@@ -26,7 +26,7 @@ class BitbucketRequestSender(RequestSender):
         :return: response object
         """
 
-        return requests.get(self.base_url + endpoint)
+        return requests.get(self.base_url + endpoint, params, **kwargs)
 
     def get_repo(self):
         """
