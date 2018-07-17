@@ -135,6 +135,11 @@ class RequestSenderGitLab(RequestSender):
         # get url of remote repository given as input
         url_commits = self.base_url + self.owner + "%2F" + self.repo + "/repository/commits"
 
+        response = requests.get(url_commits)
+
+        if not response.status_code == 200:
+            return None
+
         # get JSON about commits
         commits_info = requests.get(url_commits).json()
 
@@ -207,6 +212,11 @@ class RequestSenderGitLab(RequestSender):
         # get url of remote repository given as input
         url_commit = (self.base_url + self.owner + "%2F" + self.repo +
                       "/repository/commits/" + hash_of_commit)
+
+        response = requests.get(url_commit)
+
+        if not response.status_code == 200:
+            return None
 
         # get JSON about one commit
         commit_info = requests.get(url_commit).json()
