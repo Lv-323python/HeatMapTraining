@@ -101,32 +101,37 @@ class BitbucketRequestSender(RequestSender):
                 "hash": "commit hash",
                 "author": "commit author",
                 "message": "commit message",
-                "date": "date when committed converted to int"
-
+                "date": "date when committed converted to int",
+                "branches": [branches names]
             },
             ...
         ]
         """
 
-        commits_endpoint = f'/repositories/{self.owner}/{self.repo}/commits'
-        response = self._get_request(commits_endpoint)
+        # get list of commits pages from all branches in repository
+        branches = self.get_branches()
+        repo_commits = {}
+        for branch in branches:
+            list_of_branch_commits = self.get_commits_by_branch(branch['name'])
 
-        # guard condition
-        if response.status_code != 200:
-            return None
+            # adds branches key with branch name to every commit in branch
+            for commit_in_branch in list_of_branch_commits:
+                commit = repo_commits.get(commit_in_branch['hash'])
+                if commit:
+                    commit['branches'].append(branch["name"])
+                else:
+                    commit_in_branch['branches'] = [branch["name"]]
+                    repo_commits[commit_in_branch['hash']] = commit_in_branch
+            list_of_branch_commits.clear()
 
-        commits_page = response.json()
-        return [
-            {
-                'hash': commit['hash'],
-                'author': (
-                    commit['author']['user']['username'] if 'user' in commit['author']
-                    else commit['author']['raw']
-                ),
-                'message': commit['message'],
-                'date': str(to_timestamp(commit['date']))
-            } for commit in commits_page['values']
-            ]
+        # sorts all commits in repository by date in reverse order
+        sorted_commits = sorted(list(repo_commits.values()), key=lambda x: x['date'], reverse=True)
+
+        # forms a list of commits as an 'get commits API' response
+        commits_amount = 30 if len(sorted_commits) >= 30 else len(sorted_commits)
+        result_list = sorted_commits[:commits_amount]
+
+        return result_list
 
     def get_commit_by_hash(self, hash_of_commit):
         """
@@ -140,30 +145,47 @@ class BitbucketRequestSender(RequestSender):
             "hash": "commit hash",
             "author": "commit author",
             "message": "commit message",
-            "date": "date when committed converted to int"
-
+            "date": "date when committed converted to int",
+            "branches": [branches names]
         }
         """
-
+        # gets commit by 'hash'
         assert isinstance(hash_of_commit, str), 'Inputted "hash_of_commit" type is not str'
         commit_endpoint = f'/repositories/{self.owner}/{self.repo}/commit/{hash_of_commit}'
         response = self._get_request(commit_endpoint)
-
         # guard condition
         if response.status_code != 200:
             return None
-
         # deserialize commit
         commit = response.json()
-        return {
-            'hash': commit['hash'],
-            'author': (
-                commit['author']['user']['username'] if 'user' in commit['author']
-                else commit['author']['raw']
-            ),
-            'message': commit['message'],
-            'date': str(to_timestamp(commit['date']))
-        }
+
+        # gets "branches" from the repository to check each branch
+        # for the existence of found "commit"
+        branches = [x['name'] for x in self.get_branches()]
+        result = {}
+        for branch in branches:
+            branch_commits_endpoint = \
+                f'/repositories/{self.owner}/{self.repo}/commits/{branch}?fields = values.hash'
+            response = self._get_request(branch_commits_endpoint).json()
+
+            for commit_hash in response['values']:
+                # compares the hash of each commit in the branch to match to the given commit hash
+                if commit_hash['hash'] == hash_of_commit:
+                    # forms key 'branch' with branch name in commit describe dict
+                    # or add to exist branch
+                    if 'branches' in result:
+                        result['branches'].append(branch)
+                    else:
+                        result['branches'] = [branch]
+
+        # forms dict of commit describe
+        result['hash'] = commit['hash']
+        result['author'] = (commit['author']['user']['username'] if 'user' in commit['author']
+                            else commit['author']['raw'])
+        result['message'] = commit['message']
+        result['date'] = str(to_timestamp(commit['date']))
+
+        return result
 
     def get_commits_by_branch(self, branch_name):
         """
@@ -179,7 +201,6 @@ class BitbucketRequestSender(RequestSender):
                 "author": "commit author",
                 "message": "commit message",
                 "date": "date when committed converted to int"
-
             },
             ...
         ]
