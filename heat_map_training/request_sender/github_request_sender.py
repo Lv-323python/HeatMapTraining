@@ -31,12 +31,14 @@ class GithubRequestSender(RequestSender):
     to web-based hosting services for version control using GitHub
     """
 
-    def __init__(self, owner, repo, base_url="https://api.github.com"):
+    def __init__(self, owner, repo, token='',
+                 base_url="https://api.github.com"):
         RequestSender.__init__(self,
                                base_url=base_url,
                                owner=owner,
                                repo=repo)
         self.repos_api_url = f'/repos/{self.owner}/{self.repo}'
+        self.token = token
 
     # returns a dict in which the key is sha of commit
     # and the value is existing branch it belongs to
@@ -65,11 +67,8 @@ class GithubRequestSender(RequestSender):
 
     # gets all pull requests of repository
     def _get_pull_requests(self):
-        url = self.base_url + self.repos_api_url + '/pulls?state=all'
-        response = requests.get(url)
-        if not response.status_code == STATUS_CODE_OK:
-            return None
-        return response.json()
+        endpoint = '/pulls?state=all'
+        return self._request(endpoint)
 
     # gets all pull requests of a repository and
     # returns a dict from parsed branch and a matching commit
@@ -98,6 +97,14 @@ class GithubRequestSender(RequestSender):
                 existing_branches.setdefault(key, set([])).add(item)
         return existing_branches
 
+    def _request(self, endpoint=''):
+        headers = 'Authorization'
+        url = self.base_url + self.repos_api_url + endpoint
+        response = requests.get(url, headers={headers: self.token})
+        if response.status_code != STATUS_CODE_OK:
+            return None
+        return response.json()
+
     def get_repo(self):
         """
         Gets information about repository
@@ -115,11 +122,7 @@ class GithubRequestSender(RequestSender):
         }
         """
 
-        endpoint = self.repos_api_url
-        response = requests.get(self.base_url + endpoint)
-        if not response.status_code == STATUS_CODE_OK:
-            return None
-        response = response.json()
+        response = self._request()
         repo = {
             'id': response['id'],
             'repo_name': response['name'],
@@ -127,7 +130,7 @@ class GithubRequestSender(RequestSender):
                                                 GITHUB_TIME_FORMAT),
             'owner': response['owner']['login'],
             'url': response['url']
-        }
+        } if response is not None else None
         return repo
 
     def get_branches(self):
@@ -145,12 +148,8 @@ class GithubRequestSender(RequestSender):
             ...
         ]
         """
-        endpoint = self.repos_api_url + '/branches'
-        url = self.base_url + endpoint
-        response = requests.get(url)
-        if not response.status_code == STATUS_CODE_OK:
-            return None
-        response = response.json()
+        endpoint = '/branches'
+        response = self._request(endpoint)
         return list(map(lambda x: {'name': x['name']}, response))
 
     def get_commits(self):
@@ -172,10 +171,8 @@ class GithubRequestSender(RequestSender):
             ...
         ]
         """
-        endpoint = self.repos_api_url + '/commits'
-        response = requests.get(self.base_url + endpoint)
-        if not response.status_code == STATUS_CODE_OK:
-            return None
+        endpoint = '/commits'
+        response = self._request(endpoint)
         branches = self._get_complete_commit_branch_map()
         response = response.json()
         return [{
@@ -185,7 +182,7 @@ class GithubRequestSender(RequestSender):
             'date': format_date_to_int(commit['commit']['author']['date'],
                                        GITHUB_TIME_FORMAT),
             'branch': match_branch_to_commit(branches, commit['sha'])
-        } for commit in response]
+        } for commit in response] if response is not None else None
 
     def get_commits_by_branch(self, branch_name):
         """
@@ -208,19 +205,15 @@ class GithubRequestSender(RequestSender):
         ]
         """
         assert isinstance(branch_name, str), "Branch name must be str, received other"
-        endpoint = self.repos_api_url + f'/commits?sha={branch_name}'
-        url = self.base_url + endpoint
-        response = requests.get(url)
-        if not response.status_code == STATUS_CODE_OK:
-            return None
-        response = response.json()
+        endpoint = f'/commits?sha={branch_name}'
+        response = self._request(endpoint)
         return list(map(lambda x: {
             'hash': x['sha'],
             'author': x['commit']['author']['name'],
             'message': x['commit']['message'],
             'date': format_date_to_int(x['commit']['author']['date'],
                                        GITHUB_TIME_FORMAT)
-        }, response))
+        }, response)) if response is not None else None
 
     def get_commit_by_hash(self, hash_of_commit):
         """
@@ -240,11 +233,8 @@ class GithubRequestSender(RequestSender):
         }
         """
         assert isinstance(hash_of_commit, str), "Hash of commit must be str, received other"
-        endpoint = self.repos_api_url + f'/commits/{hash_of_commit}'
-        response = requests.get(self.base_url + endpoint)
-        if not response.status_code == STATUS_CODE_OK:
-            return None
-        response = response.json()
+        endpoint = f'/commits/{hash_of_commit}'
+        response = self._request(endpoint)
         branches = self._get_complete_commit_branch_map()
         return {
             'hash': response['sha'],
@@ -253,7 +243,7 @@ class GithubRequestSender(RequestSender):
             'date': format_date_to_int(response['commit']['author']['date'],
                                        GITHUB_TIME_FORMAT),
             'branch': match_branch_to_commit(branches, response['sha'])
-        }
+        } if response is not None else None
 
     def get_contributors(self):
         """
@@ -273,15 +263,11 @@ class GithubRequestSender(RequestSender):
              ...
         ]
         """
-        endpoint = self.repos_api_url + '/contributors'
-        url = self.base_url + endpoint
-        response = requests.get(url)
-        if not response.status_code == STATUS_CODE_OK:
-            return None
-        response = response.json()
+        endpoint = '/contributors'
+        response = self._request(endpoint)
         return list(map(lambda x: {
             'name': x['login'],
             'number_of_commits': x['contributions'],
             'email': x['login'],
             'url': x['url']
-        }, response))
+        }, response)) if response is not None else None
