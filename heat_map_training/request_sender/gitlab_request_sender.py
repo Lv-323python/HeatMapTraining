@@ -7,6 +7,7 @@ from datetime import datetime
 import requests
 from heat_map_training.request_sender.request_sender_base import \
     RequestSender  # pylint: disable=import-error
+from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
 
 def _timestamp(date):
@@ -53,7 +54,7 @@ class RequestSenderGitLab(RequestSender):
         # get response and check it's validation
         response = requests.get(url_repo)
 
-        if not response.status_code == 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
 
         # get json of repository
@@ -90,7 +91,7 @@ class RequestSenderGitLab(RequestSender):
         # get response and check it's validation
         response = requests.get(url_branches)
 
-        if not response.status_code == 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
 
         # get json of branches
@@ -137,7 +138,7 @@ class RequestSenderGitLab(RequestSender):
 
         response = requests.get(url_commits)
 
-        if not response.status_code == 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
 
         # get JSON about commits
@@ -178,7 +179,7 @@ class RequestSenderGitLab(RequestSender):
         # get response and check it's validation
         response = requests.get(url_contributors)
 
-        if not response.status_code == 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
 
         # get json of contributors
@@ -215,7 +216,7 @@ class RequestSenderGitLab(RequestSender):
 
         response = requests.get(url_commit)
 
-        if not response.status_code == 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
 
         # get JSON about one commit
@@ -257,7 +258,7 @@ class RequestSenderGitLab(RequestSender):
         # get response and check it's validation
         response = requests.get(api_commits_by_branch)
 
-        if not response.status_code == 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
 
         # get json of commits
