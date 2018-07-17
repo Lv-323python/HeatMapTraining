@@ -40,6 +40,8 @@ def test_get_commits():
     """
     Unittest function for testing method get_commits in GithubRequestSender
     """
+
+    # check output for correctness
     assert GithubRequestSender('mixa1901', 'test').get_commits() == [
         {
             'hash': '5a8a11fa7b0fc08d59e0fd7c435c3073459ae87a',
@@ -55,13 +57,16 @@ def test_get_commits():
         }
     ]
 
-    assert GithubRequestSender('unknown', 'unknown').get_commits() is None
+    # check output if given wrong owner or repository
+    assert GithubRequestSender('mixa1901', 'unknown').get_commits() is None
 
 
 def test_get_commit_by_hash():
     """
     Unittest function for testing method get_commit_by_hash in GithubRequestSender
     """
+
+    # check output for correctness
     assert GithubRequestSender('mixa1901', 'test').get_commit_by_hash(
         '5a8a11fa7b0fc08d59e0fd7c435c3073459ae87a') == {
                'hash': '5a8a11fa7b0fc08d59e0fd7c435c3073459ae87a',
@@ -70,8 +75,11 @@ def test_get_commit_by_hash():
                'date': 1531637855
            }
 
-    assert GithubRequestSender('unknown', 'unknown').get_commit_by_hash('unknown') is None
+    # check output if given wrong owner or repository
+    assert GithubRequestSender('mixa1901', 'unknown').get_commit_by_hash('unknown') is None
 
+    # check output if given wrong hash
+    assert GithubRequestSender('mixa1901', 'test').get_commit_by_hash('unknown') is None
 
 def test_get_branches():
     """
