@@ -7,6 +7,7 @@ import requests
 from heat_map_training.request_sender.request_sender_base \
     import RequestSender  # pylint: disable=import-error
 from heat_map_training.utils.helper import format_date_to_int
+from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
 GITHUB_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -66,7 +67,7 @@ class GithubRequestSender(RequestSender):
     def _get_pull_requests(self):
         url = self.base_url + self.repos_api_url + '/pulls?state=all'
         response = requests.get(url)
-        if response.status_code != 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
         return response.json()
 
@@ -116,7 +117,7 @@ class GithubRequestSender(RequestSender):
 
         endpoint = self.repos_api_url
         response = requests.get(self.base_url + endpoint)
-        if not response.status_code == 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
         response = response.json()
         repo = {
@@ -147,7 +148,7 @@ class GithubRequestSender(RequestSender):
         endpoint = self.repos_api_url + '/branches'
         url = self.base_url + endpoint
         response = requests.get(url)
-        if not response.status_code == 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
         response = response.json()
         return list(map(lambda x: {'name': x['name']}, response))
@@ -173,7 +174,7 @@ class GithubRequestSender(RequestSender):
         """
         endpoint = self.repos_api_url + '/commits'
         response = requests.get(self.base_url + endpoint)
-        if not response.status_code == 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
         branches = self._get_complete_commit_branch_map()
         response = response.json()
@@ -210,7 +211,7 @@ class GithubRequestSender(RequestSender):
         endpoint = self.repos_api_url + f'/commits?sha={branch_name}'
         url = self.base_url + endpoint
         response = requests.get(url)
-        if not response.status_code == 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
         response = response.json()
         return list(map(lambda x: {
@@ -241,7 +242,7 @@ class GithubRequestSender(RequestSender):
         assert isinstance(hash_of_commit, str), "Hash of commit must be str, received other"
         endpoint = self.repos_api_url + f'/commits/{hash_of_commit}'
         response = requests.get(self.base_url + endpoint)
-        if not response.status_code == 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
         response = response.json()
         branches = self._get_complete_commit_branch_map()
@@ -275,7 +276,7 @@ class GithubRequestSender(RequestSender):
         endpoint = self.repos_api_url + '/contributors'
         url = self.base_url + endpoint
         response = requests.get(url)
-        if not response.status_code == 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
         response = response.json()
         return list(map(lambda x: {
