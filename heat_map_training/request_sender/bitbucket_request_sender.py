@@ -7,6 +7,7 @@ import requests
 
 from heat_map_training.request_sender.request_sender_base import RequestSender  # pylint: disable=import-error
 from heat_map_training.utils.bitbucket_helper import to_timestamp, get_gitname, get_email
+from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
 
 class BitbucketRequestSender(RequestSender):
@@ -18,7 +19,7 @@ class BitbucketRequestSender(RequestSender):
     def __init__(self, owner, repo, base_url='https://api.bitbucket.org/2.0'):
         super().__init__(base_url=base_url, owner=owner, repo=repo)
 
-    def _get_request(self, endpoint):
+    def _get_request(self, endpoint, params=None, **kwargs):
         """
         Sends GET request to URL
 
@@ -26,7 +27,7 @@ class BitbucketRequestSender(RequestSender):
         :return: response object
         """
 
-        return requests.get(self.base_url + endpoint)
+        return requests.get(self.base_url + endpoint, params, **kwargs)
 
     def get_repo(self):
         """
@@ -48,7 +49,7 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(repo_endpoint)
 
         # guard condition
-        if response.status_code != 200:
+        if response.status_code != STATUS_CODE_OK:
             return None
 
         repo = response.json()
@@ -79,7 +80,7 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(branches_endpoint)
 
         # guard condition
-        if response.status_code != 200:
+        if response.status_code != STATUS_CODE_OK:
             return None
 
         branches_page = response.json()
@@ -87,7 +88,7 @@ class BitbucketRequestSender(RequestSender):
             {
                 'name': branch['name']
             } for branch in branches_page['values']
-            ]
+        ]
 
     def get_commits(self):
         """
@@ -154,7 +155,7 @@ class BitbucketRequestSender(RequestSender):
         commit_endpoint = f'/repositories/{self.owner}/{self.repo}/commit/{hash_of_commit}'
         response = self._get_request(commit_endpoint)
         # guard condition
-        if response.status_code != 200:
+        if response.status_code != STATUS_CODE_OK:
             return None
         # deserialize commit
         commit = response.json()
@@ -211,7 +212,7 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(branch_commits_endpoint)
 
         # guard condition
-        if response.status_code != 200:
+        if response.status_code != STATUS_CODE_OK:
             return None
 
         commits_page = response.json()
@@ -249,7 +250,7 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(commits_endpoint)
 
         # guard condition
-        if response.status_code != 200:
+        if response.status_code != STATUS_CODE_OK:
             return None
 
         commits_page = response.json()

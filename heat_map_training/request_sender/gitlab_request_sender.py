@@ -5,7 +5,9 @@ to web-based hosting services for version control using Git
 
 from datetime import datetime
 import requests
-from heat_map_training.request_sender.request_sender_base import RequestSender  # pylint: disable=import-error
+from heat_map_training.request_sender.request_sender_base import \
+    RequestSender  # pylint: disable=import-error
+from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
 
 def _timestamp(date):
@@ -49,8 +51,14 @@ class RequestSenderGitLab(RequestSender):
         """
         url_repo = self.base_url + self.owner + "%2F" + self.repo
 
-        # get JSON with repository info
-        repo_info = requests.get(url_repo).json()
+        # get response and check it's validation
+        response = requests.get(url_repo)
+
+        if not response.status_code == STATUS_CODE_OK:
+            return None
+
+        # get json of repository
+        repo_info = response.json()
 
         # retrieve only info about repository
         repo = {
@@ -83,7 +91,7 @@ class RequestSenderGitLab(RequestSender):
         # get response and check it's validation
         response = requests.get(url_branches)
 
-        if not response.status_code == 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
 
         # get json of branches
@@ -128,6 +136,11 @@ class RequestSenderGitLab(RequestSender):
         # get url of remote repository given as input
         url_commits = self.base_url + self.owner + "%2F" + self.repo + "/repository/commits"
 
+        response = requests.get(url_commits)
+
+        if not response.status_code == STATUS_CODE_OK:
+            return None
+
         # get JSON about commits
         commits_info = requests.get(url_commits).json()
 
@@ -163,15 +176,21 @@ class RequestSenderGitLab(RequestSender):
         url_contributors = (self.base_url + self.owner + "%2F" + self.repo +
                             "/repository/contributors")
 
-        # get JSON about contributors
-        contributors_info = requests.get(url_contributors).json()
+        # get response and check it's validation
+        response = requests.get(url_contributors)
+
+        if not response.status_code == STATUS_CODE_OK:
+            return None
+
+        # get json of contributors
+        contributors_info = response.json()
 
         # retrieve only info about contributors
         contributors = [{
             "name": contributors_info[i]["name"],
             "number_of_commits": contributors_info[i]["commits"],
             "email": contributors_info[i]["email"],
-            "url": "None" # to be continued...
+            "url": "None"  # to be continued...
         } for i in range(len(contributors_info))]
 
         return contributors
@@ -194,6 +213,11 @@ class RequestSenderGitLab(RequestSender):
         # get url of remote repository given as input
         url_commit = (self.base_url + self.owner + "%2F" + self.repo +
                       "/repository/commits/" + hash_of_commit)
+
+        response = requests.get(url_commit)
+
+        if not response.status_code == STATUS_CODE_OK:
+            return None
 
         # get JSON about one commit
         commit_info = requests.get(url_commit).json()
@@ -234,11 +258,14 @@ class RequestSenderGitLab(RequestSender):
         # get response and check it's validation
         response = requests.get(api_commits_by_branch)
 
-        if not response.status_code == 200:
+        if not response.status_code == STATUS_CODE_OK:
             return None
 
         # get json of commits
         commits_json = response.json()
+
+        if not commits_json:
+            return None
 
         # make a list of dicts concerning commits per branch
         commits = [{
