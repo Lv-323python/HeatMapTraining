@@ -2,7 +2,7 @@
 Contains functions for testing
 of GithubRequestSender class which sends API requests to Github
 """
-from heat_map_training.request_sender.github_request_sender import GithubRequestSender
+from heat_map_training.request_sender.github_request_sender_v3 import GithubRequestSender
 
 
 def test_get_repo_success():
