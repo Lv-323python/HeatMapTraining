@@ -9,6 +9,8 @@ from heat_map_training.request_sender.request_sender_base import \
 from heat_map_training.utils.helper import format_date_to_int
 from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
+TOKEN = ""
+ENDPOINT = "?private_token=" + TOKEN
 
 class RequestSenderGitLab(RequestSender):
     """
@@ -40,7 +42,7 @@ class RequestSenderGitLab(RequestSender):
             "url": "repository url"
         }
         """
-        url_repo = self.base_url + self.owner + "%2F" + self.repo + "?" + "private_token=8eiDbF2WLxPkAAde_TFt"
+        url_repo = self.base_url + self.owner + "%2F" + self.repo + ENDPOINT
 
         # get response and check it's validation
         response = requests.get(url_repo)
@@ -77,7 +79,8 @@ class RequestSenderGitLab(RequestSender):
         """
 
         # get url of remote repository given as input
-        url_branches = self.base_url + self.owner + "%2F" + self.repo + "/repository/branches" + "?"  + "private_token=8eiDbF2WLxPkAAde_TFt"
+        url_branches = (self.base_url + self.owner + "%2F" + self.repo + "/repository/branches" +
+                        ENDPOINT)
 
         # get response and check it's validation
         response = requests.get(url_branches)
@@ -100,7 +103,7 @@ class RequestSenderGitLab(RequestSender):
         # ex (v4): /projects/:id/repository/commits/:sha/refs
 
         api_gitlab = (self.base_url + self.owner + "%2F" + self.repo + "/repository/commits/" +
-                      commit_hash + "/refs" + "?" + "private_token=8eiDbF2WLxPkAAde_TFt")
+                      commit_hash + "/refs" + ENDPOINT)
         print(api_gitlab)
         branch_info = requests.get(api_gitlab).json()
 
@@ -129,7 +132,8 @@ class RequestSenderGitLab(RequestSender):
         ]
         """
         # get url of remote repository given as input
-        url_commits = self.base_url + self.owner + "%2F" + self.repo + "/repository/commits" + "?" + "private_token=8eiDbF2WLxPkAAde_TFt"
+        url_commits = (self.base_url + self.owner + "%2F" + self.repo + "/repository/commits" + \
+                      ENDPOINT)
 
         response = requests.get(url_commits)
 
@@ -169,7 +173,7 @@ class RequestSenderGitLab(RequestSender):
         """
         # get url of remote repository given as input
         url_contributors = (self.base_url + self.owner + "%2F" + self.repo +
-                            "/repository/contributors" + "?" + "private_token=8eiDbF2WLxPkAAde_TFt")
+                            "/repository/contributors" + ENDPOINT)
 
         # get response and check it's validation
         response = requests.get(url_contributors)
@@ -211,7 +215,7 @@ class RequestSenderGitLab(RequestSender):
         """
         # get url of remote repository given as input
         url_commit = (self.base_url + self.owner + "%2F" + self.repo +
-                      "/repository/commits/" + hash_of_commit + "?" + "private_token=8eiDbF2WLxPkAAde_TFt")
+                      "/repository/commits/" + hash_of_commit + ENDPOINT)
 
         response = requests.get(url_commit)
 
@@ -252,7 +256,7 @@ class RequestSenderGitLab(RequestSender):
         """
 
         api_commits_by_branch = (self.base_url + self.owner + "%2F" + self.repo +
-                                 "/repository/commits?ref_name=" + branch_name + "&" + "private_token=8eiDbF2WLxPkAAde_TFt")
+                                 "/repository/commits" + ENDPOINT + "&" + "ref_name=" + branch_name)
 
 
         # get response and check it's validation
