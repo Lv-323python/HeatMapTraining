@@ -3,23 +3,15 @@ Contains RequestSenderGitLab class that provides realisation for sending API req
 to web-based hosting services for version control using Git
 """
 
-from datetime import datetime
 import requests
 from heat_map_training.request_sender.request_sender_base import \
     RequestSender  # pylint: disable=import-error
+from heat_map_training.utils.helper import format_date_to_int
 from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
 
-def _timestamp(date):
-    """
-    Converts datetime string to timestamp
-    :param date: string - datetime string
-    :return: int - timestamp
-    """
-    return int(datetime.strptime(date[:-5], "%Y-%m-%dT%H:%M:%S").timestamp())
-
-
 class GitLabRequestSender(RequestSender):
+
     """
         GitLab class that provides realisation for sending API requests
         to web-based hosting services for version control using Git
@@ -64,7 +56,7 @@ class GitLabRequestSender(RequestSender):
         repo = {
             "id": repo_info["id"],
             "repo_name": repo_info["name"],
-            "creation_date": _timestamp(repo_info["created_at"]),
+            "creation_date": format_date_to_int(repo_info["created_at"][:-5], "%Y-%m-%dT%H:%M:%S"),
             "owner": repo_info["path_with_namespace"].split("/")[0],
             "url": repo_info["web_url"]
         }
@@ -149,7 +141,7 @@ class GitLabRequestSender(RequestSender):
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
-            "date": _timestamp(commit["created_at"]),
+            "date": format_date_to_int(commit["created_at"][:-5], "%Y-%m-%dT%H:%M:%S"),
             "branch": self._get_branch_for_commit(commit["id"])
         } for commit in commits_info]
 
@@ -226,7 +218,7 @@ class GitLabRequestSender(RequestSender):
             "hash": commit_info["id"],
             "author": commit_info["author_name"],
             "message": commit_info["message"],
-            "date": int(_timestamp(commit_info["committed_date"])),
+            "date": format_date_to_int(commit_info["committed_date"][:-5], "%Y-%m-%dT%H:%M:%S"),
             "branch": self._get_branch_for_commit(hash_of_commit)
         }
         # retrieve only info about one commit
@@ -272,7 +264,7 @@ class GitLabRequestSender(RequestSender):
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
-            "date": _timestamp(commit["created_at"])
+            "date": format_date_to_int(commit["created_at"][:-5], "%Y-%m-%dT%H:%M:%S")
         } for commit in commits_json]
 
         return commits
