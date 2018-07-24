@@ -9,7 +9,7 @@ from heat_map_training.request_sender.request_sender_base import \
 from heat_map_training.utils.helper import format_date_to_int
 from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
-TOKEN = ""
+TOKEN = "2JWpasvj4xCy1yihKt92"
 ENDPOINT = "?private_token=" + TOKEN
 
 
@@ -58,7 +58,8 @@ class RequestSenderGitLab(RequestSender):
         repo = {
             "id": repo_info["id"],
             "repo_name": repo_info["name"],
-            "creation_date": format_date_to_int(repo_info["created_at"][:-5], "%Y-%m-%dT%H:%M:%S"),
+            "creation_date": format_date_to_int(repo_info["created_at"][:23],
+                                                "%Y-%m-%dT%H:%M:%S.%f"),
             "owner": repo_info["path_with_namespace"].split("/")[0],
             "url": repo_info["web_url"]
         }
@@ -108,7 +109,7 @@ class RequestSenderGitLab(RequestSender):
         branch_info = requests.get(api_gitlab).json()
         try:
             return branch_info[0]['ref']
-        except:
+        except ValueError:
             return None
 
     def get_commits(self):
@@ -150,7 +151,7 @@ class RequestSenderGitLab(RequestSender):
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
-            "date": format_date_to_int(commit["created_at"][:19] + commit["created_at"][19:].replace(":", ""),
+            "date": format_date_to_int(commit["created_at"][:26] + commit["created_at"][27:29],
                                        "%Y-%m-%dT%H:%M:%S.%f%z"),
             "branch": self._get_branch_for_commit(commit["id"])
         } for commit in commits_info]
@@ -232,7 +233,8 @@ class RequestSenderGitLab(RequestSender):
             "hash": commit_info["id"],
             "author": commit_info["author_name"],
             "message": commit_info["message"],
-            "date": format_date_to_int(commit_info["created_at"][:19] + commit_info["created_at"][19:].replace(":", ""),
+            "date": format_date_to_int(commit_info["created_at"][:26] +
+                                       commit_info["created_at"][27:29],
                                        "%Y-%m-%dT%H:%M:%S.%f%z"),
             "branch": self._get_branch_for_commit(hash_of_commit)
         }
@@ -279,7 +281,7 @@ class RequestSenderGitLab(RequestSender):
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
-            "date": format_date_to_int(commit["created_at"][:19] + commit["created_at"][19:].replace(":", ""),
+            "date": format_date_to_int(commit["created_at"][:26] + commit["created_at"][27:29],
                                        "%Y-%m-%dT%H:%M:%S.%f%z")
         } for commit in commits_json]
 
