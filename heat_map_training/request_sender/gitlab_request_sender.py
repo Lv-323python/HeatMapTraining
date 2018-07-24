@@ -19,7 +19,7 @@ def _timestamp(date):
     return int(datetime.strptime(date[:-5], "%Y-%m-%dT%H:%M:%S").timestamp())
 
 
-class RequestSenderGitLab(RequestSender):
+class GitLabRequestSender(RequestSender):
     """
         GitLab class that provides realisation for sending API requests
         to web-based hosting services for version control using Git

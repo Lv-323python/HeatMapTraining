@@ -4,7 +4,7 @@ from gitlab_request_sender.py
 """
 
 import pytest
-from heat_map_training.request_sender.gitlab_request_sender import RequestSenderGitLab
+from heat_map_training.request_sender.gitlab_request_sender import GitLabRequestSender
 
 GITLAB_API_BASE_URL = 'https://gitlab.com/api/v4/projects/' or 'https://gitlab.com/api/v4'
 COMMIT_HASH = '130eabe9061c46b5ec90676735be9a8bfd1fa064'
@@ -15,12 +15,12 @@ NON_EXISTING_COMMIT_HASH = '0'*len(COMMIT_HASH)
 
 @pytest.fixture(scope='module')
 def real_repo():
-    return RequestSenderGitLab('partsey', 'my-awesome-project',GITLAB_API_BASE_URL)
+    return GitLabRequestSender('partsey', 'my-awesome-project', GITLAB_API_BASE_URL)
 
 
 @pytest.fixture(scope='module')
 def non_existing_repo():
-    return RequestSenderGitLab(owner='_', repo='_', base_url=GITLAB_API_BASE_URL)
+    return GitLabRequestSender(owner='_', repo='_', base_url=GITLAB_API_BASE_URL)
 
 
 def test_get_repo_on_real_repo(real_repo):
