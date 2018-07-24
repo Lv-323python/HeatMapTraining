@@ -9,7 +9,7 @@ from heat_map_training.request_sender.request_sender_base import \
 from heat_map_training.utils.helper import format_date_to_int
 from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
-TOKEN = "2JWpasvj4xCy1yihKt92"
+TOKEN = ""
 ENDPOINT = "?private_token=" + TOKEN
 
 
