@@ -31,7 +31,7 @@ class GithubRequestSender(RequestSender):
     to web-based hosting services for version control using GitHub
     """
 
-    def __init__(self, owner, repo, token='',
+    def __init__(self, owner, repo, token='token ...',
                  base_url="https://api.github.com"):
         RequestSender.__init__(self,
                                base_url=base_url,
@@ -44,6 +44,8 @@ class GithubRequestSender(RequestSender):
     # and the value is existing branch it belongs to
     def _get_existing_commit_branch_map(self, list_of_branches):
         result = {}
+        if list_of_branches.__len__() == 0:
+            return None
         if self.get_commits_by_branch(list_of_branches[0]) is None:
             return None
         for branch in list_of_branches:
@@ -53,7 +55,9 @@ class GithubRequestSender(RequestSender):
 
     # returns plain list of all branches of a repository
     def _get_list_of_branches(self):
-        return [d[k] for d in self.get_branches() for k in d if not self.get_branches() is None]
+        return [d[k] for d in
+                (self.get_branches() if self.get_branches() is not None else []) for k in
+                (d if d is not None else [])]
 
     # returns dict of all commits with key as 'sha' and value as master
     def _get_dict_of_commits(self):
@@ -150,6 +154,8 @@ class GithubRequestSender(RequestSender):
         """
         endpoint = '/branches'
         response = self._request(endpoint)
+        if response is None:
+            return None
         return list(map(lambda x: {'name': x['name']}, response))
 
     def get_commits(self):
@@ -174,7 +180,6 @@ class GithubRequestSender(RequestSender):
         endpoint = '/commits'
         response = self._request(endpoint)
         branches = self._get_complete_commit_branch_map()
-        response = response.json()
         return [{
             'hash': commit['sha'],
             'author': commit['commit']['author']['name'],
