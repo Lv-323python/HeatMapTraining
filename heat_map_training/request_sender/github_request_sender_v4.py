@@ -46,7 +46,8 @@ class GithubRequestSenderV4(GithubRequestSenderBase):
         :return: name list
         """
         needed_fields = ['oid', 'repo_name: name', 'creation_date: createdAt']
-        query = Query('repositories', attributes={'first': 30}, query=Query('nodes', query=needed_fields.reverse()))
+        query = Query('repositories', attributes={'first': 30}, query=Query('nodes',
+                                                                            query=needed_fields.reverse()))
         root = Query('viewer', query=query)
         response = self.query(root)
         return response
@@ -110,7 +111,8 @@ class Query:
                                                 query is not None]))
         else:
             query = """ %s { %s } """ % (
-                self.name, ' '.join([query.query_to_json() for query in self.query if query is not None]))
+                self.name, ' '.join([query.query_to_json() for query
+                                     in self.query if query is not None]))
         if first:
             query = "{ %s }" % query
         return query
