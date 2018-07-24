@@ -4,8 +4,8 @@ interface for sending API requests
 to web-based hosting services for version control using GitHub
 """
 import requests
-from heat_map_training.request_sender.request_sender_base \
-    import RequestSender  # pylint: disable=import-error
+from heat_map_training.request_sender.github_request_sender_base import \
+    GithubRequestSenderBase  # pylint: disable=import-error
 from heat_map_training.utils.helper import format_date_to_int
 from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
@@ -25,7 +25,7 @@ def match_branch_to_commit(branch_list, sha):
     return "unknown"
 
 
-class GithubRequestSender(RequestSender):
+class GithubRequestSenderV3(GithubRequestSenderBase):
     """
     Class that provides implementation of interface for sending API requests
     to web-based hosting services for version control using GitHub
@@ -33,10 +33,10 @@ class GithubRequestSender(RequestSender):
 
     def __init__(self, owner, repo, token='',
                  base_url="https://api.github.com"):
-        RequestSender.__init__(self,
-                               base_url=base_url,
-                               owner=owner,
-                               repo=repo)
+        GithubRequestSenderBase.__init__(self,
+                                         base_url=base_url,
+                                         owner=owner,
+                                         repo=repo)
         self.repos_api_url = f'/repos/{self.owner}/{self.repo}'
         self.token = token
 
@@ -114,7 +114,6 @@ class GithubRequestSender(RequestSender):
         :raise NotImplementedError
         :Example:
         {
-            "id": "unique id",
             "repo_name": "repository name",
             "creation_date": "date",
             "owner": "repository owner",
@@ -271,3 +270,7 @@ class GithubRequestSender(RequestSender):
             'email': x['login'],
             'url': x['url']
         }, response)) if response is not None else None
+
+
+client = GithubRequestSenderV3('Lv-323python', 'learnRepo', '97f896b3656a56ab6f8c647d6c63ee53279ff1e1')
+print(client.get_repo())

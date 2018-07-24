@@ -3,17 +3,18 @@ Contains RequestSender class that provides interface for sending API requests
 to web-based hosting services for version control using Git
 """
 
+from heat_map_training.request_sender.request_sender_base \
+    import RequestSender
 
-class GithubRequestSenderBase:
+
+class GithubRequestSenderBase(RequestSender):
     """
     Base class that provides interface for sending API requests
     to web-based hosting services for version control using Git
     """
 
     def __init__(self, base_url, owner, repo):
-        assert isinstance(base_url, str), 'Inputted "base_url" type is not str'
-        assert isinstance(owner, str), 'Inputted "owner" type is not str'
-        assert isinstance(repo, str), 'Inputted "repo" type is not str'
+        super().__init__(base_url, owner, repo)
         self.base_url = base_url
         self.owner = owner
         self.repo = repo
@@ -34,7 +35,7 @@ class GithubRequestSenderBase:
             "url": "repository url"
         }
         """
-        raise NotImplementedError
+        pass
 
     def get_branches(self):
         """
@@ -51,7 +52,7 @@ class GithubRequestSenderBase:
             ...
         ]
         """
-        raise NotImplementedError
+        pass
 
     def get_commits(self):
         """
@@ -72,7 +73,7 @@ class GithubRequestSenderBase:
             ...
         ]
         """
-        raise NotImplementedError
+        pass
 
     def get_commits_by_branch(self, branch_name):
         """
@@ -95,7 +96,7 @@ class GithubRequestSenderBase:
         ]
         """
 
-        raise NotImplementedError
+        pass
 
     def get_commit_by_hash(self, hash_of_commit):
         """
@@ -115,7 +116,7 @@ class GithubRequestSenderBase:
         }
         """
 
-        raise NotImplementedError
+        pass
 
     def get_contributors(self):
         """
@@ -135,4 +136,4 @@ class GithubRequestSenderBase:
              ...
         ]
         """
-        raise NotImplementedError
+        pass
