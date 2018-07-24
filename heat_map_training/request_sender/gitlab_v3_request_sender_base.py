@@ -13,7 +13,7 @@ TOKEN = ""
 ENDPOINT = "?private_token=" + TOKEN
 
 
-class RequestSenderGitLab(RequestSender):
+class GitLabV3RequestSender(RequestSender):
     """
         GitLab class that provides realisation for sending API requests
         to web-based hosting services for version control using Git
@@ -109,7 +109,7 @@ class RequestSenderGitLab(RequestSender):
         branch_info = requests.get(api_gitlab).json()
         try:
             return branch_info[0]['ref']
-        except ValueError:
+        except IndexError:
             return None
 
     def get_commits(self):
@@ -135,7 +135,7 @@ class RequestSenderGitLab(RequestSender):
         ]
         """
         # get url of remote repository given as input
-        url_commits = (self.base_url + self.owner + "%2F" + self.repo + "/repository/commits" + \
+        url_commits = (self.base_url + self.owner + "%2F" + self.repo + "/repository/commits" +
                        ENDPOINT)
 
         response = requests.get(url_commits)
