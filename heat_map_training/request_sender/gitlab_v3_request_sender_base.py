@@ -12,13 +12,14 @@ from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 TOKEN = ""
 ENDPOINT = "?private_token=" + TOKEN
 
+
 class RequestSenderGitLab(RequestSender):
     """
         GitLab class that provides realisation for sending API requests
         to web-based hosting services for version control using Git
     """
 
-    def __init__(self, owner, repo, base_url="http://mixa1901-virtual-machine/api/v3/projects/"):
+    def __init__(self, owner, repo, base_url="http://boart-lenovo-ideapad-y510p/api/v3/projects/"):
         RequestSender.__init__(
             self,
             base_url=base_url,
@@ -98,20 +99,21 @@ class RequestSenderGitLab(RequestSender):
 
     def _get_branch_for_commit(self, commit_hash):
 
-        #todo
+        # todo
         # v3 doesn't support getting branch by commit's hash
         # ex (v4): /projects/:id/repository/commits/:sha/refs
 
         api_gitlab = (self.base_url + self.owner + "%2F" + self.repo + "/repository/commits/" +
-                      commit_hash + "/refs" + ENDPOINT)
-        print(api_gitlab)
+                      commit_hash + "/statuses" + ENDPOINT)
         branch_info = requests.get(api_gitlab).json()
-
-        return branch_info[0]['name']
+        try:
+            return branch_info[0]['ref']
+        except:
+            return None
 
     def get_commits(self):
 
-        #todo
+        # todo
         # in order to get branch we have to use _get_branch_for_commit that doesn't work
 
         """
@@ -133,7 +135,7 @@ class RequestSenderGitLab(RequestSender):
         """
         # get url of remote repository given as input
         url_commits = (self.base_url + self.owner + "%2F" + self.repo + "/repository/commits" + \
-                      ENDPOINT)
+                       ENDPOINT)
 
         response = requests.get(url_commits)
 
@@ -148,7 +150,8 @@ class RequestSenderGitLab(RequestSender):
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
-            "date": format_date_to_int(commit["created_at"][:-5], "%Y-%m-%dT%H:%M:%S"),
+            "date": format_date_to_int(commit["created_at"][:19] + commit["created_at"][19:].replace(":", ""),
+                                       "%Y-%m-%dT%H:%M:%S.%f%z"),
             "branch": self._get_branch_for_commit(commit["id"])
         } for commit in commits_info]
 
@@ -196,7 +199,7 @@ class RequestSenderGitLab(RequestSender):
 
     def get_commit_by_hash(self, hash_of_commit):
 
-        #todo
+        # todo
         # in order to get branch we have to use _get_branch_for_commit that doesn't work
 
         """
@@ -229,7 +232,8 @@ class RequestSenderGitLab(RequestSender):
             "hash": commit_info["id"],
             "author": commit_info["author_name"],
             "message": commit_info["message"],
-            "date": format_date_to_int(commit_info["committed_date"][:-5], "%Y-%m-%dT%H:%M:%S"),
+            "date": format_date_to_int(commit_info["created_at"][:19] + commit_info["created_at"][19:].replace(":", ""),
+                                       "%Y-%m-%dT%H:%M:%S.%f%z"),
             "branch": self._get_branch_for_commit(hash_of_commit)
         }
         # retrieve only info about one commit
@@ -258,7 +262,6 @@ class RequestSenderGitLab(RequestSender):
         api_commits_by_branch = (self.base_url + self.owner + "%2F" + self.repo +
                                  "/repository/commits" + ENDPOINT + "&" + "ref_name=" + branch_name)
 
-
         # get response and check it's validation
         response = requests.get(api_commits_by_branch)
 
@@ -276,7 +279,8 @@ class RequestSenderGitLab(RequestSender):
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
-            "date": format_date_to_int(commit["created_at"][:-5], "%Y-%m-%dT%H:%M:%S")
+            "date": format_date_to_int(commit["created_at"][:19] + commit["created_at"][19:].replace(":", ""),
+                                       "%Y-%m-%dT%H:%M:%S.%f%z")
         } for commit in commits_json]
 
         return commits
