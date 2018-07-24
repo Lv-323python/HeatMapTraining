@@ -10,7 +10,8 @@ from heat_map_training.utils.helper import format_date_to_int
 from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
 
-class RequestSenderGitLab(RequestSender):
+class GitLabRequestSender(RequestSender):
+
     """
         GitLab class that provides realisation for sending API requests
         to web-based hosting services for version control using Git
