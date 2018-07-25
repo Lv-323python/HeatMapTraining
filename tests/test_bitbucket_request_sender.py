@@ -1,9 +1,10 @@
 import pytest
-import mock
+from unittest import mock
 from heat_map_training.request_sender.bitbucket_request_sender import BitbucketRequestSender
 from heat_map_training.utils.request_status_codes import STATUS_CODE_OK, STATUS_CODE_NOT_FOUND
 from tests.bitbucket_mock_data import REPO_DATA, BRANCHES_DATA, COMMITS_DATA, \
     COMMIT_BY_AWESOME_BRANCH, COMMIT_BY_BEAUTIFUL_BRANCH, COMMIT_BY_MASTER
+
 REPO = "publicbitbucketrepo"
 USER = "partsey"
 BRANCH = "awesome-feature"
@@ -49,7 +50,8 @@ def create_non_existing_repo_data():
     return BitbucketRequestSender("__", "__")
 
 
-def test_get_repo_success():
+@mock.patch('requests.get', side_effect=mocked_requests_get)
+def test_get_repo_success(mocker):
     expected_result = {
         'id': 'bd061b16-a281-4368-bc45-c2f78f8eb63c',
         'repo_name': 'PublicBitbucketRepo',
@@ -60,20 +62,24 @@ def test_get_repo_success():
     assert create_repo_data().get_repo() == expected_result, "Received data does not match the expected result"
 
 
-def test_get_repo_fail():
+@mock.patch('heat_map_training.request_sender.bitbucket_request_sender.requests.get', side_effect=mocked_requests_get)
+def test_get_repo_fail(mocker):
     assert create_non_existing_repo_data().get_repo() is None, "Bad data request"
 
 
-def test_get_branches_success():
+@mock.patch('heat_map_training.request_sender.bitbucket_request_sender.requests.get', side_effect=mocked_requests_get)
+def test_get_branches_success(mocker):
     expected_result = [{'name': 'awesome-feature'}, {'name': 'beautiful-feature'}, {'name': 'master'}]
     assert create_repo_data().get_branches() == expected_result, "Received data does not match the expected result"
 
 
-def test_get_branches_fail():
+@mock.patch('heat_map_training.request_sender.bitbucket_request_sender.requests.get', side_effect=mocked_requests_get)
+def test_get_branches_fail(mocker):
     assert create_non_existing_repo_data().get_branches() is None, "Bad data request"
 
 
-def test_get_commits_success():
+@mock.patch('heat_map_training.request_sender.bitbucket_request_sender.requests.get', side_effect=mocked_requests_get)
+def test_get_commits_success(mocker):
     expected_result = [
         {
             "hash": "ad28081b8f17286689d1fef7efaad33dfcd6c4f3",
@@ -141,9 +147,9 @@ def test_get_commits_success():
     assert create_repo_data().get_commits() == expected_result, "Received data does not match the expected result"
 
 
-def test_get_commits_fail():
+@mock.patch('heat_map_training.request_sender.bitbucket_request_sender.requests.get', side_effect=mocked_requests_get)
+def test_get_commits_fail(mocker):
     assert create_non_existing_repo_data().get_commits() is None, "Bad data request"
-
 
 # def test_get_commit_by_hash_success():
 #     expected_result = {'hash': '35a363addc596e1f3a0580d3dec1b78689be991d',
