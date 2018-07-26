@@ -19,12 +19,7 @@ class GitLabRequestSender(RequestSender):
     """
 
     def __init__(self, owner, repo, base_url="https://gitlab.com/api/v4/projects/"):
-        RequestSender.__init__(
-            self,
-            base_url=base_url,
-            owner=owner,
-            repo=repo
-        )
+        super().__init__(base_url=base_url, owner=owner, repo=repo)
         self.token = TOKEN
 
     def get_repo(self):
@@ -57,8 +52,7 @@ class GitLabRequestSender(RequestSender):
         repo = {
             "id": repo_info["id"],
             "repo_name": repo_info["name"],
-            "creation_date": format_date_to_int(repo_info["created_at"][:23],
-                                                "%Y-%m-%dT%H:%M:%S.%f"),
+            "creation_date": self._get_time(repo_info["created_at"]),
             "owner": repo_info["path_with_namespace"].split("/")[0],
             "url": repo_info["web_url"]
         }
@@ -108,6 +102,15 @@ class GitLabRequestSender(RequestSender):
 
         return branch_info[0]['name']
 
+    def _get_time(self, time):
+        """
+        return time from helper's function
+        :param time: string
+        :return: int
+        """
+
+        return format_date_to_int(time[:23], "%Y-%m-%dT%H:%M:%S.%f")
+
     def get_commits(self):
         """
         Takes repository name and owner as parameters and
@@ -142,7 +145,7 @@ class GitLabRequestSender(RequestSender):
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
-            "date": format_date_to_int(commit["created_at"][:-5], "%Y-%m-%dT%H:%M:%S"),
+            "date": self._get_time(commit["created_at"]),
             "branch": self._get_branch_for_commit(commit["id"])
         } for commit in commits_info]
 
@@ -219,7 +222,7 @@ class GitLabRequestSender(RequestSender):
             "hash": commit_info["id"],
             "author": commit_info["author_name"],
             "message": commit_info["message"],
-            "date": format_date_to_int(commit_info["committed_date"][:-5], "%Y-%m-%dT%H:%M:%S"),
+            "date": self._get_time(commit_info["committed_date"]),
             "branch": self._get_branch_for_commit(hash_of_commit)
         }
         # retrieve only info about one commit
@@ -265,7 +268,7 @@ class GitLabRequestSender(RequestSender):
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
-            "date": format_date_to_int(commit["created_at"][:-5], "%Y-%m-%dT%H:%M:%S")
+            "date": self._get_time(commit["created_at"])
         } for commit in commits_json]
 
         return commits
