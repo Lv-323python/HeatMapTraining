@@ -1,5 +1,5 @@
 """
-Contains RequestSenderGitLab class that provides realisation for sending API requests
+Contains GitLabRequestSender class that provides realisation for sending API requests
 to web-based hosting services for version control using Git
 """
 
@@ -9,7 +9,7 @@ from heat_map_training.request_sender.request_sender_base import \
 from heat_map_training.utils.helper import format_date_to_int
 from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
-TOKEN = "?private_token=3bbDYxUFJwSxSAFQc-wm"
+TOKEN = "?private_token="
 
 
 class GitLabRequestSender(RequestSender):
@@ -81,7 +81,6 @@ class GitLabRequestSender(RequestSender):
         # get url of remote repository given as input
         url_branches = (self.base_url + self.owner + "%2F" + self.repo + "/repository/branches" +
                         self.token)
-        print(url_branches)
         # get response and check it's validation
         response = requests.get(url_branches)
 

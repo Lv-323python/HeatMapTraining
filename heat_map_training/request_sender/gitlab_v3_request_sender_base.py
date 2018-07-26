@@ -1,5 +1,5 @@
 """
-Contains RequestSenderGitLab class that provides realisation for sending API requests
+Contains GitLabV3RequestSender class that provides realisation for sending API requests
 to web-based hosting services for version control using Git
 """
 
@@ -9,13 +9,13 @@ from heat_map_training.request_sender.gitlab_request_sender import \
 from heat_map_training.utils.helper import format_date_to_int
 from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
-TOKEN = "?private_token=1SxVpxZE2536J4YyAmxp"
+TOKEN = "?private_token="
 
 
 class GitLabV3RequestSender(GitLabRequestSender):
     """
         GitLab class that provides realisation for sending API requests
-        to web-based hosting services for version control using Git
+        to web-based hosting services for version control using Git on version 3 API
     """
 
     def __init__(self, owner, repo, base_url="http://boart-lenovo-ideapad-y510p/api/v3/projects/"):
@@ -27,11 +27,6 @@ class GitLabV3RequestSender(GitLabRequestSender):
         self.token = TOKEN
 
     def _get_branch_for_commit(self, commit_hash):
-
-        # todo
-        # v3 doesn't support getting branch by commit's hash
-        # ex (v4): /projects/:id/repository/commits/:sha/refs
-
         api_gitlab = (self.base_url + self.owner + "%2F" + self.repo + "/repository/commits/" +
                       commit_hash + "/statuses" + self.token)
         branch_info = requests.get(api_gitlab).json()
@@ -41,10 +36,6 @@ class GitLabV3RequestSender(GitLabRequestSender):
             return None
 
     def get_commits(self):
-
-        # todo
-        # in order to get branch we have to use _get_branch_for_commit that doesn't work
-
         """
         Takes repository name and owner as parameters and
         returns information about commits in list of dictionaries
@@ -87,10 +78,6 @@ class GitLabV3RequestSender(GitLabRequestSender):
         return commits
 
     def get_commit_by_hash(self, hash_of_commit):
-
-        # todo
-        # in order to get branch we have to use _get_branch_for_commit that doesn't work
-
         """
         Takes hash of the commit and returns info about it in JSON format
 
