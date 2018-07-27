@@ -546,6 +546,7 @@ class BitbucketServerRequestSender(RequestSender):
         return result
 
     # ! ! ! needs another contributor for test
+    # ! ! ! needs check for duplicate
     def get_contributors(self):
         """
         Gets information about all contributors to repository
