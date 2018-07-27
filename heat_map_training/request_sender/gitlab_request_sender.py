@@ -1,5 +1,5 @@
 """
-Contains RequestSenderGitLab class that provides realisation for sending API requests
+Contains GitLabRequestSender class that provides realisation for sending API requests
 to web-based hosting services for version control using Git
 """
 
@@ -9,9 +9,10 @@ from heat_map_training.request_sender.request_sender_base import \
 from heat_map_training.utils.helper import format_date_to_int
 from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
+TOKEN = "?private_token="
+
 
 class GitLabRequestSender(RequestSender):
-
     """
         GitLab class that provides realisation for sending API requests
         to web-based hosting services for version control using Git
@@ -24,6 +25,7 @@ class GitLabRequestSender(RequestSender):
             owner=owner,
             repo=repo
         )
+        self.token = TOKEN
 
     def get_repo(self):
         # get url of remote repository given as input
@@ -41,11 +43,10 @@ class GitLabRequestSender(RequestSender):
             "url": "repository url"
         }
         """
-        url_repo = self.base_url + self.owner + "%2F" + self.repo
+        url_repo = self.base_url + self.owner + "%2F" + self.repo + self.token
 
         # get response and check it's validation
         response = requests.get(url_repo)
-
         if not response.status_code == STATUS_CODE_OK:
             return None
 
@@ -56,11 +57,11 @@ class GitLabRequestSender(RequestSender):
         repo = {
             "id": repo_info["id"],
             "repo_name": repo_info["name"],
-            "creation_date": format_date_to_int(repo_info["created_at"][:-5], "%Y-%m-%dT%H:%M:%S"),
+            "creation_date": format_date_to_int(repo_info["created_at"][:23],
+                                                "%Y-%m-%dT%H:%M:%S.%f"),
             "owner": repo_info["path_with_namespace"].split("/")[0],
             "url": repo_info["web_url"]
         }
-
         return repo
 
     def get_branches(self):
@@ -78,8 +79,8 @@ class GitLabRequestSender(RequestSender):
         """
 
         # get url of remote repository given as input
-        url_branches = self.base_url + self.owner + "%2F" + self.repo + "/repository/branches"
-
+        url_branches = (self.base_url + self.owner + "%2F" + self.repo + "/repository/branches" +
+                        self.token)
         # get response and check it's validation
         response = requests.get(url_branches)
 
@@ -166,7 +167,7 @@ class GitLabRequestSender(RequestSender):
         """
         # get url of remote repository given as input
         url_contributors = (self.base_url + self.owner + "%2F" + self.repo +
-                            "/repository/contributors")
+                            "/repository/contributors" + self.token)
 
         # get response and check it's validation
         response = requests.get(url_contributors)
