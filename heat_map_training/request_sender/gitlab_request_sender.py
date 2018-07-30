@@ -6,10 +6,10 @@ to web-based hosting services for version control using Git
 import requests
 from heat_map_training.request_sender.request_sender_base import \
     RequestSender  # pylint: disable=import-error
-from heat_map_training.utils.helper import format_date_to_int
+from heat_map_training.utils.gitlab_helper import get_time_utc
 from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
-TOKEN = "?private_token="
+TOKEN = ""
 
 
 class GitLabRequestSender(RequestSender):
@@ -52,7 +52,7 @@ class GitLabRequestSender(RequestSender):
         repo = {
             "id": repo_info["id"],
             "repo_name": repo_info["name"],
-            "creation_date": self._get_time(repo_info["created_at"]),
+            "creation_date": get_time_utc(repo_info["created_at"]),
             "owner": repo_info["path_with_namespace"].split("/")[0],
             "url": repo_info["web_url"]
         }
@@ -102,15 +102,6 @@ class GitLabRequestSender(RequestSender):
 
         return branch_info[0]['name']
 
-    def _get_time(self, time):
-        """
-        return time from helper's function
-        :param time: string
-        :return: int
-        """
-
-        return format_date_to_int(time[:23], "%Y-%m-%dT%H:%M:%S.%f")
-
     def get_commits(self):
         """
         Takes repository name and owner as parameters and
@@ -130,8 +121,9 @@ class GitLabRequestSender(RequestSender):
         ]
         """
         # get url of remote repository given as input
-        url_commits = self.base_url + self.owner + "%2F" + self.repo + "/repository/commits"
-
+        url_commits = (self.base_url + self.owner + "%2F" + self.repo + "/repository/commits" +
+                       self.token)
+        print(url_commits)
         response = requests.get(url_commits)
 
         if not response.status_code == STATUS_CODE_OK:
@@ -139,13 +131,12 @@ class GitLabRequestSender(RequestSender):
 
         # get JSON about commits
         commits_info = requests.get(url_commits).json()
-
         # retrieve only info about commits
         commits = [{
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
-            "date": self._get_time(commit["created_at"]),
+            "date": get_time_utc(commit["created_at"]),
             "branch": self._get_branch_for_commit(commit["id"])
         } for commit in commits_info]
 
@@ -222,7 +213,7 @@ class GitLabRequestSender(RequestSender):
             "hash": commit_info["id"],
             "author": commit_info["author_name"],
             "message": commit_info["message"],
-            "date": self._get_time(commit_info["committed_date"]),
+            "date": get_time_utc(commit_info["committed_date"]),
             "branch": self._get_branch_for_commit(hash_of_commit)
         }
         # retrieve only info about one commit
@@ -268,7 +259,7 @@ class GitLabRequestSender(RequestSender):
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
-            "date": self._get_time(commit["created_at"])
+            "date": get_time_utc(commit["created_at"])
         } for commit in commits_json]
 
         return commits

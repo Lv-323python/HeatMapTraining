@@ -6,8 +6,8 @@ to web-based hosting services for version control using Git
 import requests
 from heat_map_training.request_sender.gitlab_request_sender import \
     GitLabRequestSender  # pylint: disable=import-error
-from heat_map_training.utils.helper import format_date_to_int
-
+from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
+from heat_map_training.utils.gitlab_helper import get_time
 
 TOKEN = "?private_token="
 
@@ -35,5 +35,124 @@ class GitLabV3RequestSender(GitLabRequestSender):
         except IndexError:
             return None
 
-    def _get_time(self, time):
-        return format_date_to_int(time[:26] + time[27:29], "%Y-%m-%dT%H:%M:%S.%f%z")
+    def get_commits(self):
+        """
+        Takes repository name and owner as parameters and
+        returns information about commits in list of dictionaries
+
+        :return: list of dictionaries.
+        Example:
+        [
+            {
+                "hash": "commit hash",
+                "author": "commit author",
+                "message": "commit message",
+                "date": "date when committed"
+
+            },
+            ...
+        ]
+        """
+        # get url of remote repository given as input
+        url_commits = (self.base_url + self.owner + "%2F" + self.repo + "/repository/commits" +
+                       self.token)
+        print(url_commits)
+        response = requests.get(url_commits)
+
+        if not response.status_code == STATUS_CODE_OK:
+            return None
+
+        # get JSON about commits
+        commits_info = requests.get(url_commits).json()
+        # retrieve only info about commits
+        commits = [{
+            "hash": commit["id"],
+            "author": commit["committer_name"],
+            "message": commit["message"],
+            "date": get_time(commit["created_at"]),
+            "branch": self._get_branch_for_commit(commit["id"])
+        } for commit in commits_info]
+
+        return commits
+
+    def get_commit_by_hash(self, hash_of_commit):
+        """
+        Takes hash of the commit and returns info about it in JSON format
+
+        :param hash_of_commit: string
+        :return: dictionary.
+        Example:
+        {
+            "hash": "commit hash",
+            "author": "commit author",
+            "message": "commit message",
+            "date": "date when committed"
+
+        }
+        """
+        # get url of remote repository given as input
+        url_commit = (self.base_url + self.owner + "%2F" + self.repo +
+                      "/repository/commits/" + hash_of_commit)
+
+        response = requests.get(url_commit)
+
+        if not response.status_code == STATUS_CODE_OK:
+            return None
+
+        # get JSON about one commit
+        commit_info = requests.get(url_commit).json()
+
+        commit = {
+            "hash": commit_info["id"],
+            "author": commit_info["author_name"],
+            "message": commit_info["message"],
+            "date": get_time(commit_info["committed_date"]),
+            "branch": self._get_branch_for_commit(hash_of_commit)
+        }
+        # retrieve only info about one commit
+
+        return commit
+
+    def get_commits_by_branch(self, branch_name):
+        """
+        Takes repository branches as parameters and
+        returns information about last 20 commits per branch
+        in dictionary
+
+        :return: list of dictionaries.
+        Example:
+            [{
+
+                "hash": "commit hash",
+                "author": "commit author",
+                "message": "commit message",
+                "date": "date when committed"
+
+             },
+            ...]
+        """
+
+        api_commits_by_branch = (self.base_url + self.owner + "%2F" + self.repo +
+                                 "/repository/commits?ref_name=" + branch_name)
+
+        # get response and check it's validation
+        response = requests.get(api_commits_by_branch)
+
+        if not response.status_code == STATUS_CODE_OK:
+            return None
+
+        # get json of commits
+        commits_json = response.json()
+
+        if not commits_json:
+            return None
+
+        # make a list of dicts concerning commits per branch
+        commits = [{
+            "hash": commit["id"],
+            "author": commit["committer_name"],
+            "message": commit["message"],
+            "date": get_time(commit["created_at"])
+        } for commit in commits_json]
+
+        return commits
