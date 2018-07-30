@@ -1,13 +1,11 @@
 """
 Contains GithubRequestSender class that provides implementation of
 interface for sending API requests
-to web-based hosting services for version control using GitHub
+to web-based hosting services for version control in RestAPI
 """
-import requests
 from heat_map_training.request_sender.github_request_sender_base import \
     GithubRequestSenderBase  # pylint: disable=import-error
 from heat_map_training.utils.helper import format_date_to_int
-from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
 GITHUB_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -31,14 +29,14 @@ class GithubRequestSenderV3(GithubRequestSenderBase):
     to web-based hosting services for version control using GitHub
     """
 
-    def __init__(self, owner, repo, token='',
-                 base_url="https://api.github.com"):
+    def __init__(self, owner, repo, token='', query=False):
         GithubRequestSenderBase.__init__(self,
-                                         base_url=base_url,
+                                         base_url="https://api.github.com",
                                          owner=owner,
-                                         repo=repo)
+                                         repo=repo,
+                                         token=token,
+                                         query=query)
         self.repos_api_url = f'/repos/{self.owner}/{self.repo}'
-        self.token = token
 
     # returns a dict in which the key is sha of commit
     # and the value is existing branch it belongs to
@@ -97,14 +95,6 @@ class GithubRequestSenderV3(GithubRequestSenderBase):
                 existing_branches.setdefault(key, set([])).add(item)
         return existing_branches
 
-    def _request(self, endpoint=''):
-        headers = 'Authorization'
-        url = self.base_url + self.repos_api_url + endpoint
-        response = requests.get(url, headers={headers: self.token})
-        if response.status_code != STATUS_CODE_OK:
-            return None
-        return response.json()
-
     def get_repo(self):
         """
         Gets information about repository
@@ -121,7 +111,7 @@ class GithubRequestSenderV3(GithubRequestSenderBase):
         }
         """
 
-        response = self._request()
+        response = self._request(self.repos_api_url)
         repo = {
             'id': response['id'],
             'repo_name': response['name'],
