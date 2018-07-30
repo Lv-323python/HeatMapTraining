@@ -3,6 +3,28 @@ Contains functions for testing
 of GithubRequestSender class which sends API requests to Github
 """
 from heat_map_training.request_sender.github_request_sender import GithubRequestSender
+from unittest import mock
+
+
+def mock_response(status_code=200, json_data="{test}"):
+    """
+    since we typically test a bunch of different
+    requests calls for a service, we are going to do
+    a lot of mock responses, so its usually a good idea
+    to have a helper function that builds these things
+    """
+
+    mock_resp = mock.Mock()
+
+    mock_resp.json = mock.Mock(return_value=json_data)
+    mock_resp.status_code = status_code
+
+    return mock_resp
+
+a = mock_response()
+print(a.json.__dict__)
+print(a.status_code)
+
 
 
 def test_get_repo_success():
@@ -77,8 +99,9 @@ def test_get_commit_by_hash_wrong_hash_fail():
     # check output if given wrong hash
     assert GithubRequestSender('mixa1901', 'test').get_commit_by_hash('unknown') is None
 
-
-def test_get_branches_success():
+@mock.patch('requests.get')
+def test_get_branches_success(mocker):
+    mocker
     assert GithubRequestSender('Freon404', 'test_rep').get_branches() == [
         {
             "name": "master",
