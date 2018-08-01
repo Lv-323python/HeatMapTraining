@@ -3,6 +3,51 @@ Contains functions for testing
 of GithubRequestSender class which sends API requests to Github
 """
 from heat_map_training.request_sender.github_request_sender import GithubRequestSender
+from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
+from unittest import mock
+from tests.github_mock_data import REPO_DATA, CONT_DATA
+
+
+@mock.patch('heat_map_training.request_sender.github_request_sender.requests.get')
+def test_get_repo_success_mock(mock_get):
+
+    mock_get.return_value.status_code = STATUS_CODE_OK
+    mock_get.return_value.json.return_value = REPO_DATA
+
+    assert GithubRequestSender('mixa1901', 'test').get_repo() == {
+        'id': 136896178,
+        'repo_name': 'test1',
+        'creation_date': 1528694578,
+        'owner': 'BoartK',
+        'url': 'https://api.github.com/repos/BoartK/test1'
+    }
+
+
+@mock.patch('heat_map_training.request_sender.github_request_sender.requests.get')
+def test_get_repo_fail_mock(mock_get):
+    mock_get.return_value.status_code = not STATUS_CODE_OK
+    assert GithubRequestSender('testerr', 'testerr').get_repo() is None
+
+
+@mock.patch('heat_map_training.request_sender.github_request_sender.requests.get')
+def test_get_contributors_success_mock(mock_get):
+
+    mock_get.return_value.status_code = STATUS_CODE_OK
+    mock_get.return_value.json.return_value = CONT_DATA
+
+    assert GithubRequestSender('mixa1901', 'test').get_contributors() == [{
+            'name': 'mixa1901',
+            'number_of_commits': 2,
+            'email': 'mixa1901',
+            'url': 'https://api.github.com/users/mixa1901'
+         }]
+
+
+@mock.patch('heat_map_training.request_sender.github_request_sender.requests.get')
+def test_get_contributors_fail_mock(mock_get):
+
+    mock_get.return_value.status_code = not STATUS_CODE_OK
+    assert GithubRequestSender('testerr', 'testerr').get_contributors() is None
 
 
 def test_get_repo_success():
@@ -79,6 +124,7 @@ def test_get_commit_by_hash_wrong_hash_fail():
 
 
 def test_get_branches_success():
+
     assert GithubRequestSender('Freon404', 'test_rep').get_branches() == [
         {
             "name": "master",
