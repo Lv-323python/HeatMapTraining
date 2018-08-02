@@ -4,6 +4,8 @@ import graphene
 import requests
 from heat_map_training.request_sender.github_request_sender_base import \
     GithubRequestSenderBase
+from gql import Client, gql
+from gql.transport.requests import RequestsHTTPTransport
 
 
 def request_post(param, base_url, headers):
@@ -15,7 +17,7 @@ def request_post(param, base_url, headers):
 
 
 def request_get(url):
-    response = requests.get(url=url, headers={'Authorization': '97f896b3656a56ab6f8c647d6c63ee53279ff1e1'})
+    response = requests.get(url=url, headers={'Authorization': 'token ...'}) # pass a token here
     return response.json()
 
 
@@ -28,7 +30,7 @@ def json2obj(data):
 
 
 class GithubRequestSenderV4(GithubRequestSenderBase):
-    def __init__(self, owner, repo, token, query=True, base_url='https://api.github.com/graphql'):
+    def __init__(self, owner, repo, token, base_url='https://api.github.com/graphql'):
         """
         Github api requests class based on GraphQl
 
@@ -39,7 +41,6 @@ class GithubRequestSenderV4(GithubRequestSenderBase):
                                          base_url=base_url,
                                          owner=owner,
                                          repo=repo,
-                                         query=query,
                                          token=token)
         self.base_url = base_url
 
@@ -49,6 +50,10 @@ class Repository(graphene.ObjectType):
     created_at = graphene.DateTime(required=True)
     owner = graphene.String(required=True)
     url = graphene.String(required=True)
+
+
+class Commit(graphene.ObjectType):
+    hash = graphene.String(required=True)
 
 
 def get_repo(name):
@@ -63,13 +68,32 @@ class Query(graphene.ObjectType):
         owner=graphene.String(),
     )
 
+    # here we pass the resource from which graphene will get raw information about repository, using Rest API:
     def resolve_repo(_, info, args):
-        repo_info = request_get(f'https://api.github.com/repos/{args("owner")}/{args("name")}')
+        repo_info = requests.get(f'https://api.github.com/repos/{args("owner")}/{args("name")}')
         return json2obj(repo_info)
 
 
-SCHEMA = graphene.Schema(query=Query)
-RES = SCHEMA.execute("{ repository { name } }", variable_values={"owner": "Lv-323python", "name": "learnRepo"})
+# This is what I would do to execute a query using graphene without passing url:
+schema = graphene.Schema(query=Query)
+# This will give me no result because I don't make a request to a server:
+res = schema.execute('{ repository { name } }', context_value={"name": "Lv-323python", "owner": "learnRepo"})
+print(res.data, res.errors)
 
-print(RES.data)
-print(RES.errors)
+# I need to pass a url and token, so I use gql:
+client = Client(transport=RequestsHTTPTransport(url='https://api.github.com/graphql',
+                                                headers={
+                                                    'Authorization': 'token ...'}))  # pass your token here
+# Testing a simple query:
+query = gql(
+    """
+   { repository(owner: \"Lv-323python\", name: \"learnRepo\") { name } }
+    """)
+client.execute(query)
+
+# As you will probably see, my code is not working, it returns code 400.
+# I would like to find the right way to pass a query.
+# Also, I want to use the graphene models, so how can I connect graphene and gql?
+# This is a working query I send to Postman, as it is:
+postman_query = {
+    "query": "query { repository(owner: \"Lv-323python\", name: \"learnRepo\") { repo_name:name creation_date:createdAt owner{login} url: url} }"}

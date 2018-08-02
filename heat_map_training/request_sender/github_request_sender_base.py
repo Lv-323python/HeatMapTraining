@@ -16,26 +16,17 @@ class GithubRequestSenderBase(RequestSender):
     Supports both RestAPI and GraphQl.
     """
 
-    def __init__(self, base_url, owner, repo, query, token=''):
+    def __init__(self, base_url, owner, repo, token=''):
         super().__init__(base_url, owner, repo)
-        self.query = query
         self.token = token
         self.headers = {
             'Authorization': 'token {token}'.format(token=token),
         }
 
-    def _request(self, param):
-        # if self.query is True, param will be a query to post
-        # else - param will be an endpoint to form a url
-        if self.query:
-            query_body = {'query': param}
-            response = requests.post(url=self.base_url,
-                                     json=query_body,
-                                     headers=self.headers)
-        else:
-            url = self.base_url + param
-            response = requests.get(url=url,
-                                    headers=self.headers)
+    def _request(self, endpoint):
+        url = self.base_url + endpoint
+        response = requests.get(url=url,
+                                headers=self.headers)
         if response.status_code != STATUS_CODE_OK:
             return None
         return response.json()

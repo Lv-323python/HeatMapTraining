@@ -35,7 +35,7 @@ class GithubRequestSenderV3(GithubRequestSenderBase):
                                          owner=owner,
                                          repo=repo,
                                          token=token,
-                                         query=query)
+                                        )
         self.repos_api_url = f'/repos/{self.owner}/{self.repo}'
 
     # returns a dict in which the key is sha of commit
