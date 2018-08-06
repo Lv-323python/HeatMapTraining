@@ -83,7 +83,7 @@ print(res.data, res.errors)
 # I need to pass a url and token, so I use gql:
 client = Client(transport=RequestsHTTPTransport(url='https://api.github.com/graphql',
                                                 headers={
-                                                    'Authorization': 'token ...'}))  # pass your token here
+                                                    'Authorization': 'token ...'}, use_json=True), schema=schema)  # pass your token here
 # Testing a simple query:
 query = gql(
     """
@@ -91,9 +91,9 @@ query = gql(
     """)
 client.execute(query)
 
-# As you will probably see, my code is not working, it returns code 400.
-# I would like to find the right way to pass a query.
-# Also, I want to use the graphene models, so how can I connect graphene and gql?
+
+
+# Pleace check out if this is a right way to use graphene and gql while geting data from githubapi (Graphql)
 # This is a working query I send to Postman, as it is:
 postman_query = {
     "query": "query { repository(owner: \"Lv-323python\", name: \"learnRepo\") { repo_name:name creation_date:createdAt owner{login} url: url} }"}
