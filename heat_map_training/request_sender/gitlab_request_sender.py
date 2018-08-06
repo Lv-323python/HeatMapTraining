@@ -1,37 +1,26 @@
 """
-Contains RequestSenderGitLab class that provides realisation for sending API requests
+Contains GitLabRequestSender class that provides realisation for sending API requests
 to web-based hosting services for version control using Git
 """
 
-from datetime import datetime
 import requests
 from heat_map_training.request_sender.request_sender_base import \
     RequestSender  # pylint: disable=import-error
+from heat_map_training.utils.gitlab_helper import get_time_utc
 from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
 
-
-def _timestamp(date):
-    """
-    Converts datetime string to timestamp
-    :param date: string - datetime string
-    :return: int - timestamp
-    """
-    return int(datetime.strptime(date[:-5], "%Y-%m-%dT%H:%M:%S").timestamp())
+TOKEN = ""
 
 
-class RequestSenderGitLab(RequestSender):
+class GitLabRequestSender(RequestSender):
     """
         GitLab class that provides realisation for sending API requests
         to web-based hosting services for version control using Git
     """
 
     def __init__(self, owner, repo, base_url="https://gitlab.com/api/v4/projects/"):
-        RequestSender.__init__(
-            self,
-            base_url=base_url,
-            owner=owner,
-            repo=repo
-        )
+        super().__init__(base_url=base_url, owner=owner, repo=repo)
+        self.token = TOKEN
 
     def get_repo(self):
         # get url of remote repository given as input
@@ -49,11 +38,10 @@ class RequestSenderGitLab(RequestSender):
             "url": "repository url"
         }
         """
-        url_repo = self.base_url + self.owner + "%2F" + self.repo
+        url_repo = self.base_url + self.owner + "%2F" + self.repo + self.token
 
         # get response and check it's validation
         response = requests.get(url_repo)
-
         if not response.status_code == STATUS_CODE_OK:
             return None
 
@@ -64,11 +52,10 @@ class RequestSenderGitLab(RequestSender):
         repo = {
             "id": repo_info["id"],
             "repo_name": repo_info["name"],
-            "creation_date": _timestamp(repo_info["created_at"]),
+            "creation_date": get_time_utc(repo_info["created_at"]),
             "owner": repo_info["path_with_namespace"].split("/")[0],
             "url": repo_info["web_url"]
         }
-
         return repo
 
     def get_branches(self):
@@ -86,8 +73,8 @@ class RequestSenderGitLab(RequestSender):
         """
 
         # get url of remote repository given as input
-        url_branches = self.base_url + self.owner + "%2F" + self.repo + "/repository/branches"
-
+        url_branches = (self.base_url + self.owner + "%2F" + self.repo + "/repository/branches" +
+                        self.token)
         # get response and check it's validation
         response = requests.get(url_branches)
 
@@ -134,8 +121,9 @@ class RequestSenderGitLab(RequestSender):
         ]
         """
         # get url of remote repository given as input
-        url_commits = self.base_url + self.owner + "%2F" + self.repo + "/repository/commits"
-
+        url_commits = (self.base_url + self.owner + "%2F" + self.repo + "/repository/commits" +
+                       self.token)
+        print(url_commits)
         response = requests.get(url_commits)
 
         if not response.status_code == STATUS_CODE_OK:
@@ -143,13 +131,12 @@ class RequestSenderGitLab(RequestSender):
 
         # get JSON about commits
         commits_info = requests.get(url_commits).json()
-
         # retrieve only info about commits
         commits = [{
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
-            "date": _timestamp(commit["created_at"]),
+            "date": get_time_utc(commit["created_at"]),
             "branch": self._get_branch_for_commit(commit["id"])
         } for commit in commits_info]
 
@@ -174,7 +161,7 @@ class RequestSenderGitLab(RequestSender):
         """
         # get url of remote repository given as input
         url_contributors = (self.base_url + self.owner + "%2F" + self.repo +
-                            "/repository/contributors")
+                            "/repository/contributors" + self.token)
 
         # get response and check it's validation
         response = requests.get(url_contributors)
@@ -226,7 +213,7 @@ class RequestSenderGitLab(RequestSender):
             "hash": commit_info["id"],
             "author": commit_info["author_name"],
             "message": commit_info["message"],
-            "date": int(_timestamp(commit_info["committed_date"])),
+            "date": get_time_utc(commit_info["committed_date"]),
             "branch": self._get_branch_for_commit(hash_of_commit)
         }
         # retrieve only info about one commit
@@ -272,7 +259,7 @@ class RequestSenderGitLab(RequestSender):
             "hash": commit["id"],
             "author": commit["committer_name"],
             "message": commit["message"],
-            "date": _timestamp(commit["created_at"])
+            "date": get_time_utc(commit["created_at"])
         } for commit in commits_json]
 
         return commits
