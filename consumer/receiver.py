@@ -27,10 +27,8 @@ def worker(body):
 
     body = literal_eval(body.decode())
     req_name = body['action']
-    print('body in worker', body)
 
     with Builder(body) as obj:
-        print(obj)
 
         request = {
             'get_repo': obj.get_repo,
@@ -40,9 +38,9 @@ def worker(body):
             'get_commit_by_hash': obj.get_commit_by_hash,
             'get_contributors': obj.get_contributors
         }
-        if body['hash'] is None and body['branch'] is None:
+        if not body['hash'] and not body['branch']:
             response = request[req_name]()
-        elif body['hash'] is None:
+        elif not body['hash']:
             response = request[req_name](body['branch'])
         else:
             response = request[req_name](body['hash'])
@@ -52,7 +50,7 @@ def worker(body):
         channel.basic_publish(exchange='',
                               routing_key='response',
                               body=str(response))
-
+        return response
 
 def callback(ch, method, properties, body):
     '''
@@ -64,7 +62,7 @@ def callback(ch, method, properties, body):
     :return:
     '''
 
-    print(" [x] Received %r" % (body,))
+    print(" [x] Received body")
     worker(body)
 
 
