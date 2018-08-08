@@ -29,15 +29,15 @@ class Builder:
         """
         if self.git_client == 'bitbucket':
             if self.version == '1':
-                self.provider = BitbucketServerRequestSender(self.repo, self.owner)
+                self.provider = BitbucketServerRequestSender(self.owner, self.repo)
             elif self.version == '2':
-                self.provider = BitbucketRequestSender(self.repo, self.owner)
+                self.provider = BitbucketRequestSender(self.owner, self.repo)
         elif self.git_client == 'gitlab':
             if self.version == '3':
-                self.provider = GitLabV3RequestSender(self.repo, self.owner)
-            self.provider = GitLabRequestSender(self.repo, self.owner)
+                self.provider = GitLabV3RequestSender(self.owner, self.repo)
+            self.provider = GitLabRequestSender(self.owner, self.repo)
         elif self.git_client == 'github':
-            self.provider = GithubRequestSender(self.repo, self.owner, self.token)
+            self.provider = GithubRequestSender(self.owner, self.repo, self.token)
         return self.provider
 
     def __exit__(self, exc_type, exc_val, exc_tb):
