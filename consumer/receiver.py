@@ -26,7 +26,6 @@ def worker(body):
     # decode request from provider(sender)
     body = literal_eval(body.decode())
     req_name = body['action']
-    print('body in worker', body)
 
     # gets response from API
     with Builder(body) as obj:
@@ -39,9 +38,9 @@ def worker(body):
             'get_commit_by_hash': obj.get_commit_by_hash,
             'get_contributors': obj.get_contributors
         }
-        if body['hash'] is None and body['branch'] is None:
+        if not body['hash'] and not body['branch']:
             response = request[req_name]()
-        elif body['hash'] is None:
+        elif not body['hash']:
             response = request[req_name](body['branch'])
         else:
             response = request[req_name](body['hash'])
