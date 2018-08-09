@@ -38,12 +38,12 @@ def worker(body):
             'get_commit_by_hash': obj.get_commit_by_hash,
             'get_contributors': obj.get_contributors
         }
-        if not body['hash'] and not body['branch']:
-            response = request[req_name]()
-        elif not body['hash']:
+        if body['action'] == 'get_commit_by_hash':
+            response = request[req_name](body['hash'])
+        elif body['action'] == 'get_commits_by_branch':
             response = request[req_name](body['branch'])
         else:
-            response = request[req_name](body['hash'])
+            response = request[req_name]()
 
         print('response', response)
 

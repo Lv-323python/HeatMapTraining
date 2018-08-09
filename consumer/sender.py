@@ -2,6 +2,8 @@
     Sends request, waits for response, returns response
 """
 
+from ast import literal_eval
+
 import pika
 
 
@@ -55,11 +57,11 @@ def sender(body):
     connection.close()
 
     # gets response from list_for_result and clears list_for_result
-    result = list_for_result[0]
+    result_from_list = list_for_result[0]
+    result = literal_eval(result_from_list.decode())
     list_for_result.clear()
     # returns result
     return result
-
 
 # # Working example request message for bitbucket
 #
@@ -70,8 +72,6 @@ def sender(body):
 #           " None,'action': 'get_repo'}"
 #
 # # for test without flask web server
-# from pprint import pprint
-# from ast import literal_eval
 #
 # while True:
 #     MESSAGE = input(
