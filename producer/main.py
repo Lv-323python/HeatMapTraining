@@ -1,14 +1,14 @@
 """
 Module for creating a producer on Sanic which sends JSON to RabbitMQ
 """
+import os
+import json
 from sanic import Sanic, response
+from sanic.response import html
 from sanic_wtf import SanicForm
 from wtforms import SubmitField, TextField
-from sanic.response import html
 import pika
-import os
 from jinja2 import Template
-import json
 
 app = Sanic()
 
@@ -54,6 +54,7 @@ def sender(body):
 
 
 class FeedbackForm(SanicForm):
+    """Provides basic form for input receiving from user"""
     git_client = TextField('git_client')
     version = TextField('version')
     token = TextField('token')
@@ -72,14 +73,15 @@ def render_template(html_name, **args):
     :param args:
     :return: html template
     """
-    with open(os.path.join(os.path.dirname(__file__), 'templates', html_name), 'r') as f:
-        html_text = f.read()
+    with open(os.path.join(os.path.dirname(__file__), 'templates', html_name), 'r') as file:
+        html_text = file.read()
     template = Template(html_text)
     return html(template.render(args))
 
 
 @app.route('/', methods=['GET', 'POST'])
 async def index(request):
+    """Routing function for main page"""
     form = FeedbackForm(request)
     if request.method == 'POST':
         git_client = form.git_client.data
