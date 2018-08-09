@@ -1,34 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>GitHeatMap</title>
 </head>
 <body>
-<span>Git client</span>
-<select id="git_client">
-    <option>GitHub</option>
-    <option>GitLab</option>
-    <option>Bitbucket</option>
-</select><br>
-<span>Token</span>
-<input id="token"><br>
-<span>Repository</span>
-<input id="repo"><br>
-<span>Owner</span>
-<input id="owner"><br>
-<span>Hash</span>
-<input id="hash"><br>
-<span>Hash</span>
-<input id="branch"><br>
-<span>Action</span>
-<select id="action"><br>
-    <option>get_repo</option>
-    <option>get_branches</option>
-    <option>get_commits</option>
-    <option>get_contributors</option>
-    <option>get_commit_by_hash</option>
-    <option>get_commits_by_branch</option>
-</select>
+<div>
+    <h2>Choose</h2>
+
+    <form action="/" method="POST">
+        Git client:<br>
+        <select name="git_client">
+            <option>github</option>
+            <option>gitlab</option>
+            <option>bitbucket</option>
+        </select><br>
+        Version:<br>
+        <input type="text" name="version"><br>
+        Repo:<br>
+        <input type="text" name="repo"><br>
+        Owner:<br>
+        <input type="text" name="owner"><br>
+        Token:<br>
+        <input type="text" name="token"><br>
+        Hash:<br>
+        <input type="text" name="hash"><br>
+        Branch:<br>
+        <input type="text" name="branch"><br>
+        Action:<br>
+        <select name="action">
+            <option>get_repo</option>
+            <option>get_branches</option>
+            <option>get_commits</option>
+            <option>get_contributors</option>
+            <option>get_commit_by_hash</option>
+            <option>get_commits_by_branch</option>
+        </select><br>
+        <input type="submit" value="Submit">
+        <input type="button" value="Open response">
+    </form>
+</div>
 </body>
 </html>
