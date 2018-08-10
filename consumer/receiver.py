@@ -6,13 +6,14 @@ from ast import literal_eval
 import pika
 
 from helper.builder import Builder  # pylint: disable=import-error
+from helper.consumer_config import HOST, PORT, REQUEST_QUEUE, CALLBACK_QUEUE
 
 CONNECTION = pika.BlockingConnection(pika.ConnectionParameters(
-    host='172.17.0.2'))
+    host=HOST, port=PORT))
 CHANNEL = CONNECTION.channel()
 
-CHANNEL.queue_declare(queue='request')
-CHANNEL.queue_declare(queue='response')
+CHANNEL.queue_declare(queue=REQUEST_QUEUE)
+CHANNEL.queue_declare(queue=CALLBACK_QUEUE)
 
 print(' [*] Waiting for messages. To exit press CTRL+C')
 
@@ -49,7 +50,7 @@ def worker(body):
 
         # sends API response to provider(sender)
         CHANNEL.basic_publish(exchange='',
-                              routing_key='response',
+                              routing_key=CALLBACK_QUEUE,
                               body=str(response))
 
 
@@ -74,7 +75,7 @@ def callback(ch_c, method_m, properties_p, body):
 
 
 # declare consuming
-CHANNEL.basic_consume(callback, queue='request', no_ack=True)
+CHANNEL.basic_consume(callback, queue=REQUEST_QUEUE, no_ack=True)
 
 # start waiting for request from provider(sender)
 CHANNEL.start_consuming()

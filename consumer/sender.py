@@ -5,6 +5,7 @@
 from ast import literal_eval
 
 import pika
+from helper.consumer_config import HOST, PORT, REQUEST_QUEUE, CALLBACK_QUEUE
 
 
 def sender(body):
@@ -19,12 +20,12 @@ def sender(body):
 
     # start connection
     connection = pika.BlockingConnection(pika.ConnectionParameters(
-        host='172.17.0.2'))
+        host=HOST, port=PORT))
     channel = connection.channel()
 
     # declare queues
-    channel.queue_declare(queue='request')
-    channel.queue_declare(queue='response')
+    channel.queue_declare(queue=REQUEST_QUEUE)
+    channel.queue_declare(queue=CALLBACK_QUEUE)
 
     # sends message to consumer
     channel.basic_publish(exchange='', routing_key='request', body=body)
@@ -50,7 +51,7 @@ def sender(body):
         list_for_result.append(body)
 
     # declare consuming params
-    channel.basic_consume(callback, queue='response', no_ack=True)
+    channel.basic_consume(callback, queue=CALLBACK_QUEUE, no_ack=True)
 
     # starts consuming(waiting for) response using 'callback' function
     channel.start_consuming()
