@@ -4,9 +4,10 @@
 from ast import literal_eval
 
 import pika
+import json
 
-from helper.builder import Builder  # pylint: disable=import-error
-from helper.consumer_config import HOST, PORT, REQUEST_QUEUE, CALLBACK_QUEUE
+from consumer.helper.builder import Builder  # pylint: disable=import-error
+from consumer.helper.consumer_config import HOST, PORT, REQUEST_QUEUE, CALLBACK_QUEUE
 
 CONNECTION = pika.BlockingConnection(pika.ConnectionParameters(
     host=HOST, port=PORT))
@@ -48,13 +49,16 @@ def worker(body):
 
         print('response', response)
 
+
         # sends API response to provider(sender)
-        CHANNEL.basic_publish(exchange='',
-                              routing_key=CALLBACK_QUEUE,
-                              body=str(response))
+        # CHANNEL.basic_publish(exchange='',
+        #                       routing_key=CALLBACK_QUEUE,
+        #                       body=str(response))
+
+        return response
 
 
-def callback(ch_c, method_m, properties_p, body):
+def callback(ch, method, props, body):
     """
         Consumes request from provider(sender)
     :param ch_c: unused param
@@ -65,13 +69,19 @@ def callback(ch_c, method_m, properties_p, body):
     """
 
     # print unused params to pass pylit check
-    print(ch_c, method_m, properties_p)
+    print(ch, method, props)
 
     print(" [x] Received %r" % (body,))
 
     # uses 'worker' function to get API response
     # and send it to provider(sender)
-    worker(body)
+    response = worker(body)
+
+    ch.basic_publish(exchange='',
+                     routing_key=props.reply_to,
+                     properties=pika.BasicProperties(correlation_id=props.correlation_id),
+                     body=json.dumps(response))
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 # declare consuming

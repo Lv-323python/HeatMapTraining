@@ -1,4 +1,4 @@
 HOST = "localhost"
-PORT = "80:80"
+PORT = 8080
 REQUEST_QUEUE = "request"
 CALLBACK_QUEUE = "response"

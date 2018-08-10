@@ -104,8 +104,8 @@ async def index(request):
             'action': action}
 
         request_sender_rpc = RequestSenderClient(host=HOST, port=PORT)
-        response = request_sender_rpc.call(json.dumps(git_info))
+        data = request_sender_rpc.call(json.dumps(git_info))
 
-        return response.json(json.loads(response))
+        return response.json(json.loads(data))
     return render_template('index.html')
 
