@@ -1,0 +1,12 @@
+"""
+Contains configuration variables for RequestSenderClient
+"""
+HOST = 'localhost'
+PORT = 8080
+RPC_QUEUE = 'request'
+CALLBACK_QUEUE = 'response'
+REQUEST_SENDER_CHOICES = {
+    'bitbucket_request_sender': 'BitbucketRequestSender',
+    'github_request_sender': 'GithubRequestSender',
+    'gitlab_request_sender': 'GitlabRequestSender'
+}
