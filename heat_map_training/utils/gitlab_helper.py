@@ -11,7 +11,7 @@ def get_time_utc(time):
     :param time: string
     :return: int
     """
-    if time[-1:] == 'Z':
+    if time[-1] == 'Z':
         return format_date_to_int(time + '+0000', "%Y-%m-%dT%H:%M:%S.%fZ%z")
 
     return format_date_to_int(time[:26] + time[27:29], "%Y-%m-%dT%H:%M:%S.%f%z")
