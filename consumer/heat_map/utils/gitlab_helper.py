@@ -2,7 +2,7 @@
     A library of helpers of gitlab_request_senders use
 """
 
-from heat_map_training.utils.helper import format_date_to_int
+from heat_map.utils.helper import format_date_to_int
 
 
 def get_time_utc(time):

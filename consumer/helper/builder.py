@@ -1,11 +1,11 @@
 """
 This module provides a builder that returns instance of provider class
 """
-from heat_map_training.request_sender.bitbucket_request_sender \
+from heat_map.request_sender.bitbucket_request_sender \
     import BitbucketRequestSender, BitbucketServerRequestSender
-from heat_map_training.request_sender.github_request_sender import GithubRequestSender
-from heat_map_training.request_sender.gitlab_request_sender import GitLabRequestSender
-from heat_map_training.request_sender.gitlab_v3_request_sender_base import GitLabV3RequestSender
+from heat_map.request_sender.github_request_sender import GithubRequestSender
+from heat_map.request_sender.gitlab_request_sender import GitLabRequestSender
+from heat_map.request_sender.gitlab_v3_request_sender_base import GitLabV3RequestSender
 
 
 class Builder:

@@ -4,10 +4,10 @@ to web-based hosting services for version control using Git
 """
 
 import requests
-from heat_map_training.request_sender.request_sender_base import \
+from heat_map.request_sender.request_sender_base import \
     RequestSender  # pylint: disable=import-error
-from heat_map_training.utils.gitlab_helper import get_time_utc
-from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
+from heat_map.utils.gitlab_helper import get_time_utc
+from heat_map.utils.request_status_codes import STATUS_CODE_OK
 
 TOKEN = ""
 

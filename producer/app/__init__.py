@@ -2,4 +2,4 @@ from sanic import Sanic
 
 app = Sanic()
 
-from producer.app import routes
+from app import routes

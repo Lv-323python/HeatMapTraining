@@ -1,7 +1,7 @@
 import pika
 import uuid
 import time
-from producer.app.request_sender_client_config import HOST, PORT, RPC_QUEUE, CALLBACK_QUEUE
+from rabbitmq_helpers.request_sender_client_config import HOST, PORT, RPC_QUEUE, CALLBACK_QUEUE
 
 
 class RequestSenderClient:
