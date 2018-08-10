@@ -1,27 +1,3 @@
-# import pika
-#
-# connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=8080))
-#
-# channel = connection.channel()
-#
-# channel.queue_declare(queue='request')
-# channel.queue_declare(queue='response')
-#
-#
-# def on_request(ch, method, props, body):
-#     response = body
-#     print(response)
-#     ch.basic_publish(exchange='',
-#                      routing_key='response',
-#                      properties=pika.BasicProperties(correlation_id=props.correlation_id),
-#                      body=str(response))
-#     ch.basic_ack(delivery_tag=method.delivery_tag)
-#
-#
-# channel.basic_consume(on_request, queue='request')
-#
-# print(" [x] Awaiting RPC requests")
-# channel.start_consuming()
 import pika
 import pika.exceptions
 import json
@@ -72,7 +48,7 @@ def on_request(ch, method, props, body):
 
 
 print('Connecting to rabbitmg...')
-RETRIES=30
+RETRIES = 30
 while True:
     try:
         connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=8080))
