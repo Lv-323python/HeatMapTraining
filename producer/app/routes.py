@@ -3,55 +3,14 @@ Module for creating a producer on Sanic which sends JSON to RabbitMQ
 """
 import os
 import json
-from producer.app import app
+from app import app
 from sanic import response
 from sanic.response import html
 from sanic_wtf import SanicForm
 from wtforms import SubmitField, TextField
 from jinja2 import Template
-from producer.app.request_sender_client import RequestSenderClient
-from producer.app.request_sender_client_config import HOST, PORT
-
-
-#
-# def sender(body):
-#     """
-#     Sends message to RabbitMQ and waiting for the response
-#     :param body:
-#     :return: message string
-#     """
-#     connection = pika.BlockingConnection(pika.ConnectionParameters(
-#         host='172.17.0.4'))
-#     channel = connection.channel()
-#
-#     channel.queue_declare(queue='request')
-#     channel.queue_declare(queue='response')
-#
-#     channel.basic_publish(exchange='',
-#                           routing_key='request',
-#                           body=body)
-#
-#     def callback(ch, method, properties, body):
-#         """
-#         Function which takes the message from response queue
-#         :param ch:
-#         :param method:
-#         :param properties:
-#         :param body:
-#         :return: message string
-#         """
-#         channel.stop_consuming()
-#         print(type(body.decode()))
-#         return body.decode()
-#
-#     channel.basic_consume(callback,
-#                           queue='response',
-#                           no_ack=True)
-#
-#     channel.start_consuming()
-#     connection.close()
-#
-#     return body
+from rabbitmq_helpers.request_sender_client import RequestSenderClient
+from rabbitmq_helpers.request_sender_client_config import HOST, PORT
 
 
 class FeedbackForm(SanicForm):
@@ -104,8 +63,8 @@ async def index(request):
             'action': action}
 
         request_sender_rpc = RequestSenderClient(host=HOST, port=PORT)
-        response = request_sender_rpc.call(json.dumps(git_info))
+        data = request_sender_rpc.call(json.dumps(git_info))
 
-        return response.json(json.loads(response))
+        return response.json(json.loads(data))
     return render_template('index.html')
 

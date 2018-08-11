@@ -2,7 +2,7 @@
 A library of helpers of bitbucket_request_sender use
 """
 
-from heat_map_training.utils.helper import format_date_to_int
+from heat_map.utils.helper import format_date_to_int
 
 
 def to_timestamp(date_time_str):
