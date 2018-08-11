@@ -81,13 +81,15 @@ def callback(ch, method, props, body):
                      routing_key=props.reply_to,
                      properties=pika.BasicProperties(correlation_id=props.correlation_id),
                      body=json.dumps(response))
+    # to tell the server that message was properly handled
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 # declare consuming
 
-CHANNEL.basic_qos(prefetch_count=1)
-CHANNEL.basic_consume(callback, queue=REQUEST_QUEUE)
+#CHANNEL.basic_qos(prefetch_count=1)
+CHANNEL.basic_consume(callback, no_ack=False, queue=REQUEST_QUEUE)
+
 
 
 # start waiting for request from provider(sender)

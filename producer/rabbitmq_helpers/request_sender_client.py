@@ -33,11 +33,13 @@ class RequestSenderClient:
         # declare a callback queue
         callback_queue = self.channel.queue_declare(queue=CALLBACK_QUEUE)  # only allow access by the current connection
         self.callback_queue = callback_queue.method.queue  # queue name
-        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
+        self.channel.basic_consume(self.on_response, no_ack=False, queue=self.callback_queue)
 
     def on_response(self, ch, method, props, body):
         if self.corr_id == props.correlation_id:
             self.response = body
+            self.channel.stop_consuming()
+            self.channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def call(self, message):
         self.corr_id = str(uuid.uuid4())
@@ -53,6 +55,6 @@ class RequestSenderClient:
         )
         print('Waiting for response...')
         while self.response is None:
-            self.connection.process_data_events()
+            self.channel.start_consuming()
         print('Response received!')
         return self.response
