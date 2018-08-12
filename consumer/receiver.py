@@ -5,13 +5,27 @@ from ast import literal_eval
 
 import pika
 import json
+import time
 
 from helper.builder import Builder  # pylint: disable=import-error
 from helper.consumer_config import HOST, PORT, REQUEST_QUEUE, CALLBACK_QUEUE
 
-CONNECTION = pika.BlockingConnection(pika.ConnectionParameters(
-    host=HOST, port=PORT))
-CHANNEL = CONNECTION.channel()
+print('Connecting to rabbitmg...')
+RETRIES = 30
+while True:
+    try:
+        # declare connection
+        CONNECTION = pika.BlockingConnection(pika.ConnectionParameters(host=HOST, port=PORT))
+        CHANNEL = CONNECTION.channel()
+        break
+    except pika.exceptions.ConnectionClosed as exc:
+        if RETRIES == 0:
+            print('Failed to connect!')
+            raise exc
+        RETRIES -= 1
+        time.sleep(1)
+print('Successfully connected!')
+
 
 CHANNEL.queue_declare(queue=REQUEST_QUEUE)
 CHANNEL.queue_declare(queue=CALLBACK_QUEUE)
