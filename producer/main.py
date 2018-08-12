@@ -11,7 +11,7 @@ import pika
 from jinja2 import Template
 
 app = Sanic()
-
+app.static('/static', './static')
 
 def sender(body):
     """
@@ -103,6 +103,11 @@ async def index(request):
             'action': action}
         return response.json(json.loads(sender(json.dumps(git_info))))
     return render_template('index.html')
+
+
+@app.route("/getinfo")
+async def getinfo(request):
+    return response.json({'message': 'Hello world!'})
 
 
 if __name__ == "__main__":

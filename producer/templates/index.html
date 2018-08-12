@@ -1,57 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script>
-$(document).ready(function(){
-    $("form").submit(function(){
-        var url = "localhost:8000" + $(this).attr( 'action' ) + "?" + $(this).serialize();
-        console.log(url);
-        $.get(url, function(response){
-            console.log(response);
-            $("#response").text(JSON.stringify(response));
-        })
-    });
-
-});
-</script>
+    <script src="/static/script.js"></script>
 </head>
 <body>
 <div>
     <div id = "response"></div>
     <h2>Choose</h2>
 
-    <form action="/" method="get">
-        Git client:<br>
-        <select name="git_client">
-            <option>github</option>
-            <option>gitlab</option>
-            <option>bitbucket</option>
-        </select><br>
-        Version:<br>
-        <input type="text" name="version"><br>
-        Repo:<br>
-        <input type="text" name="repo"><br>
-        Owner:<br>
-        <input type="text" name="owner"><br>
-        Token:<br>
-        <input type="text" name="token"><br>
-        Hash:<br>
-        <input type="text" name="hash"><br>
-        Branch:<br>
-        <input type="text" name="branch"><br>
-        Action:<br>
-        <select name="action">
-            <option>get_repo</option>
-            <option>get_branches</option>
-            <option>get_commits</option>
-            <option>get_contributors</option>
-            <option>get_commit_by_hash</option>
-            <option>get_commits_by_branch</option>
-        </select><br>
-        <button type="submit" value="Submit">Submit</button>
-        <input type="button" value="Open response">
-    </form>
+    Git client:<br>
+    <select id="git_client">
+        <option>github</option>
+        <option>gitlab</option>
+        <option>bitbucket</option>
+    </select><br>
+    Version:<br>
+    <input type="text" id="version"><br>
+    Repo:<br>
+    <input type="text" id="repo"><br>
+    Owner:<br>
+    <input type="text" id="owner"><br>
+    Token:<br>
+    <input type="text" id="token"><br>
+    Hash:<br>
+    <input type="text" id="hash"><br>
+    Branch:<br>
+    <input type="text" id="branch"><br>
+    Action:<br>
+    <select id="action">
+        <option>get_repo</option>
+        <option>get_branches</option>
+        <option>get_commits</option>
+        <option>get_contributors</option>
+        <option>get_commit_by_hash</option>
+        <option>get_commits_by_branch</option>
+    </select><br>
+    <button id="getinfo" value="Submit">Submit</button>
+    <input type="button" value="Open response">
+
 </div>
 </body>
 </html>
