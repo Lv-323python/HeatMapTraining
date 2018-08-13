@@ -4,7 +4,7 @@ to web-based hosting services for version control using Git
 """
 
 import requests
-from heat_map_training.request_sender.gitlab_request_sender import \
+from heat_map.request_sender.gitlab_request_sender import \
     GitLabRequestSender  # pylint: disable=import-error
 TOKEN = "?private_token="
 

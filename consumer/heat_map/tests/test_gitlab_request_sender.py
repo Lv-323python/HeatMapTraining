@@ -5,8 +5,8 @@ from gitlab_request_sender.py
 
 import pytest
 from pytest_mock import mocker
-from heat_map_training.request_sender.gitlab_request_sender import RequestSenderGitLab
-from heat_map_training.utils.request_status_codes import STATUS_CODE_OK, STATUS_CODE_NOT_FOUND
+from heat_map.request_sender.gitlab_request_sender import GitLabRequestSender
+from heat_map.utils.request_status_codes import STATUS_CODE_OK, STATUS_CODE_NOT_FOUND
 
 # base API url
 GITLAB_API_BASE_URL = 'https://gitlab.com/api/v4/projects/' or 'https://gitlab.com/api/v4'
@@ -251,7 +251,7 @@ def real_repo():
 
     :return: RequestSenderGitLab instance
     """
-    return RequestSenderGitLab('partsey', 'my-awesome-project', GITLAB_API_BASE_URL)
+    return GitLabRequestSender('partsey', 'my-awesome-project', GITLAB_API_BASE_URL)
 
 
 @pytest.fixture(scope='module')
@@ -261,7 +261,7 @@ def non_existing_repo():
 
     :return: RequestSenderGitLab instance
     """
-    return RequestSenderGitLab(owner='_', repo='_', base_url=GITLAB_API_BASE_URL)
+    return GitLabRequestSender(owner='_', repo='_', base_url=GITLAB_API_BASE_URL)
 
 
 @pytest.mark.refactored

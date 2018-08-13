@@ -7,9 +7,9 @@ to Bitbucket Server.
 
 import requests
 
-from heat_map_training.request_sender.request_sender_base import RequestSender  # pylint: disable=import-error
-from heat_map_training.utils.bitbucket_helper import to_timestamp, get_gitname, get_email
-from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
+from heat_map.request_sender.request_sender_base import RequestSender  # pylint: disable=import-error
+from heat_map.utils.bitbucket_helper import to_timestamp, get_gitname, get_email
+from heat_map.utils.request_status_codes import STATUS_CODE_OK
 
 
 class BitbucketRequestSender(RequestSender):

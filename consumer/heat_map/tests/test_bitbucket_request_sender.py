@@ -1,8 +1,8 @@
 import pytest
 from unittest import mock
-from heat_map_training.request_sender.bitbucket_request_sender import BitbucketRequestSender
-from heat_map_training.utils.request_status_codes import STATUS_CODE_OK, STATUS_CODE_NOT_FOUND
-from tests.bitbucket_mock_data import REPO_DATA, BRANCHES_DATA, COMMITS_DATA, \
+from heat_map.request_sender.bitbucket_request_sender import BitbucketRequestSender
+from heat_map.utils.request_status_codes import STATUS_CODE_OK, STATUS_CODE_NOT_FOUND
+from heat_map.tests.bitbucket_mock_data import REPO_DATA, BRANCHES_DATA, COMMITS_DATA, \
     COMMIT_BY_AWESOME_BRANCH, COMMIT_BY_BEAUTIFUL_BRANCH, COMMIT_BY_MASTER, COMMIT_BY_HASH_35a363
 
 REPO = "publicbitbucketrepo"
