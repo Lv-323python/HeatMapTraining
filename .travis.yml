@@ -4,8 +4,11 @@ python:
 
 #check code
 script:
-  - pylint --rcfile=.pylintrc heat_map_training/
+  - pylint --rcfile=.pylintrc consumer/
+  - pylint --rcfile=.pylintrc producer/
 
 # command to install dependencies
 install:
-  - pip install -r requirements.txt
+  - pip install pylint
+  - pip install -r consumer/requirements.txt
+  - pip install -r producer/requirements.txt
