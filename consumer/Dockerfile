@@ -1,6 +1,9 @@
 FROM python:3.6.5
-ADD . /consumer
-WORKDIR /consumer
+RUN mkdir top
+ADD . top/consumer
+WORKDIR top/consumer
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
-CMD ["python", "receiver.py"]
+WORKDIR /top
+ENV PYTHONPATH="$PYTHONPATH:/top"
+CMD python consumer/receiver.py
