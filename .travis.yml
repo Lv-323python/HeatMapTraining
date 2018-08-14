@@ -4,6 +4,7 @@ python:
 
 #check code
 script:
+  - chmod +x build_consumer.sh
   - build_consumer.sh
   - pylint --rcfile=.pylintrc consumer/
   - build_producer.sh
