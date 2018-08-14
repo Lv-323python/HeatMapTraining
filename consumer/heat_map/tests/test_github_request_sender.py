@@ -3,9 +3,9 @@ Contains functions for testing
 of GithubRequestSender class which sends API requests to Github
 """
 from unittest import mock
-from heat_map_training.request_sender.github_request_sender import GithubRequestSender
-from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
-from tests.github_mock_data import REPO_DATA, CONT_DATA, BRANCHES_DATA, CMTS_BY_BR_DATA, CMTS_DATA, \
+from heat_map.request_sender.github_request_sender import GithubRequestSender
+from heat_map.utils.request_status_codes import STATUS_CODE_OK
+from heat_map.tests.github_mock_data import REPO_DATA, CONT_DATA, BRANCHES_DATA, CMTS_BY_BR_DATA, CMTS_DATA, \
     CMT_BY_HASH_DATA
 
 

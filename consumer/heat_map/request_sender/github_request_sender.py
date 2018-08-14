@@ -4,10 +4,10 @@ interface for sending API requests
 to web-based hosting services for version control using GitHub
 """
 import requests
-from heat_map_training.request_sender.request_sender_base \
+from heat_map.request_sender.request_sender_base \
     import RequestSender  # pylint: disable=import-error
-from heat_map_training.utils.helper import format_date_to_int
-from heat_map_training.utils.request_status_codes import STATUS_CODE_OK
+from heat_map.utils.helper import format_date_to_int
+from heat_map.utils.request_status_codes import STATUS_CODE_OK
 
 GITHUB_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
