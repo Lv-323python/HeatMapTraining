@@ -3,25 +3,30 @@
 """
 from ast import literal_eval
 
-import pika
 import json
 import time
+import pika
 
-from helper.builder import Builder  # pylint: disable=import-error
+from helper.builder import Builder
 from helper.consumer_config import HOST, PORT, REQUEST_QUEUE, RESPONSE_QUEUE
 
 
 class RabbitMQReceiver:
     """
-    This class consumes requests from provider and sends result back to provider
+    This class consumes a request from the 'sender', receives an API response
+and     and sends the result back to the provider
     """
+
     def __init__(self):
         print('Connecting to rabbitmg...')
         retries = 30
         while True:
             try:
                 # declare connection
-                connection = pika.BlockingConnection(pika.ConnectionParameters(host=HOST, port=PORT))
+                connection = pika.BlockingConnection(
+                    pika.ConnectionParameters(host=HOST, port=PORT))
+
+                #  channel
                 channel = connection.channel()
                 break
             except pika.exceptions.ConnectionClosed as exc:
@@ -45,20 +50,29 @@ class RabbitMQReceiver:
         # start waiting for request from provider(sender)
         channel.start_consuming()
 
-    def worker(self, body):
+    @staticmethod
+    def worker(body):
+        """
+            Function which takes body of request from 'sender' and
+                returns response from needed API request.
+            The function that takes the request body from the "sender" and
+                returns the required API request.
+
+        :param body: encoded str - request string
+        :return: (dict or list) - response to the required API request
         """
 
-        :param body:
-        :return: None, but sends result to provider(sender)
-        """
         # decode request from provider(sender)
         body = literal_eval(body.decode())
-        req_name = body['action']
+        method_name = body['action']
+        hash_of_commit = body.get('hash')
+        branch_of_commit = body.get('branch')
 
-        # gets response from API
+        # gets response from API using API object from builder
         with Builder(body) as obj:
-            # declare object with methods
-            request = {
+
+            # declares object methods dict,  for next choice and call
+            methods = {
                 'get_repo': obj.get_repo,
                 'get_branches': obj.get_branches,
                 'get_commits': obj.get_commits,
@@ -66,44 +80,48 @@ class RabbitMQReceiver:
                 'get_commit_by_hash': obj.get_commit_by_hash,
                 'get_contributors': obj.get_contributors
             }
+
+            # check, if request has method, which needs parameter -  call method with parameter.
+            #  Otherwise call method without any parameters
             if body['action'] == 'get_commit_by_hash':
-                response = request[req_name](body['hash'])
+                # call needed method (obj.get_commit_by_hash) from methods dict
+                #  with 'hash_of_commit' parameter
+                response = methods[method_name](hash_of_commit)
+
             elif body['action'] == 'get_commits_by_branch':
-                response = request[req_name](body['branch'])
+                # call needed method (obj.get_commits_by_branch)
+                #  from methods dict with 'branch_of_commit' parameter
+                response = methods[method_name](branch_of_commit)
+
             else:
-                response = request[req_name]()
+                # call needed method from methods dict without any parameter
+                response = methods[method_name]()
 
             print('response', response)
 
-            # sends API response to provider(sender)
-            # CHANNEL.basic_publish(exchange='',
-            #                       routing_key=CALLBACK_QUEUE,
-            #                       body=str(response))
-
             return response
 
-    def callback(self, ch, method, props, body):
+    def callback(self, channel, method, props, body):
         """
             Consumes request from provider(sender)
-        :param ch: unused param
+        :param channel: unused param
         :param method: unused param
         :param props: unused param
         :param body: received message
         :return:
         """
 
-        # print unused params to pass pylit check
-        print(ch, method, props)
-
         print(" [x] Received %r" % (body,))
 
         # uses 'worker' function to get API response
-        # and send it to provider(sender)
+        # and sends it to provider(sender)
         response = self.worker(body)
 
-        ch.basic_publish(exchange='',
-                         routing_key=props.reply_to,
-                         properties=pika.BasicProperties(correlation_id=props.correlation_id),
-                         body=json.dumps(response))
-        # to tell the server that message was properly handled
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+        # Sends the result back to the sender
+        channel.basic_publish(exchange='',
+                              routing_key=props.reply_to,
+                              properties=pika.BasicProperties(correlation_id=props.correlation_id),
+                              body=json.dumps(response))
+
+        # used to tell the server that message was properly handled
+        channel.basic_ack(delivery_tag=method.delivery_tag)
