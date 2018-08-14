@@ -1,2 +1,2 @@
 #!/bin/sh
-cd $TRAVIS_BUILD_DIR/consumer
+$TRAVIS_BUILD_DIR = $TRAVIS_BUILD_DIR/consumer
