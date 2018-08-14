@@ -10,12 +10,9 @@ document.addEventListener('DOMContentLoaded', function () {
         var branch = document.getElementById("branch").value;
         var action = document.getElementById("action").value;
         var url = BASE_URL + "/getinfo?" + "git_client=" + git_client + "&" + "token=" + token + "&" + "version=" +
-            + version + "&" + "repo=" + repo + "&" + "owner=" + owner + "&" + "hash=" + hash + "&" + "branch=" + branch
+            +version + "&" + "repo=" + repo + "&" + "owner=" + owner + "&" + "hash=" + hash + "&" + "branch=" + branch
             + "&" + "action=" + action;
         console.log(getInfo(url));
-
-        
-
     };
 
     function getInfo(url) {
@@ -23,10 +20,18 @@ document.addEventListener('DOMContentLoaded', function () {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url);
         xhr.send();
-        if (xhr.status !== 200) {
-            return xhr.status + ': ' + xhr.statusText;
-        } else {
-            return xhr.responseText ;
-        }
+        xhr.onload = function () {
+            if (xhr.status !== 200) {
+                return xhr.status + ': ' + xhr.statusText
+            } else {
+                var json = xhr.responseText;
+                console.log(json);
+                console.log(typeof json);
+                return json
+            }
+        };
     }
+
+
+
 });
