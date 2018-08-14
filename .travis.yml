@@ -4,7 +4,9 @@ python:
 
 #check code
 script:
+  - build_consumer.sh
   - pylint --rcfile=.pylintrc consumer/
+  - build_producer.sh
   - pylint --rcfile=.pylintrc producer/
 
 # command to install dependencies
