@@ -1,37 +1,77 @@
 document.addEventListener('DOMContentLoaded', function () {
-    var BASE_URL = "http://0.0.0.0:8000";
-    document.getElementById("getinfo").onclick = function () {
-        var git_client = document.getElementById("git_client").value;
-        var token = document.getElementById("token").value;
-        var version = document.getElementById("version").value;
-        var repo = document.getElementById("repo").value;
-        var owner = document.getElementById("owner").value;
-        var hash = document.getElementById("hash").value;
-        var branch = document.getElementById("branch").value;
-        var action = document.getElementById("action").value;
-        var url = BASE_URL + "/getinfo?" + "git_client=" + git_client + "&" + "token=" + token + "&" + "version=" +
-            +version + "&" + "repo=" + repo + "&" + "owner=" + owner + "&" + "hash=" + hash + "&" + "branch=" + branch
-            + "&" + "action=" + action;
-        console.log(getInfo(url));
+
+    document.getElementById("getInfoButton").onclick = function () {
+        var url = BASE_URL + "/getinfo?"
+                + "git_client=" + document.getElementById("git_client").value
+                + "&token=" + document.getElementById("token").value
+                + "&version=" + document.getElementById("version").value
+                + "&repo=" + document.getElementById("repo").value
+                + "&owner=" + document.getElementById("owner").value
+                + "&hash=" + document.getElementById("hash").value
+                + "&branch=" + document.getElementById("branch").value
+                + "&action=" + document.getElementById("action").value;
+        getRepoData(url);
     };
 
-    function getInfo(url) {
-
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url);
-        xhr.send();
-        xhr.onload = function () {
-            if (xhr.status !== 200) {
-                return xhr.status + ': ' + xhr.statusText
-            } else {
-                var json = xhr.responseText;
-                console.log(json);
-                console.log(typeof json);
-                return json
-            }
-        };
-    }
-
-
-
 });
+
+var BASE_URL = "http://0.0.0.0:8000";
+
+function requestGet(url, successCallBack, errorCallBack) {
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.send();
+    xhr.onload = function () {
+        var data = {
+            body: Object.assign({}, JSON.parse(xhr.responseText)),
+            status: xhr.status
+        };
+        if (xhr.status >= 400) {
+            if (errorCallBack !== undefined) {
+                errorCallBack(data);
+            } else {
+                console.log(xhr);
+            }
+        } else {
+            if (successCallBack !== undefined) {
+                successCallBack(data);
+            } else {
+                console.log(xhr);
+            }
+        }
+    };
+}
+
+function requestPost(url, data, successCallBack, errorCallBack) {
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    xhr.send(data);
+    xhr.onload = function () {
+        var data = {
+            body: Object.assign({}, JSON.parse(xhr.responseText)),
+            status: xhr.status
+        }
+        if (xhr.status >= 400) {
+            if (errorCallBack !== undefined) {
+                errorCallBack(data);
+            } else {
+                console.log(xhr);
+            }
+        } else {
+            if (successCallBack !== undefined) {
+                successCallBack(data);
+            } else {
+                console.log(xhr);
+            }
+        }
+    };
+}
+
+function getRepoData(url) {
+    requestGet(url, function (respons) {
+        document.getElementById("response").innerText = JSON.stringify(respons.body);
+
+    });
+}
