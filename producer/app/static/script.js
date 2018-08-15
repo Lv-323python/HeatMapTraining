@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-
     document.getElementById("getInfoButton").onclick = function () {
         var url = BASE_URL + "/getinfo?"
                 + "git_client=" + document.getElementById("git_client").value
@@ -31,13 +30,11 @@ function requestGet(url, successCallBack, errorCallBack) {
             if (errorCallBack !== undefined) {
                 errorCallBack(data);
             } else {
-                console.log(xhr);
             }
         } else {
             if (successCallBack !== undefined) {
                 successCallBack(data);
             } else {
-                console.log(xhr);
             }
         }
     };
@@ -57,13 +54,11 @@ function requestPost(url, data, successCallBack, errorCallBack) {
             if (errorCallBack !== undefined) {
                 errorCallBack(data);
             } else {
-                console.log(xhr);
-            }
+                }
         } else {
             if (successCallBack !== undefined) {
                 successCallBack(data);
             } else {
-                console.log(xhr);
             }
         }
     };
@@ -72,6 +67,5 @@ function requestPost(url, data, successCallBack, errorCallBack) {
 function getRepoData(url) {
     requestGet(url, function (respons) {
         document.getElementById("response").innerText = JSON.stringify(respons.body);
-
     });
 }
