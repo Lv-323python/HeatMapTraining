@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById("getInfoButton").onclick = function () {
-        var url = BASE_URL + "/getinfo?"
+    var getInfoButton = document.getElementById("getInfoButton");
+
+    if (getInfoButton) {
+        getInfoButton.onclick = function () {
+            var url = BASE_URL + "/getinfo?"
                 + "git_client=" + document.getElementById("git_client").value
                 + "&token=" + document.getElementById("token").value
                 + "&version=" + document.getElementById("version").value
@@ -9,8 +12,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 + "&hash=" + document.getElementById("hash").value
                 + "&branch=" + document.getElementById("branch").value
                 + "&action=" + document.getElementById("action").value;
-        getRepoData(url);
-    };
+            getRepoData(url);
+        }
+    }
+
+
+    var getLoginButton = document.getElementById("loginButton");
+    if (getLoginButton){
+        getLoginButton.onclick = loginService
+    }
 
 });
 
@@ -44,7 +54,7 @@ function requestPost(url, data, successCallBack, errorCallBack) {
 
     var xhr = new XMLHttpRequest();
     xhr.open("POST", url);
-    xhr.send(data);
+    xhr.send(JSON.stringify(data));
     xhr.onload = function () {
         var data = {
             body: Object.assign({}, JSON.parse(xhr.responseText)),
@@ -54,7 +64,7 @@ function requestPost(url, data, successCallBack, errorCallBack) {
             if (errorCallBack !== undefined) {
                 errorCallBack(data);
             } else {
-                }
+            }
         } else {
             if (successCallBack !== undefined) {
                 successCallBack(data);
@@ -65,7 +75,22 @@ function requestPost(url, data, successCallBack, errorCallBack) {
 }
 
 function getRepoData(url) {
-    requestGet(url, function (respons) {
-        document.getElementById("response").innerText = JSON.stringify(respons.body);
+    requestGet(url, function (response) {
+        document.getElementById("response").innerText = JSON.stringify(response.body);
     });
+}
+
+function loginService() {
+    var data = {
+        "username": document.getElementById("username").value,
+        "password": document.getElementById("password").value
+    }
+    requestPost('/login', data,
+        function (response) {
+            window.location.href = '/'
+        },
+        function (badResponse) {
+            document.getElementById('error').innerText = JSON.stringify(badResponse.body);
+        }
+    )
 }
