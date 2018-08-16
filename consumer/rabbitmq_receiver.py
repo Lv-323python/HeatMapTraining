@@ -7,6 +7,7 @@ import json
 import time
 import pika
 
+from helper.redis_request_sender import RedisRequestSender
 from helper.builder import Builder
 from helper.consumer_config import HOST, PORT, REQUEST_QUEUE, RESPONSE_QUEUE
 
@@ -68,38 +69,44 @@ and     and sends the result back to the provider
         hash_of_commit = body.get('hash')
         branch_of_commit = body.get('branch')
 
-        # gets response from API using API object from builder
-        with Builder(body) as obj:
+        redis_request_sender=RedisRequestSender()
+        response=redis_request_sender.get_entry(body)
 
-            # declares object methods dict,  for next choice and call
-            methods = {
-                'get_repo': obj.get_repo,
-                'get_branches': obj.get_branches,
-                'get_commits': obj.get_commits,
-                'get_commits_by_branch': obj.get_commits_by_branch,
-                'get_commit_by_hash': obj.get_commit_by_hash,
-                'get_contributors': obj.get_contributors
-            }
+        if response==None:
+            # gets response from API using API object from builder
+            with Builder(**body) as obj:
 
-            # check, if request has method, which needs parameter -  call method with parameter.
-            #  Otherwise call method without any parameters
-            if body['action'] == 'get_commit_by_hash':
-                # call needed method (obj.get_commit_by_hash) from methods dict
-                #  with 'hash_of_commit' parameter
-                response = methods[method_name](hash_of_commit)
+                # declares object methods dict,  for next choice and ca ll
+                methods = {
+                    'get_repo': obj.get_repo,
+                    'get_branches': obj.get_branches,
+                    'get_commits': obj.get_commits,
+                    'get_commits_by_branch': obj.get_commits_by_branch,
+                    'get_commit_by_hash': obj.get_commit_by_hash,
+                    'get_contributors': obj.get_contributors
+                }
 
-            elif body['action'] == 'get_commits_by_branch':
-                # call needed method (obj.get_commits_by_branch)
-                #  from methods dict with 'branch_of_commit' parameter
-                response = methods[method_name](branch_of_commit)
+                # check, if request has method, which needs parameter -  call method with parameter.
+                #  Otherwise call method without any parameters
+                if body['action'] == 'get_commit_by_hash':
+                    # call needed method (obj.get_commit_by_hash) from methods dict
+                    #  with 'hash_of_commit' parameter
+                    response = methods[method_name](hash_of_commit)
 
-            else:
-                # call needed method from methods dict without any parameter
-                response = methods[method_name]()
+                elif body['action'] == 'get_commits_by_branch':
+                    # call needed method (obj.get_commits_by_branch)
+                    #  from methods dict with 'branch_of_commit' parameter
+                    response = methods[method_name](branch_of_commit)
 
-            print('response', response)
+                else:
+                    # call needed method from methods dict without any parameter
+                    response = methods[method_name]()
 
-            return response
+                print('response', response)
+                redis_request_sender.set_entry(body,response)
+        else:
+            response=literal_eval(response.decode())
+        return response
 
     def callback(self, channel, method, props, body):
         """
