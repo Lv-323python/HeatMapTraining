@@ -12,7 +12,7 @@ from jinja2 import Template
 from rabbitmq_helpers.request_sender_client import RequestSenderClient
 from rabbitmq_helpers.request_sender_client_config import HOST, PORT
 from app.database import scoped_session
-from app.models.user import User
+from app.models.user import User, get_user_by_name
 
 
 class FeedbackForm(SanicForm):
@@ -74,38 +74,33 @@ def render_template(html_name, **args):
 
 
 
-LOGIN_FORM = '''
-<h2>Please sign in, you can try:</h2>
-<dl>
-<dt>Username</dt> <dd>demo</dd>
-<dt>Password</dt> <dd>1234</dd>
-</dl>
-<p>{}</p>
-<form action="" method="POST">
-  <input class="username" id="name" name="username"
-    placeholder="username" type="text" value=""><br>
-  <input class="password" id="password" name="password"
-    placeholder="password" type="password" value=""><br>
-  <input id="submit" name="submit" type="submit" value="Sign In">
-</form>
-'''
-
 
 @app.route('/login', methods=['GET', 'POST'])
 async def login(request):
     if auth.current_user(request):
         return response.redirect('/')
-    message = ''
     if request.method == 'POST':
-        with scoped_session() as session:
-            user = session.query(User).filter_by(username=request.form.get('username')).first()
-            #user = User.query.filter_by(username=request.form.get('username')).first()
-            #user = User.query.filter_by(username=request.form.get('username')).first()
-            if user is None or not user.check_password(request.form.get('password')):
-                message = 'invalid username or password'
-                return response.redirect('/')
+        user = get_user_by_name(request.form.get('username'))
+        if user and user.check_password(request.form.get('password')):
             auth.login_user(request, user)
-            return response.redirect('/')
+            return response.json({
+                'message': 'succesfully logined'
+            }, status=200)
+        return response.json({
+            'message': 'invalid username or password'
+        }, status=400)
+
+
+
+        # with scoped_session() as session:
+        #     user = session.query(User).filter_by(username=request.form.get('username')).first()
+        #     #user = User.query.filter_by(username=request.form.get('username')).first()
+        #     #user = User.query.filter_by(username=request.form.get('username')).first()
+        #     if user is None or not user.check_password(request.form.get('password')):
+        #         message = 'invalid username or password'
+        #         return response.redirect('/')
+        #     auth.login_user(request, user)
+        #     return response.redirect('/')
 
         # # for demonstration purpose only, you should use more robust method
         # if username == 'demo' and password == '1234':
@@ -116,7 +111,7 @@ async def login(request):
         #     auth.login_user(request, user)
         #     return response.redirect('/')
         # message = 'invalid username or password'
-    return response.html(LOGIN_FORM.format(message))
+    return response.html(LOGIN_FORM)
 
 
 @app.route('/logout')

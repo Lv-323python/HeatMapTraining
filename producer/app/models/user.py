@@ -45,3 +45,7 @@ def load_user(token):
     if token is not None:
         with scoped_session() as session:
             return session.query(User).filter_by(username=token['username']).first()
+
+def get_user_by_name(name):
+    with scoped_session() as session:
+        return session.query(User).filter_by(username=name).first()
