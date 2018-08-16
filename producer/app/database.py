@@ -16,7 +16,7 @@ DATABASE_URL = app.config['DATABASE_URL']
 ENGINE = create_engine(DATABASE_URL)
 
 # Session to be used throughout app.
-SESSION = sessionmaker(bind=ENGINE)
+SESSION = sessionmaker(bind=ENGINE, expire_on_commit=False)
 
 
 @contextmanager
