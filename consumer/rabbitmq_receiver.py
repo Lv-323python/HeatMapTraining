@@ -10,6 +10,9 @@ import pika
 from helper.builder import Builder
 from helper.consumer_config import HOST, PORT, REQUEST_QUEUE, RESPONSE_QUEUE
 
+from general_helper.logger.log_event import event_log_maker
+from general_helper.logger.log_error_decorators import try_except_decor
+
 
 class RabbitMQReceiver:
     """
@@ -17,9 +20,13 @@ class RabbitMQReceiver:
 and     and sends the result back to the provider
     """
 
+    @try_except_decor
     def __init__(self):
-        print('Connecting to rabbitmg...')
-        retries = 30
+
+        event_log_maker('Connecting to rabbitmg...')
+        # print('Connecting to rabbitmg...')
+
+        retries = 5
         while True:
             try:
                 # declare connection
@@ -29,18 +36,21 @@ and     and sends the result back to the provider
                 #  channel
                 channel = connection.channel()
                 break
-            except pika.exceptions.ConnectionClosed as exc:
+            # except pika.exceptions.ConnectionClosed as exc:
+            except BaseException as exc:
                 if retries == 0:
-                    print('Failed to connect!')
+                    event_log_maker('Failed to connect!')
+                    # print('Failed to connect!')
                     raise exc
                 retries -= 1
                 time.sleep(1)
-        print('Successfully connected!')
+        event_log_maker('Successfully connected!')
+        # print('Successfully connected!')
 
         channel.queue_declare(queue=REQUEST_QUEUE)
         channel.queue_declare(queue=RESPONSE_QUEUE)
-
-        print(' [*] Waiting for messages. To exit press CTRL+C')
+        event_log_maker(' [*] Waiting for messages...')
+        # print(' [*] Waiting for messages. To exit press CTRL+C')
 
         # declare consuming
 
@@ -51,6 +61,7 @@ and     and sends the result back to the provider
         channel.start_consuming()
 
     @staticmethod
+    @try_except_decor
     def worker(body):
         """
             Function which takes body of request from 'sender' and
@@ -97,10 +108,12 @@ and     and sends the result back to the provider
                 # call needed method from methods dict without any parameter
                 response = methods[method_name]()
 
-            print('response', response)
+            event_log_maker(f'response, {response}')
+            # print('response', response)
 
             return response
 
+    @try_except_decor
     def callback(self, channel, method, props, body):
         """
             Consumes request from provider(sender)
@@ -111,7 +124,8 @@ and     and sends the result back to the provider
         :return:
         """
 
-        print(" [x] Received %r" % (body,))
+        event_log_maker(f'[x] Received {body}')
+        # print(" [x] Received %r" % (body,))
 
         # uses 'worker' function to get API response
         # and sends it to provider(sender)
