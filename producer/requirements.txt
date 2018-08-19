@@ -9,3 +9,4 @@ ujson==1.35
 uvloop==0.11.2
 websockets==6.0
 WTForms==2.2.1
+fluent-logger==0.9.3

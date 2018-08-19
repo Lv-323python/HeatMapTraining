@@ -5,20 +5,32 @@ services:
     ports:
      - "8080:5672"
      - "9090:15672"
+
+
+#     docker run -d -p 24224:24224 -p 24224:24224/udp -v /data:/fluentd/log fluent/fluentd
+  fluentd:
+    image: "fluent/fluentd"
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    volumes:
+      - /data:/fluentd/log
+
   consumer:
     build:
-      context: ./consumer
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: /consumer/Dockerfile
     image: consumer:latest
     depends_on:
      - rabbit
+     - fluentd
   producer:
     build:
-      context: ./producer
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: /producer/Dockerfile
     image: producer:latest
     ports:
      - "8000:8000"
     depends_on:
      - rabbit
-
+     - fluentd

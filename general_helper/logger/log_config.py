@@ -8,7 +8,7 @@
 import logging
 from fluent import handler
 
-HOST = 'localhost'
+HOST = 'heatmaptraining_fluentd_1'
 PORT = 24224
 
 # format for data that saves into general log file via Fluentd.
