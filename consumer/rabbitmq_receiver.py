@@ -1,17 +1,16 @@
 """
     Consumes requests from provider(sender), sends result to provider(sender)
 """
-from ast import literal_eval
-
 import json
 import time
-import pika
+from ast import literal_eval
 
+import pika
+from general_helper.logger.log_config import LOG
+
+from general_helper.logger.log_error_decorators import try_except_decor
 from helper.builder import Builder
 from helper.consumer_config import HOST, PORT, REQUEST_QUEUE, RESPONSE_QUEUE
-
-from general_helper.logger.log_event import event_log_maker
-from general_helper.logger.log_error_decorators import try_except_decor
 
 
 class RabbitMQReceiver:
@@ -23,7 +22,8 @@ and     and sends the result back to the provider
     @try_except_decor
     def __init__(self):
 
-        event_log_maker('Connecting to rabbitmg...')
+        # event_log_maker('Connecting to rabbitmg...')
+        LOG.info('Connecting to rabbitmg...')
         # print('Connecting to rabbitmg...')
 
         retries = 5
@@ -39,17 +39,22 @@ and     and sends the result back to the provider
             # except pika.exceptions.ConnectionClosed as exc:
             except BaseException as exc:
                 if retries == 0:
-                    event_log_maker('Failed to connect!')
+                    LOG.info('Failed to connect...')
+                    # l.error('Failed to connect!', exc_info=exc)
+                    # event_log_maker('Failed to connect!')
                     # print('Failed to connect!')
                     raise exc
                 retries -= 1
                 time.sleep(1)
-        event_log_maker('Successfully connected!')
+        LOG.info('Successfully connected!')
+        # event_log_maker('Successfully connected!')
         # print('Successfully connected!')
 
         channel.queue_declare(queue=REQUEST_QUEUE)
         channel.queue_declare(queue=RESPONSE_QUEUE)
-        event_log_maker(' [*] Waiting for messages...')
+
+        LOG.info(' [*] Waiting for messages...')
+        # event_log_maker(' [*] Waiting for messages...')
         # print(' [*] Waiting for messages. To exit press CTRL+C')
 
         # declare consuming
@@ -108,7 +113,8 @@ and     and sends the result back to the provider
                 # call needed method from methods dict without any parameter
                 response = methods[method_name]()
 
-            event_log_maker(f'response, {response}')
+            LOG.info(f'response, {response}')
+            # event_log_maker(f'response, {response}')
             # print('response', response)
 
             return response
@@ -124,7 +130,8 @@ and     and sends the result back to the provider
         :return:
         """
 
-        event_log_maker(f'[x] Received {body}')
+        LOG.info(f'[x] Received {body}')
+        # event_log_maker(f'[x] Received {body}')
         # print(" [x] Received %r" % (body,))
 
         # uses 'worker' function to get API response

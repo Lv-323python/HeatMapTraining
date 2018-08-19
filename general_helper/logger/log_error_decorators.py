@@ -2,14 +2,9 @@
     module that contains try-except decorator function
 """
 
-import traceback
 from functools import wraps
 
-from fluent import sender
-from fluent import event
-
-from general_helper.logger.log_config import HOST, PORT
-from general_helper.general_utils import get_file_name
+from general_helper.logger.log_config import LOG
 
 
 def try_except_decor(func):
@@ -33,15 +28,9 @@ def try_except_decor(func):
         """
         try:
             return func(*args, **kwargs)
-        # except:
-        except BaseException:
-            # Get current system exception
-            error = traceback.format_exc()
 
-            sender.setup(get_file_name(__file__), host=HOST, port=PORT)
-            event.Event('error', {'exception': error})
-            sender.close()
-
+        except BaseException as exc:
+            LOG.error('message from try_except_decor', exc_info=exc)
             return None
 
     return wrapper
