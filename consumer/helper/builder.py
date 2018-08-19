@@ -6,6 +6,7 @@ from heat_map.request_sender.bitbucket_request_sender \
 from heat_map.request_sender.github_request_sender import GithubRequestSender
 from heat_map.request_sender.gitlab_request_sender import GitLabRequestSender
 from heat_map.request_sender.gitlab_v3_request_sender_base import GitLabV3RequestSender
+from general_helper.logger.log_error_decorators import try_except_decor
 
 
 class Builder:
@@ -13,6 +14,7 @@ class Builder:
     This is a class builder that returns instance of provider depending on its git_client
     """
 
+    @try_except_decor
     def __init__(self, request_dict):
         self.git_client = request_dict['git_client']
         self.version = request_dict['version']
@@ -21,6 +23,7 @@ class Builder:
         self.token = request_dict['token']
         self.provider = None
 
+    @try_except_decor
     def __enter__(self):
         """
         This method is responsible for building provider with given methods.
@@ -40,5 +43,6 @@ class Builder:
             self.provider = GithubRequestSender(self.owner, self.repo, self.token)
         return self.provider
 
+    @try_except_decor
     def __exit__(self, exc_type, exc_val, exc_tb):
         del self.provider

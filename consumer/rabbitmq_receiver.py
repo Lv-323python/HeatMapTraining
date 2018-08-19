@@ -22,11 +22,9 @@ and     and sends the result back to the provider
     @try_except_decor
     def __init__(self):
 
-        # event_log_maker('Connecting to rabbitmg...')
-        LOG.info('Connecting to rabbitmg...')
-        # print('Connecting to rabbitmg...')
+        LOG.info('Connecting to RabbitMQ...')
 
-        retries = 5
+        retries = 30
         while True:
             try:
                 # declare connection
@@ -36,29 +34,23 @@ and     and sends the result back to the provider
                 #  channel
                 channel = connection.channel()
                 break
+
             # except pika.exceptions.ConnectionClosed as exc:
             except BaseException as exc:
+
                 if retries == 0:
-                    LOG.info('Failed to connect...')
-                    # l.error('Failed to connect!', exc_info=exc)
-                    # event_log_maker('Failed to connect!')
-                    # print('Failed to connect!')
+                    LOG.error('Failed to connect to RabbitMQ...')
                     raise exc
                 retries -= 1
                 time.sleep(1)
-        LOG.info('Successfully connected!')
-        # event_log_maker('Successfully connected!')
-        # print('Successfully connected!')
+        LOG.info('Successfully connected to RabbitMQ!')
 
         channel.queue_declare(queue=REQUEST_QUEUE)
         channel.queue_declare(queue=RESPONSE_QUEUE)
 
-        LOG.info(' [*] Waiting for messages...')
-        # event_log_maker(' [*] Waiting for messages...')
-        # print(' [*] Waiting for messages. To exit press CTRL+C')
+        LOG.info(' [*] Waiting for request...')
 
         # declare consuming
-
         # CHANNEL.basic_qos(prefetch_count=1)
         channel.basic_consume(self.callback, no_ack=False, queue=REQUEST_QUEUE)
 
@@ -113,10 +105,6 @@ and     and sends the result back to the provider
                 # call needed method from methods dict without any parameter
                 response = methods[method_name]()
 
-            LOG.info(f'response, {response}')
-            # event_log_maker(f'response, {response}')
-            # print('response', response)
-
             return response
 
     @try_except_decor
@@ -130,9 +118,7 @@ and     and sends the result back to the provider
         :return:
         """
 
-        LOG.info(f'[x] Received {body}')
-        # event_log_maker(f'[x] Received {body}')
-        # print(" [x] Received %r" % (body,))
+        LOG.info(f'[x] Received request: {body}')
 
         # uses 'worker' function to get API response
         # and sends it to provider(sender)
@@ -143,6 +129,8 @@ and     and sends the result back to the provider
                               routing_key=props.reply_to,
                               properties=pika.BasicProperties(correlation_id=props.correlation_id),
                               body=json.dumps(response))
+
+        LOG.info(f'[x] Sent response: {response}')
 
         # used to tell the server that message was properly handled
         channel.basic_ack(delivery_tag=method.delivery_tag)
