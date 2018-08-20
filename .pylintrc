@@ -5,11 +5,11 @@
 # run arbitrary code
 extension-pkg-whitelist=
 
-init-hook='import sys; sys.path.append("./consumer")'
+init-hook='import sys; sys.path.append("./consumer"); sys.path.append("./producer")'
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
-ignore=CVS, tests.py, tests, producer, consumer
+ignore=CVS, tests.py, tests, config,  models, routes, app, client
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
@@ -537,7 +537,7 @@ max-returns=6
 max-statements=50
 
 # Minimum number of public methods for a class (see R0903).
-min-public-methods=2
+min-public-methods=0
 
 
 [EXCEPTIONS]
