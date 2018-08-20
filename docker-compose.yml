@@ -5,9 +5,6 @@ services:
     ports:
      - "8080:5672"
      - "9090:15672"
-
-
-#     docker run -d -p 24224:24224 -p 24224:24224/udp -v /data:/fluentd/log fluent/fluentd
   fluentd:
     image: "fluent/fluentd"
     ports:
@@ -15,7 +12,6 @@ services:
       - "24224:24224/udp"
     volumes:
       - /data:/fluentd/log
-
   consumer:
     build:
       context: ./
