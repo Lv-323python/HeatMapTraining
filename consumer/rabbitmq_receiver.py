@@ -22,7 +22,7 @@ and     and sends the result back to the provider
     @try_except_decor
     def __init__(self):
 
-        LOG.info('Connecting to RabbitMQ...')
+        LOG.debug('Connecting to RabbitMQ...')
 
         retries = 30
         while True:
@@ -43,12 +43,12 @@ and     and sends the result back to the provider
                     raise exc
                 retries -= 1
                 time.sleep(1)
-        LOG.info('Successfully connected to RabbitMQ!')
+        LOG.debug('Successfully connected to RabbitMQ!')
 
         channel.queue_declare(queue=REQUEST_QUEUE)
         channel.queue_declare(queue=RESPONSE_QUEUE)
 
-        LOG.info(' [*] Waiting for request...')
+        LOG.debug(' [*] Waiting for request...')
 
         # declare consuming
         # CHANNEL.basic_qos(prefetch_count=1)
@@ -118,7 +118,7 @@ and     and sends the result back to the provider
         :return:
         """
 
-        LOG.info(f'[x] Received request: {body}')
+        LOG.debug(f'[x] Received request: {body}')
 
         # uses 'worker' function to get API response
         # and sends it to provider(sender)
@@ -130,7 +130,7 @@ and     and sends the result back to the provider
                               properties=pika.BasicProperties(correlation_id=props.correlation_id),
                               body=json.dumps(response))
 
-        LOG.info(f'[x] Sent response: {response}')
+        LOG.debug(f'[x] Sent response: {response}')
 
         # used to tell the server that message was properly handled
         channel.basic_ack(delivery_tag=method.delivery_tag)

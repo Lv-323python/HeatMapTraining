@@ -14,7 +14,7 @@ class RequestSenderClient:
         self.response = None
         self.corr_id = None
 
-        LOG.info('Connecting to RabbitMQ...')
+        LOG.debug('Connecting to RabbitMQ...')
 
         retries = 30
         while True:
@@ -27,13 +27,13 @@ class RequestSenderClient:
             # except pika.exceptions.ConnectionClosed as exc:
             except BaseException as exc:
                 if retries == 0:
-                    LOG.info('Failed to connect to RabbitMQ!')
+                    LOG.debug('Failed to connect to RabbitMQ!')
                     raise exc
 
                 retries -= 1
                 time.sleep(1)
 
-        LOG.info('Successfully connected to RabbitMQ!')
+        LOG.debug('Successfully connected to RabbitMQ!')
 
         # declare a queues
         queue = self.channel.queue_declare(queue=RPC_QUEUE)
@@ -62,10 +62,10 @@ class RequestSenderClient:
             ),
             body=message
         )
-        LOG.info(f'Sent request: {message}')
-        LOG.info('Waiting for response...')
+        LOG.debug(f'Sent request: {message}')
+        LOG.debug('Waiting for response...')
 
         while self.response is None:
             self.channel.start_consuming()
-        LOG.info(f'Response received: {self.response}')
+        LOG.debug(f'Response received: {self.response}')
         return self.response

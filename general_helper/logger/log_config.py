@@ -10,6 +10,8 @@ from fluent import handler
 
 HOST = 'heatmaptraining_fluentd_1'
 PORT = 24224
+LOGGING_LEVEL = logging.DEBUG
+
 
 # format for data that saves into general log file via Fluentd.
 CUSTOM_FORMAT = {
@@ -20,7 +22,7 @@ CUSTOM_FORMAT = {
 }
 
 # sets level of logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=LOGGING_LEVEL)
 
 # ! ! ! used to Import ! ! !
 # gets logger from logging module.
