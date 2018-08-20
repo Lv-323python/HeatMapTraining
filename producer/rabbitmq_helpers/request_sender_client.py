@@ -88,10 +88,10 @@ class RequestSenderClient:
             ),
             body=message
         )
-        LOG.debug(f'Sent request: {message}')
+        LOG.debug(f'Sent request: %s', message)
         LOG.debug('Waiting for response...')
 
         while self.response is None:
             self.channel.start_consuming()
-        LOG.debug(f'Response received: {self.response}')
+        LOG.debug(f'Response received: %s', self.response)
         return self.response
