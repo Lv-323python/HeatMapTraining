@@ -1,12 +1,14 @@
 """
     Consumes requests from provider(sender), sends result to provider(sender)
 """
-from ast import literal_eval
-
 import json
 import time
-import pika
+from ast import literal_eval
 
+import pika
+from general_helper.logger.log_config import LOG
+
+from general_helper.logger.log_error_decorators import try_except_decor
 from helper.builder import Builder
 from helper.consumer_config import HOST, PORT, REQUEST_QUEUE, RESPONSE_QUEUE
 
@@ -17,8 +19,11 @@ class RabbitMQReceiver:
 and     and sends the result back to the provider
     """
 
+    @try_except_decor
     def __init__(self):
-        print('Connecting to rabbitmg...')
+
+        LOG.debug('Connecting to RabbitMQ...')
+
         retries = 30
         while True:
             try:
@@ -29,21 +34,23 @@ and     and sends the result back to the provider
                 #  channel
                 channel = connection.channel()
                 break
-            except pika.exceptions.ConnectionClosed as exc:
+
+            # except pika.exceptions.ConnectionClosed as exc:
+            except BaseException as exc:
+
                 if retries == 0:
-                    print('Failed to connect!')
+                    LOG.error('Failed to connect to RabbitMQ...')
                     raise exc
                 retries -= 1
                 time.sleep(1)
-        print('Successfully connected!')
+        LOG.debug('Successfully connected to RabbitMQ!')
 
         channel.queue_declare(queue=REQUEST_QUEUE)
         channel.queue_declare(queue=RESPONSE_QUEUE)
 
-        print(' [*] Waiting for messages. To exit press CTRL+C')
+        LOG.debug(' [*] Waiting for request...')
 
         # declare consuming
-
         # CHANNEL.basic_qos(prefetch_count=1)
         channel.basic_consume(self.callback, no_ack=False, queue=REQUEST_QUEUE)
 
@@ -51,6 +58,7 @@ and     and sends the result back to the provider
         channel.start_consuming()
 
     @staticmethod
+    @try_except_decor
     def worker(body):
         """
             Function which takes body of request from 'sender' and
@@ -97,10 +105,9 @@ and     and sends the result back to the provider
                 # call needed method from methods dict without any parameter
                 response = methods[method_name]()
 
-            print('response', response)
-
             return response
 
+    @try_except_decor
     def callback(self, channel, method, props, body):
         """
             Consumes request from provider(sender)
@@ -111,7 +118,7 @@ and     and sends the result back to the provider
         :return:
         """
 
-        print(" [x] Received %r" % (body,))
+        LOG.debug(f'[x] Received request: {body}')
 
         # uses 'worker' function to get API response
         # and sends it to provider(sender)
@@ -122,6 +129,8 @@ and     and sends the result back to the provider
                               routing_key=props.reply_to,
                               properties=pika.BasicProperties(correlation_id=props.correlation_id),
                               body=json.dumps(response))
+
+        LOG.debug(f'[x] Sent response: {response}')
 
         # used to tell the server that message was properly handled
         channel.basic_ack(delivery_tag=method.delivery_tag)

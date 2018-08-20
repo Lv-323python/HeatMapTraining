@@ -12,3 +12,4 @@ pytest-mock==1.10.0
 requests==2.19.1
 six==1.11.0
 urllib3==1.23
+fluent-logger==0.9.3

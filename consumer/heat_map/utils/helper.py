@@ -2,8 +2,10 @@
 A library of helpers of general use
 """
 from datetime import datetime
+from general_helper.logger.log_error_decorators import try_except_decor
 
 
+@try_except_decor
 def format_date_to_int(date, format_string):
     """
     Creates an int(timestamp) from a string representing a date and time and a corresponding
