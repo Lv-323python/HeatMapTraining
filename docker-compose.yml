@@ -15,7 +15,7 @@ services:
   consumer:
     build:
       context: ./
-      dockerfile: /consumer/Dockerfile
+      dockerfile: ./consumer/Dockerfile
     image: consumer:latest
     depends_on:
      - rabbit
@@ -23,7 +23,7 @@ services:
   producer:
     build:
       context: ./
-      dockerfile: /producer/Dockerfile
+      dockerfile: ./producer/Dockerfile
     image: producer:latest
     ports:
      - "8000:8000"

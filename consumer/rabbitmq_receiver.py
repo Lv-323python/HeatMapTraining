@@ -118,7 +118,7 @@ and     and sends the result back to the provider
         :return:
         """
 
-        LOG.debug(f'[x] Received request: {body}')
+        LOG.debug(f'[x] Received request: %s', body)
 
         # uses 'worker' function to get API response
         # and sends it to provider(sender)
@@ -130,7 +130,7 @@ and     and sends the result back to the provider
                               properties=pika.BasicProperties(correlation_id=props.correlation_id),
                               body=json.dumps(response))
 
-        LOG.debug(f'[x] Sent response: {response}')
+        LOG.debug(f'[x] Sent response: %s', response)
 
         # used to tell the server that message was properly handled
         channel.basic_ack(delivery_tag=method.delivery_tag)
