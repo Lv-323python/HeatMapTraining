@@ -5,6 +5,13 @@ services:
     ports:
      - "8080:5672"
      - "9090:15672"
+  postgres:
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
+    image: postgres:customized
+    ports:
+     - "7070:5432"
   fluentd:
     image: "fluent/fluentd"
     ports:
@@ -29,4 +36,5 @@ services:
      - "8000:8000"
     depends_on:
      - rabbit
+     - postgres
      - fluentd
