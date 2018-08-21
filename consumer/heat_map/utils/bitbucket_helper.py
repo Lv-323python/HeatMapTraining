@@ -3,8 +3,10 @@ A library of helpers of bitbucket_request_sender use
 """
 
 from heat_map.utils.helper import format_date_to_int
+from general_helper.logger.log_error_decorators import try_except_decor
 
 
+@try_except_decor
 def to_timestamp(date_time_str):
     """
     Converts datetime string to timestamp
@@ -15,6 +17,7 @@ def to_timestamp(date_time_str):
     return format_date_to_int(date_time_str[0:19], "%Y-%m-%dT%H:%M:%S")
 
 
+@try_except_decor
 def get_gitname(commit):
     """
 
@@ -29,6 +32,7 @@ def get_gitname(commit):
     return result_name
 
 
+@try_except_decor
 def get_email(author_raw):
     """
     Extracts author email from author_raw string

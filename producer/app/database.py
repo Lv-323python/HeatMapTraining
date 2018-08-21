@@ -6,6 +6,7 @@ Notes:
      and reduces noise in code by not having to manually
      commit or rollback the db if a exception occurs.
 """
+
 import os
 import time
 from alembic import command
@@ -16,24 +17,13 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError, OperationalError as SQLAlchemyConnectionError
 from app import app
 
-
-from app.db_connection import create_database
-
-print('waiting 30 seconds')
-time.sleep(30)
-create_database()
-
 DATABASE_URL = app.config['DATABASE_URL']
-
-ALEMBIC_INI_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'alembic.ini')
-ALEMBIC_CFG = Config(ALEMBIC_INI_FILE)
-command.upgrade(ALEMBIC_CFG, "head")
-
 ENGINE = create_engine(DATABASE_URL)
+
 # Session to be used throughout app.
 SESSION = sessionmaker(bind=ENGINE, expire_on_commit=False)
 
-
+RETRIES = 30
 while True:
     try:
         # declare connection
@@ -48,7 +38,10 @@ while True:
 print('Successfully connected!')
 CONNECTION.close()
 
-
+# run migrations
+ALEMBIC_INI_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'alembic.ini')
+ALEMBIC_CONFIG = Config(ALEMBIC_INI_FILE)
+command.upgrade(ALEMBIC_CONFIG, "head")
 
 
 @contextmanager
