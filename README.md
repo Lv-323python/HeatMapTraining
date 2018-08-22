@@ -59,6 +59,13 @@ Parameters:
 6. Open ***producer*** project in ***PyCharm*** and run  ```client.py```.
 
 
+## View Log files:
+1. To view the general ***log*** file in real time, just use the command below:
+```
+cd /data && tail -f $(ls data.*.log -t1 |  head -n 1) | sed 's/\n/n/g;G;G'
+```
+**Note:** use this command only after the ***app*** has been successfully started using the ***docker-compose*** file .
+
 
 
 

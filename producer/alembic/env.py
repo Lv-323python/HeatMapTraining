@@ -19,8 +19,8 @@ fileConfig(config.config_file_name)
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 sys.path.append(os.getcwd())
-for i in sys.path:
-    print(i)
+
+
 from app import app
 from app.models import Base
 

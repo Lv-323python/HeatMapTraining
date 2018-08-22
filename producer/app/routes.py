@@ -1,30 +1,13 @@
 """
 Module for creating a producer on Sanic which sends JSON to RabbitMQ
 """
-import os
 import json
 from app import app, auth
+from app.helpers.template import render_template
 from sanic import response
-from sanic.response import html
-from jinja2 import Template
 from rabbitmq_helpers.request_sender_client import RequestSenderClient
 from rabbitmq_helpers.request_sender_client_config import HOST, PORT
-from app.models.user import get_user_by_name
-from ast import literal_eval
-
-
-
-def render_template(html_name, **args):
-    """
-    Function which starts working with templates
-    :param html_name:
-    :param args:
-    :return: html template
-    """
-    with open(os.path.join(os.path.dirname(__file__), 'templates', html_name), 'r') as file:
-        html_text = file.read()
-    template = Template(html_text)
-    return html(template.render(args))
+from app.models.user import get_user_by_name, get_user_by_email, register_user
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -79,11 +62,20 @@ async def logout(request):
     return response.redirect('/login')
 
 
-# @app.route('/')
-# @auth.login_required(user_keyword='user')
-# async def profile(request, user):
-#     content = '<a href="/logout">Logout</a><p>Welcome, %s</p>' % user.username
-#     return response.html(content)
+@app.route('/register', methods=['GET', 'POST'])
+def register(request):
+    if auth.current_user(request):
+        return response.redirect('/')
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        if not get_user_by_name(username) and not get_user_by_email(email):
+            register_user(username, email, password)
+            return response.redirect(app.url_for('login'))
+    return render_template('register.html')
 
 
 def handle_no_auth(request):

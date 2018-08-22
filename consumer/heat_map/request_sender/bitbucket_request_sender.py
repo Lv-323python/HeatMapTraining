@@ -11,6 +11,8 @@ from heat_map.request_sender.request_sender_base import RequestSender
 from heat_map.utils.bitbucket_helper import to_timestamp, get_gitname, get_email
 from heat_map.utils.request_status_codes import STATUS_CODE_OK
 
+from general_helper.logger.log_error_decorators import try_except_decor
+
 
 class BitbucketRequestSender(RequestSender):
     """
@@ -18,9 +20,11 @@ class BitbucketRequestSender(RequestSender):
     for version control using Git
     """
 
+    @try_except_decor
     def __init__(self, owner, repo, base_url='https://api.bitbucket.org/2.0'):
         super().__init__(base_url=base_url, owner=owner, repo=repo)
 
+    @try_except_decor
     def _get_request(self, endpoint, params=None, **kwargs):
         """
         Sends GET request to URL
@@ -31,6 +35,7 @@ class BitbucketRequestSender(RequestSender):
         """
         return requests.get(self.base_url + endpoint, params, **kwargs)
 
+    @try_except_decor
     def get_repo(self):
         """
         Gets information about repository
@@ -53,7 +58,10 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(repo_endpoint, filter_param)
         # guard condition
         if response.status_code != STATUS_CODE_OK:
-            return None
+            assert False, \
+                f'Invalid parameter(s) in: owner: {self.owner},' \
+                f' repo: {self.repo}'
+            # return None
         # deserialize
         repo = response.json()
 
@@ -65,6 +73,7 @@ class BitbucketRequestSender(RequestSender):
             'url': repo['links']['self']['href']
         }
 
+    @try_except_decor
     def get_branches(self):
         """
         Gets list of branches in a repository
@@ -86,7 +95,10 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(branches_endpoint, filter_param)
         # guard condition
         if response.status_code != STATUS_CODE_OK:
-            return None
+            assert False, \
+                f'Invalid parameter(s) in: owner: {self.owner},' \
+                f' repo: {self.repo}'
+            # return None
         # deserialize
         branches_page = response.json()
 
@@ -96,6 +108,7 @@ class BitbucketRequestSender(RequestSender):
             } for branch in branches_page['values']
             ]
 
+    @try_except_decor
     def get_commits(self):
         """
         Gets information about all commits in repository
@@ -148,6 +161,7 @@ class BitbucketRequestSender(RequestSender):
 
         return result_list
 
+    @try_except_decor
     def get_commits_by_branch(self, branch_name):
         """
         Gets information about commits of a specific branch
@@ -174,7 +188,10 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(branch_commits_endpoint, filter_param)
         # guard condition
         if response.status_code != STATUS_CODE_OK:
-            return None
+            assert False, \
+                f'Invalid parameter(s) in: owner: {self.owner},' \
+                f' repo: {self.repo}, branch name: {branch_name}'
+            # return None
         # deserialize commit
         commits_page = response.json()
 
@@ -187,6 +204,7 @@ class BitbucketRequestSender(RequestSender):
             } for commit in commits_page['values']
             ]
 
+    @try_except_decor
     def get_commit_by_hash(self, hash_of_commit):
         """
         Gets information about the commit by hash
@@ -212,7 +230,10 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(commit_endpoint)
         # guard condition
         if response.status_code != STATUS_CODE_OK:
-            return None
+            assert False, \
+                f'Invalid parameter(s) in: owner: {self.owner},' \
+                f' repo: {self.repo}, hash of commit: {hash_of_commit}'
+            # return None
         # deserialize commit
         commit = response.json()
 
@@ -228,7 +249,10 @@ class BitbucketRequestSender(RequestSender):
             response = self._get_request(branch_commits_endpoint, filter_param)
             # guard condition
             if response.status_code != STATUS_CODE_OK:
-                return None
+                assert False, \
+                    f'Invalid parameter(s) in: owner: {self.owner},' \
+                    f' repo: {self.repo}, branch name: {branch}'
+                # return None
             # deserialize commit
             response = response.json()
 
@@ -252,6 +276,7 @@ class BitbucketRequestSender(RequestSender):
         return result
 
     # ! ! ! needs check for duplicate
+    @try_except_decor
     def get_contributors(self):
         """
         Gets information about all contributors to repository
@@ -277,7 +302,8 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(commits_endpoint)
         # guard condition
         if response.status_code != STATUS_CODE_OK:
-            return None
+            assert False, f'Invalid parameter(s) in: owner: {self.owner}, repo: {self.repo}'
+            # return None
         # deserialize commits
         commits_page = response.json()
 
@@ -312,6 +338,7 @@ class BitbucketServerRequestSender(RequestSender):
     for version control using Git
     """
 
+    @try_except_decor
     def __init__(self, owner, repo, project='',
                  base_url='http://192.168.0.104:7990/rest/api/1.0/projects', ):
 
@@ -322,6 +349,7 @@ class BitbucketServerRequestSender(RequestSender):
         self.base_url = base_url + '/' + (project or f'~{owner}')
         self.project = project
 
+    @try_except_decor
     def _get_request(self, endpoint, params=None, **kwargs):
         """
         Sends GET request to URL
@@ -333,6 +361,7 @@ class BitbucketServerRequestSender(RequestSender):
 
         return requests.get(self.base_url + endpoint, params, **kwargs)
 
+    @try_except_decor
     def get_repo(self):
         """
         Gets information about repository
@@ -366,6 +395,7 @@ class BitbucketServerRequestSender(RequestSender):
             'url': repo['links']['self'][0]['href']
         }
 
+    @try_except_decor
     def get_branches(self):
         """
         Gets list of branches in a repository
@@ -396,6 +426,7 @@ class BitbucketServerRequestSender(RequestSender):
             } for branch in branches_page['values']
             ]
 
+    @try_except_decor
     def get_commits(self):
         """
         Gets information about all commits in repository
@@ -448,6 +479,7 @@ class BitbucketServerRequestSender(RequestSender):
 
         return result_list
 
+    @try_except_decor
     def get_commits_by_branch(self, branch_name):
         """
         Gets information about commits of a specific branch
@@ -488,6 +520,7 @@ class BitbucketServerRequestSender(RequestSender):
             } for commit in commits_page['values']
             ]
 
+    @try_except_decor
     def get_commit_by_hash(self, hash_of_commit):
         """
         Gets information about the commit by hash
@@ -547,6 +580,7 @@ class BitbucketServerRequestSender(RequestSender):
 
     # ! ! ! needs another contributor for test
     # ! ! ! needs check for duplicate
+    @try_except_decor
     def get_contributors(self):
         """
         Gets information about all contributors to repository
