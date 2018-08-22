@@ -33,7 +33,7 @@ function requestGet(url, successCallBack, errorCallBack) {
     xhr.send();
     xhr.onload = function () {
         var data = {
-            body: Object.assign({}, JSON.parse(xhr.responseText)),
+            body: JSON.parse(xhr.responseText),
             status: xhr.status
         };
         if (xhr.status >= 400) {
@@ -57,7 +57,7 @@ function requestPost(url, data, successCallBack, errorCallBack) {
     xhr.send(JSON.stringify(data));
     xhr.onload = function () {
         var data = {
-            body: Object.assign({}, JSON.parse(xhr.responseText)),
+            body: JSON.parse(xhr.responseText),
             status: xhr.status
         }
         if (xhr.status >= 400) {
