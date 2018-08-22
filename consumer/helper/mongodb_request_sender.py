@@ -4,6 +4,7 @@
 import time
 import datetime
 import pymongo
+import pymongo.errors
 
 from pymongo import MongoClient
 
@@ -49,10 +50,13 @@ class MongoDBRequestSender:
             print("MongoDBRequestSender.get_entry: Trying to find in Mongo : " + str(key))
             print(self.hash_collection.find_one({"key": key}))
             return self.hash_collection.find_one({"key": key}).get('value')
-        except:
+        except AttributeError:
+            print("Can't find this entry in Mongo or maybe you have problems with MongoDB")
+            return None
+        except pymongo.errors.PyMongoError as err:
             print(
-                "MongoDBRequestSender.get_entry: " +
-                "Can't find this entry in Mongo or maybe you have problems with MongoDB")
+                "MongoDBRequestSender.get_entry: problems with MongoDB")
+            print(err)
             return None
 
     def set_entry(self, body, response):
@@ -70,5 +74,6 @@ class MongoDBRequestSender:
             print(self.hash_collection.insert_one({"key": key,
                                                    "value": response,
                                                    "date": utc_timestamp}).inserted_id)
-        except:
-            print("MongoDBRequestSender.set_entry:Problems with MongoDB set_entry")
+        except pymongo.errors.PyMongoError as err:
+            print("MongoDBRequestSender.set_entry: Problems with MongoDB")
+            print(err)
