@@ -4,6 +4,7 @@
 import time
 from ast import literal_eval
 import redis
+import redis.exceptions
 
 REDIS_HOST = 'heatmaptraining_redis_1'
 REDIS_PORT = 6379
@@ -41,8 +42,9 @@ class RedisRequestSender:
         key = '-'.join(body.values())
         try:
             return literal_eval(self.redis_db.get(key).decode())
-        except:
+        except redis.exceptions.RedisError as exc:
             print("Problems with Redis get")
+            print(exc)
             return None
 
     def set_entry(self, body, response):
@@ -58,5 +60,6 @@ class RedisRequestSender:
             pipe = self.redis_db.pipeline()
             pipe.set(name=key, value=response, ex=3600)
             pipe.execute()
-        except:
+        except redis.exceptions.RedisError as exc:
             print("Problems with Redis set")
+            print(exc)
