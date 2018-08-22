@@ -8,6 +8,7 @@ import time
 import pika
 
 from helper.redis_request_sender import RedisRequestSender
+from helper.mongodb_request_sender import MongoDBRequestSender
 from helper.builder import Builder
 from helper.consumer_config import HOST, PORT, REQUEST_QUEUE, RESPONSE_QUEUE
 
@@ -69,8 +70,13 @@ and     and sends the result back to the provider
         hash_of_commit = body.get('hash')
         branch_of_commit = body.get('branch')
 
-        redis_request_sender=RedisRequestSender()
-        response=redis_request_sender.get_entry(body)
+        # If your hash database is Redis
+        # redis_request_sender=RedisRequestSender()
+        # response=redis_request_sender.get_entry(body)
+
+        # If your hash database is MongoDB
+        mongo_request_sender = MongoDBRequestSender()
+        response = mongo_request_sender.get_entry(body)
 
         if response==None:
             # gets response from API using API object from builder
@@ -103,9 +109,9 @@ and     and sends the result back to the provider
                     response = methods[method_name]()
 
                 print('response', response)
-                redis_request_sender.set_entry(body,response)
+                mongo_request_sender.set_entry(body,response)
         else:
-            response=literal_eval(response.decode())
+            response=response
         return response
 
     def callback(self, channel, method, props, body):

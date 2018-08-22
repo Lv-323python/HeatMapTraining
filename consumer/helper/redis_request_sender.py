@@ -1,6 +1,8 @@
 import redis
 import time
 
+from ast import literal_eval
+
 
 REDIS_HOST='heatmaptraining_redis_1'
 REDIS_PORT=6379
@@ -32,9 +34,9 @@ class RedisRequestSender:
         assert isinstance(body, dict), 'Inputted "body" type is not dict'
         key='-'.join(body.values())
         try:
-            return(self.redis_db.get(key))
+            return(literal_eval(self.redis_db.get(key).decode()))
         except:
-            print("Problems with Redis")
+            print("Problems with Redis get")
             return(None)
 
     def set_entry(self,body,response):
@@ -45,5 +47,5 @@ class RedisRequestSender:
             pipe.set(name=key,value=response,ex=3600)
             pipe.execute()
         except:
-            print("Problems with Redis")
+            print("Problems with Redis set")
 

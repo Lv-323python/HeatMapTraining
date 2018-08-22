@@ -14,6 +14,15 @@ services:
     volumes:
       - ../data/redis:/data
     restart: always
+  mongo:
+    image: mongo
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/dev/null
+    volumes:
+      - ./data/db:/data/db
+    ports:
+      - "27017:27017"
   consumer:
     build:
       context: ./consumer
