@@ -5,6 +5,24 @@ services:
     ports:
      - "8080:5672"
      - "9090:15672"
+  redis:
+    image: redis
+    command: ["redis-server", "--appendonly", "yes"]
+    hostname: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ../data/redis:/data
+    restart: always
+  mongo:
+    image: mongo
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/dev/null
+    volumes:
+      - ./data/db:/data/db
+    ports:
+      - "27017:27017"
   postgres:
     build:
       context: ./postgres

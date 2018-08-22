@@ -1,14 +1,16 @@
 """
     Consumes requests from provider(sender), sends result to provider(sender)
 """
+
 import json
 import time
 from ast import literal_eval
-
 import pika
-from general_helper.logger.log_config import LOG
 
+from general_helper.logger.log_config import LOG
 from general_helper.logger.log_error_decorators import try_except_decor
+#from helper.redis_request_sender import RedisRequestSender
+from helper.mongodb_request_sender import MongoDBRequestSender
 from helper.builder import Builder
 from helper.consumer_config import HOST, PORT, REQUEST_QUEUE, RESPONSE_QUEUE
 
@@ -76,36 +78,47 @@ and     and sends the result back to the provider
         hash_of_commit = body.get('hash')
         branch_of_commit = body.get('branch')
 
-        # gets response from API using API object from builder
-        with Builder(body) as obj:
+        # If your hash database is Redis
+        # redis_request_sender=RedisRequestSender()
+        # response=redis_request_sender.get_entry(body)
 
-            # declares object methods dict,  for next choice and call
-            methods = {
-                'get_repo': obj.get_repo,
-                'get_branches': obj.get_branches,
-                'get_commits': obj.get_commits,
-                'get_commits_by_branch': obj.get_commits_by_branch,
-                'get_commit_by_hash': obj.get_commit_by_hash,
-                'get_contributors': obj.get_contributors
-            }
+        # If your hash database is MongoDB
+        mongo_request_sender = MongoDBRequestSender()
+        response = mongo_request_sender.get_entry(body)
 
-            # check, if request has method, which needs parameter -  call method with parameter.
-            #  Otherwise call method without any parameters
-            if body['action'] == 'get_commit_by_hash':
-                # call needed method (obj.get_commit_by_hash) from methods dict
-                #  with 'hash_of_commit' parameter
-                response = methods[method_name](hash_of_commit)
+        if not response:
+            # gets response from API using API object from builder
+            with Builder(**body) as obj:
 
-            elif body['action'] == 'get_commits_by_branch':
-                # call needed method (obj.get_commits_by_branch)
-                #  from methods dict with 'branch_of_commit' parameter
-                response = methods[method_name](branch_of_commit)
+                # declares object methods dict,  for next choice and ca ll
+                methods = {
+                    'get_repo': obj.get_repo,
+                    'get_branches': obj.get_branches,
+                    'get_commits': obj.get_commits,
+                    'get_commits_by_branch': obj.get_commits_by_branch,
+                    'get_commit_by_hash': obj.get_commit_by_hash,
+                    'get_contributors': obj.get_contributors
+                }
 
-            else:
-                # call needed method from methods dict without any parameter
-                response = methods[method_name]()
+                # check, if request has method, which needs parameter -  call method with parameter.
+                #  Otherwise call method without any parameters
+                if body['action'] == 'get_commit_by_hash':
+                    # call needed method (obj.get_commit_by_hash) from methods dict
+                    #  with 'hash_of_commit' parameter
+                    response = methods[method_name](hash_of_commit)
 
-            return response
+                elif body['action'] == 'get_commits_by_branch':
+                    # call needed method (obj.get_commits_by_branch)
+                    #  from methods dict with 'branch_of_commit' parameter
+                    response = methods[method_name](branch_of_commit)
+
+                else:
+                    # call needed method from methods dict without any parameter
+                    response = methods[method_name]()
+
+                print('response', response)
+                mongo_request_sender.set_entry(body, response)
+        return response
 
     @try_except_decor
     def callback(self, channel, method, props, body):

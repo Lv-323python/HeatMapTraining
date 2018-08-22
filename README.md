@@ -40,8 +40,23 @@ Parameters:
 Parameters:
 - *rabbitmq_server_port* - should be the port on which ***rabbitmq server*** is running on your local mahcihe.
 
-3. Open ***consumer*** project in ***PyCharm*** and run ```receiver.py```.
-4. Open ***producer*** project in ***PyCharm*** and run  ```client.py```.
+3. Run the redis server in ***docker container*** by typing:
+
+```
+sudo docker run --name container_name -d redis
+sudo docker run -it --link container_name:redis --rm redis redis-cli -h redis -p 6379
+```
+Parameters:
+- *container_name*  -  the name ***container*** will get after creation
+
+
+4. Change ```HOST = 'localhost'``` and ```PORT = redis_server_port``` in the ```/home/user/ana/softs/HeatMapTraining/consumer/helper/redis_request_sender.py```  file.
+
+Parameters:
+- *redis_server_port* - should be the port on which ***redis server*** is running on your local mahcihe.
+
+5. Open ***consumer*** project in ***PyCharm*** and run ```receiver.py```.
+6. Open ***producer*** project in ***PyCharm*** and run  ```client.py```.
 
 
 ## View Log files:
