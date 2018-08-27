@@ -5,13 +5,30 @@ BitbucketServerRequestSender class hat provides the same methods for sending API
 to Bitbucket Server.
 """
 
+import time
 import requests
+from requests.exceptions import RequestException
 
 from heat_map.request_sender.request_sender_base import RequestSender
 from heat_map.utils.bitbucket_helper import to_timestamp, get_gitname, get_email
 from heat_map.utils.request_status_codes import STATUS_CODE_OK
 
 from general_helper.logger.log_error_decorators import try_except_decor
+from general_helper.logger.log_config import LOG
+
+
+class BitbucketRequestSenderExc(Exception):
+    """
+        Exception class for BitbucketRequestSender
+    """
+    pass
+
+
+class BitbucketServerRequestSenderExc(Exception):
+    """
+        Exception class for BitbucketServerRequestSender
+    """
+    pass
 
 
 class BitbucketRequestSender(RequestSender):
@@ -33,7 +50,21 @@ class BitbucketRequestSender(RequestSender):
         :param kwargs: - other optional parameters
         :return: json - response object
         """
-        return requests.get(self.base_url + endpoint, params, **kwargs)
+
+        retries = 30
+        while True:
+            try:
+                LOG.debug('Try to connect to BitBucket Cloud!')
+                response = requests.get(self.base_url + endpoint, params, **kwargs)
+                LOG.debug('Successfully connected BitBucket Cloud!')
+                return response
+
+            except RequestException as exc:
+                if retries == 0:
+                    LOG.error('Failed to connect to BitBucket Cloud...', exc_info=exc)
+                    raise RequestException
+                retries -= 1
+                time.sleep(1)
 
     @try_except_decor
     def get_repo(self):
@@ -58,10 +89,9 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(repo_endpoint, filter_param)
         # guard condition
         if response.status_code != STATUS_CODE_OK:
-            assert False, \
-                f'Invalid parameter(s) in: owner: {self.owner},' \
-                f' repo: {self.repo}'
-            # return None
+            raise BitbucketRequestSenderExc(
+                f'Invalid parameter(s) in: owner: {self.owner},'
+                f' repo: {self.repo}')
         # deserialize
         repo = response.json()
 
@@ -95,10 +125,9 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(branches_endpoint, filter_param)
         # guard condition
         if response.status_code != STATUS_CODE_OK:
-            assert False, \
-                f'Invalid parameter(s) in: owner: {self.owner},' \
-                f' repo: {self.repo}'
-            # return None
+            raise BitbucketRequestSenderExc(
+                f'Invalid parameter(s) in: owner: {self.owner},'
+                f' repo: {self.repo}')
         # deserialize
         branches_page = response.json()
 
@@ -133,13 +162,13 @@ class BitbucketRequestSender(RequestSender):
         # gets all branches in repository
         branches = self.get_branches()
         if branches is None:
-            return None
+            raise BitbucketRequestSenderExc()
 
         # get list of commits pages from all branches in repository
         for branch in branches:
             list_of_branch_commits = self.get_commits_by_branch(branch['name'])
             if list_of_branch_commits is None:
-                return None
+                raise BitbucketRequestSenderExc()
 
             # adds key 'branches' with branch name in list to every commit in branch,
             #  or if key 'branches' is existing add branch name to existing branches list
@@ -188,10 +217,9 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(branch_commits_endpoint, filter_param)
         # guard condition
         if response.status_code != STATUS_CODE_OK:
-            assert False, \
-                f'Invalid parameter(s) in: owner: {self.owner},' \
-                f' repo: {self.repo}, branch name: {branch_name}'
-            # return None
+            raise BitbucketRequestSenderExc(
+                f'Invalid parameter(s) in: owner: {self.owner},'
+                f' repo: {self.repo}, branch name: {branch_name}')
         # deserialize commit
         commits_page = response.json()
 
@@ -230,10 +258,9 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(commit_endpoint)
         # guard condition
         if response.status_code != STATUS_CODE_OK:
-            assert False, \
-                f'Invalid parameter(s) in: owner: {self.owner},' \
-                f' repo: {self.repo}, hash of commit: {hash_of_commit}'
-            # return None
+            raise BitbucketRequestSenderExc(
+                f'Invalid parameter(s) in: owner: {self.owner},'
+                f' repo: {self.repo}, hash of commit: {hash_of_commit}')
         # deserialize commit
         commit = response.json()
 
@@ -249,10 +276,9 @@ class BitbucketRequestSender(RequestSender):
             response = self._get_request(branch_commits_endpoint, filter_param)
             # guard condition
             if response.status_code != STATUS_CODE_OK:
-                assert False, \
-                    f'Invalid parameter(s) in: owner: {self.owner},' \
-                    f' repo: {self.repo}, branch name: {branch}'
-                # return None
+                raise BitbucketRequestSenderExc(
+                    f'Invalid parameter(s) in: owner: {self.owner},'
+                    f' repo: {self.repo}, branch name: {branch}')
             # deserialize commit
             response = response.json()
 
@@ -302,8 +328,8 @@ class BitbucketRequestSender(RequestSender):
         response = self._get_request(commits_endpoint)
         # guard condition
         if response.status_code != STATUS_CODE_OK:
-            assert False, f'Invalid parameter(s) in: owner: {self.owner}, repo: {self.repo}'
-            # return None
+            raise BitbucketRequestSenderExc(
+                f'Invalid parameter(s) in: owner: {self.owner}, repo: {self.repo}')
         # deserialize commits
         commits_page = response.json()
 
