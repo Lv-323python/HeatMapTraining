@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
     var getInfoButton = document.getElementById("getInfoButton");
-
     if (getInfoButton) {
         getInfoButton.onclick = function () {
             var url = BASE_URL + "/getinfo?"
@@ -15,6 +14,20 @@ document.addEventListener('DOMContentLoaded', function () {
             getRepoData(url);
         }
     }
+
+    var getHeatDictButton = document.getElementById("getHeatDictButton");
+    if (getHeatDictButton) {
+        getHeatDictButton.onclick = function () {
+            var url = BASE_URL + "/getheatdict?"
+                + "git_client=" + document.getElementById("git_client").value
+                + "&token=" + document.getElementById("token").value
+                + "&repo=" + document.getElementById("repo").value
+                + "&owner=" + document.getElementById("owner").value
+                + "&form_of_date=" + document.getElementById("formOfDate").value;
+            getHeatDict(url);
+        }
+    }
+
 
 
     var getLoginButton = document.getElementById("loginButton");
@@ -75,6 +88,12 @@ function requestPost(url, data, successCallBack, errorCallBack) {
 }
 
 function getRepoData(url) {
+    requestGet(url, function (response) {
+        document.getElementById("response").innerText = JSON.stringify(response.body);
+    });
+}
+
+function getHeatDict(url) {
     requestGet(url, function (response) {
         document.getElementById("response").innerText = JSON.stringify(response.body);
     });
