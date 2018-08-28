@@ -162,13 +162,14 @@ class BitbucketRequestSender(RequestSender):
         # gets all branches in repository
         branches = self.get_branches()
         if branches is None:
-            raise BitbucketRequestSenderExc()
+            raise BitbucketRequestSenderExc('Can\'t get branches for get_commits method')
 
         # get list of commits pages from all branches in repository
         for branch in branches:
             list_of_branch_commits = self.get_commits_by_branch(branch['name'])
             if list_of_branch_commits is None:
-                raise BitbucketRequestSenderExc()
+                raise BitbucketRequestSenderExc(
+                    'Can\'t get commits by branch for get_commits method')
 
             # adds key 'branches' with branch name in list to every commit in branch,
             #  or if key 'branches' is existing add branch name to existing branches list
@@ -267,6 +268,8 @@ class BitbucketRequestSender(RequestSender):
         # gets "branches" from the repository to check each branch
         # for the existence of "commit" found above
         branches = self.get_branches()
+        if branches is None:
+            raise BitbucketRequestSenderExc('Can\'t get branches for get_commit_by_hash method')
         branches_names = [branch['name'] for branch in branches]
 
         # gets 'hash' field for every commit in every branch in repo
