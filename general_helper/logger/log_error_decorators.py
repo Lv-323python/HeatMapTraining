@@ -7,13 +7,6 @@ from functools import wraps
 from general_helper.logger.log_config import LOG
 
 
-class TryExceptDecorExc(Exception):
-    """
-        Exception class for try_except_decor
-    """
-    pass
-
-
 def try_except_decor(func):
     """
         Decorator that run function in 'try-except' way,
@@ -36,7 +29,7 @@ def try_except_decor(func):
         try:
             return func(*args, **kwargs)
 
-        except TryExceptDecorExc as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             LOG.error('message from try_except_decor', exc_info=exc)
             return None
 
