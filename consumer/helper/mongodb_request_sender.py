@@ -48,8 +48,9 @@ class MongoDBRequestSender:
         key = '-'.join(body.values())
         try:
             print("MongoDBRequestSender.get_entry: Trying to find in Mongo : " + str(key))
-            print(self.hash_collection.find_one({"key": key}))
-            return self.hash_collection.find_one({"key": key}).get('value')
+            mongo_response = self.hash_collection.find_one({"key": key})
+            print(mongo_response)
+            return pymongo.get('value')
         except AttributeError:
             print("Can't find this entry in Mongo or maybe you have problems with MongoDB")
             return None
