@@ -22,6 +22,11 @@ document.addEventListener('DOMContentLoaded', function () {
         getLoginButton.onclick = loginService
     }
 
+    var getUserRequests = document.getElementById("userRequests");
+    if (getUserRequests){
+        getUserRequests.onclick = userRequests
+    }
+
 });
 
 var BASE_URL = "http://0.0.0.0:8000";
@@ -94,3 +99,19 @@ function loginService() {
         }
     )
 }
+
+function userRequests() {
+    var user_requests = {
+        "id": document.getElementById("git_client").value,
+        "git_client": document.getElementById("git_client").value,
+        "version": document.getElementById("version").value,
+        "repo": document.getElementById("repo").value,
+        "owner": document.getElementById("owner").value,
+        "token": document.getElementById("token").value,
+        "hash": document.getElementById("hash").value,
+        "branch": document.getElementById("branch").value,
+        "action": document.getElementById("action").value
+    }
+
+        document.getElementById("response").innerText = JSON.stringify(user_requests);
+    }

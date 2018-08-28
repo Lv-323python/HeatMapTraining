@@ -8,6 +8,7 @@ from sanic import response
 from rabbitmq_helpers.request_sender_client import RequestSenderClient
 from rabbitmq_helpers.request_sender_client_config import HOST, PORT
 from app.models.user import get_user_by_name, get_user_by_email, register_user
+from app.models.user_request import get_user_requests
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -82,7 +83,7 @@ def handle_no_auth(request):
     return response.json(dict(message='unauthorized'), status=401)
 
 
-@app.route('/api/user')
+@app.route('/api/user')  # GET USER ID !!!!!!!!!!
 @auth.login_required(user_keyword='user', handle_no_auth=handle_no_auth)
 async def api_profile(request, user):
     return response.json(dict(id=user.id, name=user.username))
