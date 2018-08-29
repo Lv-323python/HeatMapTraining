@@ -35,32 +35,15 @@ document.addEventListener('DOMContentLoaded', function () {
         getLoginButton.onclick = loginService
     }
 
-    var getUserRequests = document.getElementById("userRequests");
-    if (getUserRequests){
-        userRequests.onclick = function () {
-            var url = BASE_URL + "/user/requests?"
-                    + "git_client=" + document.getElementById("git_client").value
-                    + "&token=" + document.getElementById("token").value
-                    + "&version=" + document.getElementById("version").value
-                    + "&repo=" + document.getElementById("repo").value
-                    + "&owner=" + document.getElementById("owner").value
-                    + "&hash=" + document.getElementById("hash").value
-                    + "&branch=" + document.getElementById("branch").value
-                    + "&action=" + document.getElementById("action").value;
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", url, true);
-            xhttp.send();
-        }
+    var saveUserRequestsButton = document.getElementById("saveUserRequests");
+    if (saveUserRequestsButton){
+        saveUserRequestsButton.onclick = saveUserRequests;
     }
 
-    var getSavedRequests = document.getElementById("savedRequests");
-    if (getSavedRequests){
-        savedRequests.onclick = function () {
-            var url = BASE_URL + "/user/requests"
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("POST", url, true);
-            xhttp.send();
-        }
+
+    var getUserRequestsButton = document.getElementById("getUserRequests");
+    if (getUserRequestsButton){
+        getUserRequestsButton.onclick = getUserRequests;
     }
 });
 
@@ -127,6 +110,45 @@ function getHeatDict(url) {
     });
 }
 
+function saveUserRequests() {
+    var data = {
+        "git_client": document.getElementById("git_client").value,
+        "version": document.getElementById("version").value,
+        "repo": document.getElementById("repo").value,
+        "owner": document.getElementById("owner").value,
+        "token": document.getElementById("token").value,
+        "hash": document.getElementById("hash").value,
+        "branch": document.getElementById("branch").value,
+        "action": document.getElementById("action").value,
+    }
+    requestPost('/user/requests', data,
+        function (response) {
+            console.log(response.body);
+        },
+        function (badResponse) {
+//            document.getElementById('error').innerText = JSON.stringify(badResponse.body);
+        }
+    )
+
+//    requestGet(url, function (response) {
+//        document.getElementById("response").innerText = JSON.stringify(response.body);
+//    });
+}
+
+
+function getUserRequests(){
+    requestGet('/user/requests',
+        function (response) {
+//            document.getElementById("response").innerText = JSON.stringify(response.body);
+            createTable(response.body);
+        },
+        function (badResponse) {
+//            document.getElementById('error').innerText = JSON.stringify(badResponse.body);
+        }
+    )
+
+}
+
 function loginService() {
     var data = {
         "username": document.getElementById("username").value,
@@ -140,4 +162,64 @@ function loginService() {
             document.getElementById('error').innerText = JSON.stringify(badResponse.body);
         }
     )
+}
+
+function createTable(data){
+    for (i = 0; i < data.length; i++){
+        var row = document.createElement("TR");
+        var row_id = "row_" + data[i]["id"];
+        row.setAttribute("id", row_id);
+        document.getElementById("myTable").appendChild(row);
+
+
+        var td = document.createElement("TD");
+        var td_data = document.createTextNode(i);
+        td.appendChild(td_data);
+        document.getElementById(row_id).appendChild(td);
+
+        var td = document.createElement("TD");
+        var td_data = document.createTextNode(data[i]["user_id"]);
+        td.appendChild(td_data);
+        document.getElementById(row_id).appendChild(td);
+
+        var td = document.createElement("TD");
+        var td_data = document.createTextNode(data[i]["git_client"]);
+        td.appendChild(td_data);
+        document.getElementById(row_id).appendChild(td);
+
+        var td = document.createElement("TD");
+        var td_data = document.createTextNode(data[i]["version"]);
+        td.appendChild(td_data);
+        document.getElementById(row_id).appendChild(td);
+
+        var td = document.createElement("TD");
+        var td_data = document.createTextNode(data[i]["repo"]);
+        td.appendChild(td_data);
+        document.getElementById(row_id).appendChild(td);
+
+        var td = document.createElement("TD");
+        var td_data = document.createTextNode(data[i]["owner"]);
+        td.appendChild(td_data);
+        document.getElementById(row_id).appendChild(td);
+
+        var td = document.createElement("TD");
+        var td_data = document.createTextNode(data[i]["token"]);
+        td.appendChild(td_data);
+        document.getElementById(row_id).appendChild(td);
+
+        var td = document.createElement("TD");
+        var td_data = document.createTextNode(data[i]["hash"]);
+        td.appendChild(td_data);
+        document.getElementById(row_id).appendChild(td);
+
+        var td = document.createElement("TD");
+        var td_data = document.createTextNode(data[i]["branch"]);
+        td.appendChild(td_data);
+        document.getElementById(row_id).appendChild(td);
+
+        var td = document.createElement("TD");
+        var td_data = document.createTextNode(data[i]["action"]);
+        td.appendChild(td_data);
+        document.getElementById(row_id).appendChild(td);
+   }
 }

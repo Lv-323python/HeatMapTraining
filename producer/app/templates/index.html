@@ -1,12 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <script src="/static/script.js"></script>
     <title>GitHeatMap</title>
 </head>
 <body>
 <div>
-    <div id="response"></div>
+    <div id="response">
+        <table id="myTable" class="table">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">git_client</th>
+                <th scope="col">Version</th>
+                <th scope="col">Repo</th>
+                <th scope="col">Owner</th>
+                <th scope="col">Token</th>
+                <th scope="col">Hash</th>
+                <th scope="col">Branch</th>
+                <th scope="col">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
     <h2>Choose</h2>
 
     Git client:<br>
@@ -44,8 +63,8 @@
     <br>
     <input type="button" id="getInfoButton" value="get info">
     <input type="button" value="Open response">
-    <input type="button" id="userRequests" value="Save requests">
-    <input type="button" id="savedRequests" value="Show saved requests">
+    <input type="button" id="saveUserRequests" value="Save requests">
+    <input type="button" id="getUserRequests" value="Show requests">
     <input type="button" id="getHeatDictButton" value="Open heat dict">
 
 </div>

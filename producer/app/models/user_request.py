@@ -26,6 +26,21 @@ class UserRequests(Base):
     branch = Column(String(128))
     action = Column(String(32))
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'git_client': self.git_client,
+            'version': self.version,
+            'repo': self.repo,
+            'owner': self.owner,
+            'token': self.token,
+            'hash': self.hash,
+            'branch': self.branch,
+            'action': self.action
+
+        }
+
 
 def save_user_requests(body):
     """Save user requests for registered user"""
@@ -49,4 +64,4 @@ def save_user_requests(body):
 def get_user_requests(user_id):
     """Get user requests for registered user"""
     with scoped_session() as session:
-        return session.query(UserRequests).filter_by(user_id=user_id).first()
+        return session.query(UserRequests).filter_by(user_id=user_id)

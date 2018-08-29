@@ -107,19 +107,24 @@ async def api_profile(request, user):
 @app.route('/user/requests', methods=['GET', 'POST'])
 @auth.login_required(user_keyword='user', handle_no_auth=handle_no_auth)
 async def get_repos(request, user):
-    # repos = UserReq.get(user.id)
+    if request.method == 'GET':
+        res = [repo.to_dict() for repo in get_user_requests(user.id)]
+        return response.json(res)
+
+    data = json.loads(request.body)
     git_info = {
         'user_id': user.id,
-        'git_client': request.raw_args.get('git_client', ""),
-        'token': request.raw_args.get('token', ""),
-        'version': request.raw_args.get('version', ""),
-        'repo': request.raw_args.get('repo', ""),
-        'owner': request.raw_args.get('owner', ""),
-        'hash': request.raw_args.get('hash', ""),
-        'branch': request.raw_args.get('branch', ""),
-        'action': request.raw_args.get('action', "")
+        'git_client': data.get('git_client', ""),
+        'token': data.get('token', ""),
+        'version': data.get('version', ""),
+        'repo': data.get('repo', ""),
+        'owner': data.get('owner', ""),
+        'hash': data.get('hash', ""),
+        'branch': data.get('branch', ""),
+        'action': data.get('action', "")
     }
+
     save_user_requests(git_info)
-    if request.method == 'POST':
-        get_user_requests(user.id)
-    return render_template('index.html')
+    return response.json({
+        'message': 'saved'
+    }, status=201)
