@@ -1,8 +1,8 @@
-"""Fixed user requests
+"""Added user_id
 
-Revision ID: 4d7c8b61417d
+Revision ID: d4cfb0a6adf7
 Revises: 
-Create Date: 2018-08-28 01:00:18.183921
+Create Date: 2018-08-29 05:08:54.332338
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '4d7c8b61417d'
+revision = 'd4cfb0a6adf7'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -29,6 +29,7 @@ def upgrade():
     op.create_index(op.f('ix_user_username'), 'user', ['username'], unique=True)
     op.create_table('user_requests',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('git_client', sa.String(length=16), nullable=True),
     sa.Column('version', sa.String(length=16), nullable=True),
     sa.Column('repo', sa.String(length=128), nullable=True),
@@ -37,7 +38,7 @@ def upgrade():
     sa.Column('hash', sa.String(length=128), nullable=True),
     sa.Column('branch', sa.String(length=128), nullable=True),
     sa.Column('action', sa.String(length=32), nullable=True),
-    # sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
 

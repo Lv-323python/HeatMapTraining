@@ -24,9 +24,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var getUserRequests = document.getElementById("userRequests");
     if (getUserRequests){
-        getUserRequests.onclick = userRequests
+        userRequests.onclick = function () {
+            var url = BASE_URL + "/user/requests?"
+                    + "git_client=" + document.getElementById("git_client").value
+                    + "&token=" + document.getElementById("token").value
+                    + "&version=" + document.getElementById("version").value
+                    + "&repo=" + document.getElementById("repo").value
+                    + "&owner=" + document.getElementById("owner").value
+                    + "&hash=" + document.getElementById("hash").value
+                    + "&branch=" + document.getElementById("branch").value
+                    + "&action=" + document.getElementById("action").value;
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", url, true);
+            xhttp.send();
+        }
     }
 
+    var getSavedRequests = document.getElementById("savedRequests");
+    if (getSavedRequests){
+        savedRequests.onclick = function () {
+            var url = BASE_URL + "/user/requests"
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("POST", url, true);
+            xhttp.send();
+        }
+    }
 });
 
 var BASE_URL = "http://0.0.0.0:8000";
@@ -65,6 +87,7 @@ function requestPost(url, data, successCallBack, errorCallBack) {
             body: JSON.parse(xhr.responseText),
             status: xhr.status
         }
+        console.log(data)
         if (xhr.status >= 400) {
             if (errorCallBack !== undefined) {
                 errorCallBack(data);
@@ -99,19 +122,3 @@ function loginService() {
         }
     )
 }
-
-function userRequests() {
-    var user_requests = {
-        "id": document.getElementById("git_client").value,
-        "git_client": document.getElementById("git_client").value,
-        "version": document.getElementById("version").value,
-        "repo": document.getElementById("repo").value,
-        "owner": document.getElementById("owner").value,
-        "token": document.getElementById("token").value,
-        "hash": document.getElementById("hash").value,
-        "branch": document.getElementById("branch").value,
-        "action": document.getElementById("action").value
-    }
-
-        document.getElementById("response").innerText = JSON.stringify(user_requests);
-    }

@@ -8,7 +8,7 @@ from sanic import response
 from rabbitmq_helpers.request_sender_client import RequestSenderClient
 from rabbitmq_helpers.request_sender_client_config import HOST, PORT
 from app.models.user import get_user_by_name, get_user_by_email, register_user
-from app.models.user_request import get_user_requests
+from app.models.user_request import get_user_requests, save_user_requests
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -83,7 +83,28 @@ def handle_no_auth(request):
     return response.json(dict(message='unauthorized'), status=401)
 
 
-@app.route('/api/user')  # GET USER ID !!!!!!!!!!
+@app.route('/api/user')
 @auth.login_required(user_keyword='user', handle_no_auth=handle_no_auth)
 async def api_profile(request, user):
     return response.json(dict(id=user.id, name=user.username))
+
+
+@app.route('/user/requests', methods=['GET', 'POST'])
+@auth.login_required(user_keyword='user', handle_no_auth=handle_no_auth)
+async def get_repos(request, user):
+    # repos = UserReq.get(user.id)
+    git_info = {
+        'user_id': user.id,
+        'git_client': request.raw_args.get('git_client', ""),
+        'token': request.raw_args.get('token', ""),
+        'version': request.raw_args.get('version', ""),
+        'repo': request.raw_args.get('repo', ""),
+        'owner': request.raw_args.get('owner', ""),
+        'hash': request.raw_args.get('hash', ""),
+        'branch': request.raw_args.get('branch', ""),
+        'action': request.raw_args.get('action', "")
+    }
+    save_user_requests(git_info)
+    if request.method == 'POST':
+        get_user_requests(user.id)
+    return render_template('index.html')

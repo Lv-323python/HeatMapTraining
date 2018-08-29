@@ -5,6 +5,7 @@ Module contains User Requests model definition and helper functions for manipula
 from sqlalchemy import Column, String, Integer
 from sqlalchemy.sql import select
 from app.models import Base
+from app.database import scoped_session
 
 
 class UserRequests(Base):
@@ -15,6 +16,7 @@ class UserRequests(Base):
 
     # Attributes
     id = Column(Integer, autoincrement=True, primary_key=True)
+    user_id = Column(Integer)
     git_client = Column(String(16))
     version = Column(String(16))
     repo = Column(String(128))
@@ -23,10 +25,28 @@ class UserRequests(Base):
     hash = Column(String(128))
     branch = Column(String(128))
     action = Column(String(32))
-    user_id = Column(Integer)
 
-def get_user_requests(user):
+
+def save_user_requests(body):
+    """Save user requests for registered user"""
+    with scoped_session() as session:
+        user_id = int(body.get('user_id'))
+        git_client = str(body.get('git_client'))
+        version = body.get('version')
+        repo = body.get('repo')
+        owner = body.get('owner')
+        token = body.get('token')
+        hash = body.get('hash')
+        branch = body.get('branch')
+        action = body.get('action')
+        user_requsts = UserRequests(user_id=user_id, git_client=git_client, version=version,
+                                    repo=repo, owner=owner, token=token, hash=hash, branch=branch,
+                                    action=action)
+        session.add(user_requsts)
+
+
+
+def get_user_requests(user_id):
     """Get user requests for registered user"""
-    sel = select(['user_requests'])
-    print(sel)
-    return sel
+    with scoped_session() as session:
+        return session.query(UserRequests).filter_by(user_id=user_id).first()

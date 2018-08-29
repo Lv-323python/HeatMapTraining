@@ -3,56 +3,84 @@ services:
   rabbit:
     image: "rabbitmq:3-management"
     ports:
-     - "8080:5672"
-     - "9090:15672"
+    - "8080:5672"
+    - "9090:15672"
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.7
   redis:
     image: redis
     command: ["redis-server", "--appendonly", "yes"]
     hostname: redis
     ports:
-      - "6379:6379"
+    - "6379:6379"
     volumes:
-      - ../data/redis:/data
+    - ../data/redis:/data
     restart: always
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.8
   mongo:
     image: mongo
     environment:
-      - MONGO_DATA_DIR=/data/db
-      - MONGO_LOG_DIR=/dev/null
+    - MONGO_DATA_DIR=/data/db
+    - MONGO_LOG_DIR=/dev/null
     volumes:
-      - ./data/db:/data/db
+    - ./data/db:/data/db
     ports:
-      - "27017:27017"
+    - "27017:27017"
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.9
   postgres:
     build:
       context: ./postgres
       dockerfile: Dockerfile
     image: postgres:customized
     ports:
-     - "7070:5432"
+    - "7070:5432"
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.6
   fluentd:
     image: "fluent/fluentd"
     ports:
-      - "24224:24224"
-      - "24224:24224/udp"
+    - "24224:24224"
+    - "24224:24224/udp"
     volumes:
-      - /data:/fluentd/log
+    - /data:/fluentd/log
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.10
   consumer:
     build:
       context: ./
       dockerfile: ./consumer/Dockerfile
     image: consumer:latest
     depends_on:
-     - rabbit
-     - fluentd
+    - rabbit
+    - fluentd
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.11
   producer:
     build:
       context: ./
       dockerfile: ./producer/Dockerfile
     image: producer:latest
     ports:
-     - "8000:8000"
+    - "8000:8000"
     depends_on:
-     - rabbit
-     - postgres
-     - fluentd
+    - rabbit
+    - postgres
+    - fluentd
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.12
+
+networks:
+  vpcbr:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 10.5.0.0/16
