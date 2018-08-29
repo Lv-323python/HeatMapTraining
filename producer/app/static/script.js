@@ -165,20 +165,23 @@ function loginService() {
 }
 
 function createTable(data){
+    var table = document.getElementById("myTableTBody");
+    while (table.firstChild) {
+        table.removeChild(table.firstChild);
+    }
+
     for (i = 0; i < data.length; i++){
+
+
+
         var row = document.createElement("TR");
         var row_id = "row_" + data[i]["id"];
         row.setAttribute("id", row_id);
-        document.getElementById("myTable").appendChild(row);
+        table.appendChild(row);
 
 
         var td = document.createElement("TD");
         var td_data = document.createTextNode(i);
-        td.appendChild(td_data);
-        document.getElementById(row_id).appendChild(td);
-
-        var td = document.createElement("TD");
-        var td_data = document.createTextNode(data[i]["user_id"]);
         td.appendChild(td_data);
         document.getElementById(row_id).appendChild(td);
 
