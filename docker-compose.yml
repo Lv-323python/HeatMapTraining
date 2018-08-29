@@ -56,3 +56,5 @@ services:
      - rabbit
      - postgres
      - fluentd
+    labels:
+     - "traefik.frontend.rule=Host:heatmap.localhost"
