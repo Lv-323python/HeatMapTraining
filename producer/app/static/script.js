@@ -106,8 +106,40 @@ function getRepoData(url) {
 
 function getHeatDict(url) {
     requestGet(url, function (response) {
-        document.getElementById("response").innerText = JSON.stringify(response.body);
+        var data = response.body;
+        plotHeatMap(data)
     });
+}
+
+function plotHeatMap(rawData){
+    console.log("enter")
+    console.log(typeof(rawData))
+    console.log(typeof(rawData.x))
+    console.log(rawData.y)
+    console.log(rawData.z)
+
+     var colorscaleValue = [
+      [0, '#ebedf0'],
+      [0.25, '#c6e48b'],
+      [0.5, '#7bc96f'],
+      [0.75, '#239a3b'],
+      [1, '#196127']
+
+    ];
+    var data2 = [
+      {
+        z: rawData.z,
+        x: rawData.x,
+        y: rawData.y,
+        xgap :	1,
+        ygap :	1,
+        type: 'heatmap',
+        colorscale: colorscaleValue
+      }
+    ];
+    document.getElementById("response").innerText = "";
+    Plotly.newPlot('response', data2);
+    console.log("exit")
 }
 
 function saveUserRequests() {

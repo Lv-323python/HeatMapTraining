@@ -2,6 +2,7 @@
     Provides class MongoResponseBuilder
 """
 import time
+import datetime
 import pandas as pd
 import pymongo
 import pymongo.errors
@@ -63,13 +64,97 @@ class MongoResponseBuilder:
             if git_info['form_of_date'] == HEAT_CHOICES[0]:
                 dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
                     .apply(lambda x: str(x.hour))
+                grouped = dataf.groupby(['author', 'date']) \
+                    .size().reset_index(name='counts').groupby('author')['date', 'counts'] \
+                    .apply(lambda x: x.to_dict('records')).to_dict()
+                return self.build_heat_with_hours(grouped)
             elif git_info['form_of_date'] == HEAT_CHOICES[1]:
                 dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
                     .apply(lambda x: str(x.weekday()))
-            else:
-                dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
-                    .apply(lambda x: x.date())
-            grouped = dataf.groupby(['author', 'date']).size().reset_index(name='counts').groupby(
-                'author')['date', 'counts'].apply(lambda x: x.to_dict('records')).to_dict()
-            return grouped
+                grouped = dataf.groupby(['author', 'date']) \
+                    .size().reset_index(name='counts').groupby('author')['date', 'counts'] \
+                    .apply(lambda x: x.to_dict('records')).to_dict()
+                return self.build_heat_with_weekdays(grouped)
+            dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
+                .apply(lambda x: x.date())
+            grouped = dataf.groupby(['author', 'date']) \
+                .size().reset_index(name='counts').groupby('author')['date', 'counts'] \
+                .apply(lambda x: x.to_dict('records')).to_dict()
+            return self.build_heat_with_dates(grouped)
         return None
+
+    def build_heat_with_hours(self, grouped):
+        """
+
+        :param grouped:
+        :return:
+        """
+        names = list(grouped.keys())
+        dates = list(range(0, 24))
+        counts = []
+        for name in names:
+            data_set = grouped[name]
+            list_of_counts = [0] * 24
+            for entry in data_set:
+                list_of_counts[int(entry['date'])] = entry['counts']
+            print(list_of_counts)
+            counts.append(list_of_counts)
+        print(dates)
+        print(self)
+        return {'x': dates, 'y': names, 'z': counts}
+
+    def build_heat_with_weekdays(self, grouped):
+        """
+
+        :param grouped:
+        :return:
+        """
+        names = list(grouped.keys())
+        dates = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sanday']
+        counts = []
+        for name in names:
+            data_set = grouped[name]
+            list_of_counts = [0] * 7
+            for entry in data_set:
+                list_of_counts[int(entry['date'])] = entry['counts']
+            print(list_of_counts)
+            counts.append(list_of_counts)
+        print(counts)
+        print(self)
+        return {'x': dates, 'y': names, 'z': counts}
+
+    def build_heat_with_dates(self, grouped):
+        """
+
+        :param grouped:
+        :return:
+        """
+        names = list(grouped.keys())
+        seq = [x['date'] for name in grouped.keys() for x in grouped[name]]
+        dates = list()
+
+        def daterange(date1, date2):
+            """
+
+            :param date1:
+            :param date2:
+            :return:
+            """
+            for number_of_days in range(int((date2 - date1).days) + 1):
+                yield date1 + datetime.timedelta(number_of_days)
+
+        for date in daterange(min(seq), max(seq)):
+            dates.append(date.strftime("%Y-%m-%d"))
+
+        print(dates)
+        counts = []
+        for name in names:
+            data_set = grouped[name]
+            list_of_counts = [0] * len(dates)
+            for entry in data_set:
+                list_of_counts[dates.index(entry['date'].strftime("%Y-%m-%d"))] = entry['counts']
+            print(list_of_counts)
+            counts.append(list_of_counts)
+        print(counts)
+        print(self)
+        return {'x': dates, 'y': names, 'z': counts}
