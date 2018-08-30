@@ -1,25 +1,39 @@
-version: '3'
+version: '3.5'
 services:
-  rabbit:
-    image: "rabbitmq:3-management"
-    ports:
-    - "8080:5672"
-    - "9090:15672"
+
+  consumer:
+    build:
+      context: ./
+      dockerfile: ./consumer/Dockerfile
+    image: consumer:latest
+    depends_on:
+    - rabbit
+    - fluentd
     networks:
-      vpcbr:
-        ipv4_address: 10.5.0.7
-  redis:
-    image: redis
-    command: ["redis-server", "--appendonly", "yes"]
-    hostname: redis
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  fluentd:
+    image: "fluent/fluentd"
     ports:
-    - "6379:6379"
+    - "24224:24224"
+    - "24224:24224/udp"
     volumes:
-    - ../data/redis:/data
-    restart: always
+    - /data:/fluentd/log
     networks:
-      vpcbr:
-        ipv4_address: 10.5.0.8
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
   mongo:
     image: mongo
     environment:
@@ -30,8 +44,15 @@ services:
     ports:
     - "27017:27017"
     networks:
-      vpcbr:
-        ipv4_address: 10.5.0.9
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+
   postgres:
     build:
       context: ./postgres
@@ -40,29 +61,15 @@ services:
     ports:
     - "7070:5432"
     networks:
-      vpcbr:
-        ipv4_address: 10.5.0.6
-  fluentd:
-    image: "fluent/fluentd"
-    ports:
-    - "24224:24224"
-    - "24224:24224/udp"
-    volumes:
-    - /data:/fluentd/log
-    networks:
-      vpcbr:
-        ipv4_address: 10.5.0.10
-  consumer:
-    build:
-      context: ./
-      dockerfile: ./consumer/Dockerfile
-    image: consumer:latest
-    depends_on:
-    - rabbit
-    - fluentd
-    networks:
-      vpcbr:
-        ipv4_address: 10.5.0.11
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+
   producer:
     build:
       context: ./
@@ -75,12 +82,51 @@ services:
     - postgres
     - fluentd
     networks:
-      vpcbr:
-        ipv4_address: 10.5.0.12
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  rabbit:
+    image: "rabbitmq:3-management"
+    ports:
+    - "8080:5672"
+    - "9090:15672"
+    networks:
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+
+  redis:
+    image: redis
+    command: ["redis-server", "--appendonly", "yes"]
+    hostname: redis
+    ports:
+    - "6379:6379"
+    volumes:
+    - ../data/redis:/data
+    restart: always
+    networks:
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
 
 networks:
-  vpcbr:
+  heatmap_network:
     driver: bridge
-    ipam:
-      config:
-      - subnet: 10.5.0.0/16
+    name: heatmap_network
+
+
