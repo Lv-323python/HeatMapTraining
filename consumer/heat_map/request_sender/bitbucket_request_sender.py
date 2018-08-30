@@ -332,13 +332,13 @@ class BitbucketRequestSender(RequestSender):
         return list(contributors.values())
 
     @try_except_decor
-    def get_paginated_commits_by_branch(self, branch_name):
+    def get_all_commits_by_branch(self, branch_name):
         """
             asd
         :return:
         """
 
-        def get_com_branch_no_parse(page=1):
+        def get_commit_branch_no_parse(page=1):
             """
                 asd
             :param page:
@@ -366,24 +366,24 @@ class BitbucketRequestSender(RequestSender):
 
             return commits_page
 
-        response = get_com_branch_no_parse()
+        response = get_commit_branch_no_parse()
         page = 2
         full_response = response['values']
 
         while 'next' in response.keys():
-            response = get_com_branch_no_parse(page)
+            response = get_commit_branch_no_parse(page)
             full_response.extend(response['values'])
             page += 1
 
-        # parsed_full_response = [
-        #     {
-        #         'hash': commit['hash'],
-        #         'author': get_gitname(commit),
-        #         'message': commit['message'],
-        #         'date': str(to_timestamp(commit['date']))
-        #     } for commit in commits_page['values']
-        #     ]
-        return full_response
+        parsed_full_response = [
+            {
+                'hash': commit['hash'],
+                'author': get_gitname(commit),
+                'message': commit['message'],
+                'date': str(to_timestamp(commit['date']))
+            } for commit in full_response
+            ]
+        return parsed_full_response
 
 
 class BitbucketServerRequestSender(RequestSender):
