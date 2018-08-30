@@ -39,9 +39,10 @@ print('Successfully connected!')
 CONNECTION.close()
 
 # run migrations
-ALEMBIC_INI_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'alembic.ini')
-ALEMBIC_CONFIG = Config(ALEMBIC_INI_FILE)
-command.upgrade(ALEMBIC_CONFIG, "head")
+# ALEMBIC_INI_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'alembic.ini')
+# ALEMBIC_CONFIG = Config(ALEMBIC_INI_FILE)
+# # # command.revision(ALEMBIC_CONFIG, autogenerate=True)
+# command.upgrade(ALEMBIC_CONFIG, "head")
 
 
 @contextmanager
