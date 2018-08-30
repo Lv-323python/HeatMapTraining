@@ -5,6 +5,7 @@ import time
 import pandas as pd
 import pymongo
 import pymongo.errors
+import datetime
 
 from pymongo import MongoClient
 
@@ -63,13 +64,71 @@ class MongoResponseBuilder:
             if git_info['form_of_date'] == HEAT_CHOICES[0]:
                 dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
                     .apply(lambda x: str(x.hour))
+                grouped = dataf.groupby(['author', 'date']).size().reset_index(name='counts').groupby(
+                    'author')['date', 'counts'].apply(lambda x: x.to_dict('records')).to_dict()
+                return self.build_heat_with_hours(grouped)
             elif git_info['form_of_date'] == HEAT_CHOICES[1]:
                 dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
                     .apply(lambda x: str(x.weekday()))
+                grouped = dataf.groupby(['author', 'date']).size().reset_index(name='counts').groupby(
+                    'author')['date', 'counts'].apply(lambda x: x.to_dict('records')).to_dict()
+                return self.build_heat_with_weekdays(grouped)
             else:
                 dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
                     .apply(lambda x: x.date())
-            grouped = dataf.groupby(['author', 'date']).size().reset_index(name='counts').groupby(
-                'author')['date', 'counts'].apply(lambda x: x.to_dict('records')).to_dict()
-            return grouped
+                grouped = dataf.groupby(['author', 'date']).size().reset_index(name='counts').groupby(
+                    'author')['date', 'counts'].apply(lambda x: x.to_dict('records')).to_dict()
+                return self.build_heat_with_dates(grouped)
         return None
+
+    def build_heat_with_hours(self, grouped):
+        y = list(grouped.keys())
+        x1 = list(range(0, 24))
+        z1 = []
+        for name in y:
+            data_set = grouped[name]
+            l = [0] * 24
+            for entry in data_set:
+                l[int(entry['date'])] = entry['counts']
+            print(l)
+            z1.append(l)
+        print(z1)
+        return {'x':x1,'y':y,'z':z1}
+
+    def build_heat_with_weekdays(self, grouped):
+        y = list(grouped.keys())
+        x = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sanday']
+        z = []
+        for name in y:
+            data_set = grouped[name]
+            l = [0] * 7
+            for entry in data_set:
+                l[int(entry['date'])] = entry['counts']
+            print(l)
+            z.append(l)
+        print(z)
+        return {'x':x,'y':y,'z':z}
+
+    def build_heat_with_dates(self, grouped):
+        y = list(grouped.keys())
+        seq = [x['date'] for name in grouped.keys() for x in grouped[name]]
+        x2 = list()
+
+        def daterange(date1, date2):
+            for n in range(int((date2 - date1).days) + 1):
+                yield date1 + datetime.timedelta(n)
+
+        for dt in daterange(min(seq), max(seq)):
+            x2.append(dt.strftime("%Y-%m-%d"))
+
+        print(x2)
+        z2 = []
+        for name in y:
+            data_set = grouped[name]
+            l = [0] * len(x2)
+            for entry in data_set:
+                l[x2.index(entry['date'].strftime("%Y-%m-%d"))] = entry['counts']
+            print(l)
+            z2.append(l)
+        print(z2)
+        return {'x':x2,'y':y,'z':z2}
