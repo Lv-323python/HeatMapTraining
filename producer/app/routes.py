@@ -9,6 +9,7 @@ from rabbitmq_helpers.request_sender_client import RequestSenderClient
 from rabbitmq_helpers.request_sender_client_config import HOST, PORT
 from mongodb_helpers.mongo_response_builder import MongoResponseBuilder, HEAT_CHOICES
 from app.models.user import get_user_by_name, get_user_by_email, register_user
+from app.models.user_request import get_user_requests, save_user_requests
 from general_helper.logger.log_config import LOG
 
 
@@ -101,3 +102,29 @@ def handle_no_auth(request):
 @auth.login_required(user_keyword='user', handle_no_auth=handle_no_auth)
 async def api_profile(request, user):
     return response.json(dict(id=user.id, name=user.username))
+
+
+@app.route('/user/requests', methods=['GET', 'POST'])
+@auth.login_required(user_keyword='user', handle_no_auth=handle_no_auth)
+async def get_repos(request, user):
+    if request.method == 'GET':
+        res = [repo.to_dict() for repo in get_user_requests(user.id)]
+        return response.json(res)
+
+    data = json.loads(request.body)
+    git_info = {
+        'user_id': user.id,
+        'git_client': data.get('git_client', ""),
+        'token': data.get('token', ""),
+        'version': data.get('version', ""),
+        'repo': data.get('repo', ""),
+        'owner': data.get('owner', ""),
+        'hash': data.get('hash', ""),
+        'branch': data.get('branch', ""),
+        'action': data.get('action', "")
+    }
+
+    save_user_requests(git_info)
+    return response.json({
+        'message': 'saved'
+    }, status=201)
