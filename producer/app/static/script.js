@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 + "&owner=" + document.getElementById("owner").value
                 + "&form_of_date=" + document.getElementById("formOfDate").value;
             getHeatDict(url);
-
         }
     }
 
@@ -36,6 +35,16 @@ document.addEventListener('DOMContentLoaded', function () {
         getLoginButton.onclick = loginService
     }
 
+    var saveUserRequestsButton = document.getElementById("saveUserRequests");
+    if (saveUserRequestsButton){
+        saveUserRequestsButton.onclick = saveUserRequests;
+    }
+
+
+    var getUserRequestsButton = document.getElementById("getUserRequests");
+    if (getUserRequestsButton){
+        getUserRequestsButton.onclick = getUserRequests;
+    }
 });
 
 var BASE_URL = "http://0.0.0.0:8000";
@@ -74,6 +83,7 @@ function requestPost(url, data, successCallBack, errorCallBack) {
             body: JSON.parse(xhr.responseText),
             status: xhr.status
         }
+        console.log(data)
         if (xhr.status >= 400) {
             if (errorCallBack !== undefined) {
                 errorCallBack(data);
@@ -132,6 +142,45 @@ function plotHeatMap(rawData){
     console.log("exit")
 }
 
+function saveUserRequests() {
+    var data = {
+        "git_client": document.getElementById("git_client").value,
+        "version": document.getElementById("version").value,
+        "repo": document.getElementById("repo").value,
+        "owner": document.getElementById("owner").value,
+        "token": document.getElementById("token").value,
+        "hash": document.getElementById("hash").value,
+        "branch": document.getElementById("branch").value,
+        "action": document.getElementById("action").value,
+    }
+    requestPost('/user/requests', data,
+        function (response) {
+            console.log(response.body);
+        },
+        function (badResponse) {
+//            document.getElementById('error').innerText = JSON.stringify(badResponse.body);
+        }
+    )
+
+//    requestGet(url, function (response) {
+//        document.getElementById("response").innerText = JSON.stringify(response.body);
+//    });
+}
+
+
+function getUserRequests(){
+    requestGet('/user/requests',
+        function (response) {
+//            document.getElementById("response").innerText = JSON.stringify(response.body);
+            createTable(response.body);
+        },
+        function (badResponse) {
+//            document.getElementById('error').innerText = JSON.stringify(badResponse.body);
+        }
+    )
+
+}
+
 function loginService() {
     var data = {
         "username": document.getElementById("username").value,
@@ -145,4 +194,27 @@ function loginService() {
             document.getElementById('error').innerText = JSON.stringify(badResponse.body);
         }
     )
+}
+
+function createTable(data){
+    var table = document.getElementById("myTableTBody");
+    while (table.firstChild) {
+        table.removeChild(table.firstChild);
+    }
+    var ui_requests = ['git_client', 'version', 'repo', 'owner', 'token', 'hash', 'branch',
+                       'action']
+    for (i = 0; i < data.length; i++){
+
+        var row = document.createElement("TR");
+        var row_id = "row_" + data[i]["id"];
+        row.setAttribute("id", row_id);
+        table.appendChild(row);
+
+        for(y = 0; y < ui_requests.length; y++){
+            var td = document.createElement("TD");
+            var td_data = document.createTextNode(data[i][ui_requests[y]]);
+            td.appendChild(td_data);
+            document.getElementById(row_id).appendChild(td);
+        }
+   }
 }

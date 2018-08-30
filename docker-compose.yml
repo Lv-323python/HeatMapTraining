@@ -1,58 +1,132 @@
-version: '3'
+version: '3.5'
 services:
-  rabbit:
-    image: "rabbitmq:3-management"
-    ports:
-     - "8080:5672"
-     - "9090:15672"
-  redis:
-    image: redis
-    command: ["redis-server", "--appendonly", "yes"]
-    hostname: redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - ../data/redis:/data
-    restart: always
-  mongo:
-    image: mongo
-    environment:
-      - MONGO_DATA_DIR=/data/db
-      - MONGO_LOG_DIR=/dev/null
-    volumes:
-      - ./data/db:/data/db
-    ports:
-      - "27017:27017"
-  postgres:
-    build:
-      context: ./postgres
-      dockerfile: Dockerfile
-    image: postgres:customized
-    ports:
-     - "7070:5432"
-  fluentd:
-    image: "fluent/fluentd"
-    ports:
-      - "24224:24224"
-      - "24224:24224/udp"
-    volumes:
-      - /data:/fluentd/log
+
   consumer:
     build:
       context: ./
       dockerfile: ./consumer/Dockerfile
     image: consumer:latest
     depends_on:
-     - rabbit
-     - fluentd
+    - rabbit
+    - fluentd
+    networks:
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  fluentd:
+    image: "fluent/fluentd"
+    ports:
+    - "24224:24224"
+    - "24224:24224/udp"
+    volumes:
+    - /data:/fluentd/log
+    networks:
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  mongo:
+    image: mongo
+    environment:
+    - MONGO_DATA_DIR=/data/db
+    - MONGO_LOG_DIR=/dev/null
+    volumes:
+    - ./data/db:/data/db
+    ports:
+    - "27017:27017"
+    networks:
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+
+  postgres:
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
+    image: postgres:customized
+    ports:
+    - "7070:5432"
+    networks:
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+
   producer:
     build:
       context: ./
       dockerfile: ./producer/Dockerfile
     image: producer:latest
     ports:
-     - "8000:8000"
+    - "8000:8000"
     depends_on:
-     - rabbit
-     - postgres
-     - fluentd
+    - rabbit
+    - postgres
+    - fluentd
+    networks:
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  rabbit:
+    image: "rabbitmq:3-management"
+    ports:
+    - "8080:5672"
+    - "9090:15672"
+    networks:
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+
+  redis:
+    image: redis
+    command: ["redis-server", "--appendonly", "yes"]
+    hostname: redis
+    ports:
+    - "6379:6379"
+    volumes:
+    - ../data/redis:/data
+    restart: always
+    networks:
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+
+networks:
+  heatmap_network:
+    driver: bridge
+    name: heatmap_network
+
+
