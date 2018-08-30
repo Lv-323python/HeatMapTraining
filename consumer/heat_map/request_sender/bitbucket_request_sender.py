@@ -331,6 +331,60 @@ class BitbucketRequestSender(RequestSender):
 
         return list(contributors.values())
 
+    @try_except_decor
+    def get_paginated_commits_by_branch(self, branch_name):
+        """
+            asd
+        :return:
+        """
+
+        def get_com_branch_no_parse(page=1):
+            """
+                asd
+            :param page:
+            :return:
+            """
+            # https://api.bitbucket.org/2.0/repositories/zzzeek/dogpile.core/commits/master?page=3
+            assert isinstance(branch_name, str), 'Inputted "branch_name" type is not str'
+            branch_commits_endpoint = \
+                f'/repositories/{self.owner}/{self.repo}/commits/{branch_name}'
+
+            filter_param = \
+                {'fields': 'values.hash,values.author,values.message,values.date,next',
+                 'page': page}
+
+            response = self._get_request(branch_commits_endpoint, filter_param)
+
+            # guard condition
+            if response.status_code != STATUS_CODE_OK:
+                assert False, \
+                    f'Invalid parameter(s) in: owner: {self.owner},' \
+                    f' repo: {self.repo}, branch name: {branch_name}'
+                # return None
+            # deserialize commit
+            commits_page = response.json()
+
+            return commits_page
+
+        response = get_com_branch_no_parse()
+        page = 2
+        full_response = response['values']
+
+        while 'next' in response.keys():
+            response = get_com_branch_no_parse(page)
+            full_response.extend(response['values'])
+            page += 1
+
+        # parsed_full_response = [
+        #     {
+        #         'hash': commit['hash'],
+        #         'author': get_gitname(commit),
+        #         'message': commit['message'],
+        #         'date': str(to_timestamp(commit['date']))
+        #     } for commit in commits_page['values']
+        #     ]
+        return full_response
+
 
 class BitbucketServerRequestSender(RequestSender):
     """
