@@ -169,60 +169,20 @@ function createTable(data){
     while (table.firstChild) {
         table.removeChild(table.firstChild);
     }
-
+    var ui_requests = ['git_client', 'version', 'repo', 'owner', 'token', 'hash', 'branch',
+                       'action']
     for (i = 0; i < data.length; i++){
-
-
 
         var row = document.createElement("TR");
         var row_id = "row_" + data[i]["id"];
         row.setAttribute("id", row_id);
         table.appendChild(row);
 
-
-        var td = document.createElement("TD");
-        var td_data = document.createTextNode(i);
-        td.appendChild(td_data);
-        document.getElementById(row_id).appendChild(td);
-
-        var td = document.createElement("TD");
-        var td_data = document.createTextNode(data[i]["git_client"]);
-        td.appendChild(td_data);
-        document.getElementById(row_id).appendChild(td);
-
-        var td = document.createElement("TD");
-        var td_data = document.createTextNode(data[i]["version"]);
-        td.appendChild(td_data);
-        document.getElementById(row_id).appendChild(td);
-
-        var td = document.createElement("TD");
-        var td_data = document.createTextNode(data[i]["repo"]);
-        td.appendChild(td_data);
-        document.getElementById(row_id).appendChild(td);
-
-        var td = document.createElement("TD");
-        var td_data = document.createTextNode(data[i]["owner"]);
-        td.appendChild(td_data);
-        document.getElementById(row_id).appendChild(td);
-
-        var td = document.createElement("TD");
-        var td_data = document.createTextNode(data[i]["token"]);
-        td.appendChild(td_data);
-        document.getElementById(row_id).appendChild(td);
-
-        var td = document.createElement("TD");
-        var td_data = document.createTextNode(data[i]["hash"]);
-        td.appendChild(td_data);
-        document.getElementById(row_id).appendChild(td);
-
-        var td = document.createElement("TD");
-        var td_data = document.createTextNode(data[i]["branch"]);
-        td.appendChild(td_data);
-        document.getElementById(row_id).appendChild(td);
-
-        var td = document.createElement("TD");
-        var td_data = document.createTextNode(data[i]["action"]);
-        td.appendChild(td_data);
-        document.getElementById(row_id).appendChild(td);
+        for(y = 0; y < ui_requests.length; y++){
+            var td = document.createElement("TD");
+            var td_data = document.createTextNode(data[i][ui_requests[y]]);
+            td.appendChild(td_data);
+            document.getElementById(row_id).appendChild(td);
+        }
    }
 }
