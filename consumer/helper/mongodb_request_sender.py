@@ -50,7 +50,7 @@ class MongoDBRequestSender:
             print("MongoDBRequestSender.get_entry: Trying to find in Mongo : " + str(key))
             mongo_response = self.hash_collection.find_one({"key": key})
             print(mongo_response)
-            return pymongo.get('value')
+            return mongo_response.get('value')
         except AttributeError:
             print("Can't find this entry in Mongo or maybe you have problems with MongoDB")
             return None
