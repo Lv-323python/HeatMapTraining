@@ -1,12 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <script src="/static/script.js"></script>
+     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <title>GitHeatMap</title>
 </head>
 <body>
 <div>
     <div id="response"></div>
+    <div id="tbl">
+        <table id="myTable" class="table">
+            <thead>
+            <tr id="table_head">
+                <th scope="col">git_client</th>
+                <th scope="col">Version</th>
+                <th scope="col">Repo</th>
+                <th scope="col">Owner</th>
+                <th scope="col">Token</th>
+                <th scope="col">Hash</th>
+                <th scope="col">Branch</th>
+                <th scope="col">Action</th>
+            </tr>
+            </thead>
+            <tbody id="myTableTBody">
+            </tbody>
+        </table>
+    </div>
     <h2>Choose</h2>
 
     Git client:<br>
@@ -35,9 +55,18 @@
         <option>get_contributors</option>
         <option>get_commit_by_hash</option>
         <option>get_commits_by_branch</option>
-    </select><br>
+    </select>
+    <select id="formOfDate">
+        <option>date</option>
+        <option>hour</option>
+        <option>weekday</option>
+    </select>
+    <br>
     <input type="button" id="getInfoButton" value="get info">
     <input type="button" value="Open response">
+    <input type="button" id="saveUserRequests" value="Save requests">
+    <input type="button" id="getUserRequests" value="Show requests">
+    <input type="button" id="getHeatDictButton" value="Open heat dict">
 
 </div>
 </body>

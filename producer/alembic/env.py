@@ -3,7 +3,7 @@ import os
 import sys
 from alembic import context
 from sqlalchemy import engine_from_config, pool
-from logging.config import fileConfig
+# from logging.config import fileConfig
 
 
 # this is the Alembic Config object, which provides
@@ -12,7 +12,7 @@ config = context.config
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
-fileConfig(config.config_file_name)
+# fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
