@@ -61,9 +61,7 @@ class MongoResponseBuilder:
             return None
         if mongo_response:
             dataf = pd.DataFrame(mongo_response)
-            if git_info['form_of_date'] == HEAT_CHOICES[0]:
-                dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
-                    .apply(lambda x: str(x.hour))
+            if git_info['form_of_date'] == HEAT_CHOICES[0]:  # pylint: disable=R1705
                 grouped = dataf.groupby(['author', 'date']) \
                     .size().reset_index(name='counts').groupby('author')['date', 'counts'] \
                     .apply(lambda x: x.to_dict('records')).to_dict()
@@ -75,6 +73,8 @@ class MongoResponseBuilder:
                     .size().reset_index(name='counts').groupby('author')['date', 'counts'] \
                     .apply(lambda x: x.to_dict('records')).to_dict()
                 return self.build_heat_with_weekdays(grouped)
+            dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
+                .apply(lambda x: str(x.hour))
             dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
                 .apply(lambda x: x.date())
             grouped = dataf.groupby(['author', 'date']) \
