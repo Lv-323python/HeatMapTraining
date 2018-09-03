@@ -12,7 +12,6 @@ from heat_map.utils.bitbucket_helper import to_timestamp, get_gitname, get_email
 from heat_map.utils.request_status_codes import STATUS_CODE_OK
 
 from general_helper.logger.log_error_decorators import try_except_decor
-# from pprint import pprint
 
 
 class BitbucketRequestSender(RequestSender):
@@ -35,6 +34,38 @@ class BitbucketRequestSender(RequestSender):
         :return: json - response object
         """
         return requests.get(self.base_url + endpoint, params, **kwargs)
+
+    @try_except_decor
+    def _get_page_of_commits_by_branch(self, branch_name='master', page=1):
+        """
+            Gets deserialize list of not parsed commits by page and branch name.
+
+        :param branch_name: str
+        :param page: int - page number
+        :return: list - list of not parsed commits
+        """
+
+        assert isinstance(branch_name, str), 'Inputted "branch_name" type is not str'
+        assert isinstance(page, int), 'Inputted "page" type is not int'
+        branch_commits_endpoint = \
+            f'/repositories/{self.owner}/{self.repo}/commits/{branch_name}'
+
+        filter_param = \
+            {'fields': 'values.hash,values.author,values.message,values.date,next',
+             'page': page}
+
+        response = self._get_request(branch_commits_endpoint, filter_param)
+
+        # guard condition
+        if response.status_code != STATUS_CODE_OK:
+            assert False, \
+                f'Invalid parameter(s) in: owner: {self.owner},' \
+                f' repo: {self.repo}, branch name: {branch_name}, page: {page}'
+
+        # deserialize commit
+        commits_page = response.json()
+
+        return commits_page
 
     @try_except_decor
     def get_repo(self):
@@ -336,47 +367,23 @@ class BitbucketRequestSender(RequestSender):
     @try_except_decor
     def get_all_commits_by_branch(self, branch_name):
         """
-            asd
-        :return:
+            Gets list of all commits by given branch.
+
+        :param branch_name: str
+        :return: list - list of all commits
         """
 
-        def get_page_of_commits_by_branch(page=3):
-            """
-                asd
-            :param page:
-            :return:
-            """
-            # https://api.bitbucket.org/2.0/repositories/zzzeek/dogpile.core/commits/master?page=3
-            assert isinstance(branch_name, str), 'Inputted "branch_name" type is not str'
-            branch_commits_endpoint = \
-                f'/repositories/{self.owner}/{self.repo}/commits/{branch_name}'
-
-            filter_param = \
-                {'fields': 'values.hash,values.author,values.message,values.date,next',
-                 'page': page}
-
-            response = self._get_request(branch_commits_endpoint, filter_param)
-
-            # guard condition
-            if response.status_code != STATUS_CODE_OK:
-                assert False, \
-                    f'Invalid parameter(s) in: owner: {self.owner},' \
-                    f' repo: {self.repo}, branch name: {branch_name}'
-                # return None
-            # deserialize commit
-            commits_page = response.json()
-
-            return commits_page
-
-        response = get_page_of_commits_by_branch()
-        page = 2
-        full_response = response['values']
+        full_response = []
+        # declare response dict with kay 'next' to enable first iteration
+        response = {'next': 'eny text'}
+        page = 1
 
         while 'next' in response.keys():
-            response = get_page_of_commits_by_branch(page)
+            response = self._get_page_of_commits_by_branch(branch_name, page)
             full_response.extend(response['values'])
             page += 1
 
+        # parser
         parsed_full_response = [
             {
                 'hash': commit['hash'],
@@ -385,115 +392,73 @@ class BitbucketRequestSender(RequestSender):
                 'date': str(to_timestamp(commit['date']))
             } for commit in full_response
             ]
+
         return parsed_full_response
 
     # test mode
     @try_except_decor
     def get_by_branch_since_hash(self, branch_name, hash_of_commit=None):
         """
-            asd
-        :return:
+            Gets list of all commits by branch name since given hash of commit
+
+        :param branch_name: str
+        :param hash_of_commit: str
+        :return: list - list of since given hash
         """
 
-        # def get_page_of_commits_by_branch(page=1):
-        #     """
-        #         asd
-        #     :param page:
-        #     :return:
-        #     """
-        #     # https://api.bitbucket.org/2.0/repositories/zzzeek/dogpile.core/commits/master?page=3
-        #     assert isinstance(branch_name, str), 'Inputted "branch_name" type is not str'
-        #     branch_commits_endpoint = \
-        #         f'/repositories/{self.owner}/{self.repo}/commits/{branch_name}'
-        #
-        #     filter_param = \
-        #         {'fields': 'values.hash,values.author,values.message,values.date,next',
-        #          'page': 1}
-        #
-        #     response = self._get_request(branch_commits_endpoint, filter_param)
-        #
-        #     # guard condition
-        #     if response.status_code != STATUS_CODE_OK:
-        #         assert False, \
-        #             f'Invalid parameter(s) in: owner: {self.owner},' \
-        #             f' repo: {self.repo}, branch name: {branch_name}'
-        #         # return None
-        #     # deserialize commit
-        #     commits_page = response.json()
-        #
-        #     return commits_page
-
-        def get_page_of_commits_by_branch(page=1):
-            """
-                asd
-            :param page:
-            :return:
-            """
-            # https://api.bitbucket.org/2.0/repositories/zzzeek/dogpile.core/commits/master?page=3
-            assert isinstance(branch_name, str), 'Inputted "branch_name" type is not str'
-            branch_commits_endpoint = \
-                f'/repositories/{self.owner}/{self.repo}/commits/{branch_name}'
-
-            filter_param = \
-                {'fields': 'values.hash,values.author,values.message,values.date,next',
-                 'page': page}
-
-            response = self._get_request(branch_commits_endpoint, filter_param)
-
-            # guard condition
-            if response.status_code != STATUS_CODE_OK:
-                assert False, \
-                    f'Invalid parameter(s) in: owner: {self.owner},' \
-                    f' repo: {self.repo}, branch name: {branch_name}'
-                # return None
-            # deserialize commit
-            commits_page = response.json()
-
-            return commits_page
-
+        full_response = []
+        # declare response dict with kay 'next' to enable first iteration
         response = {'next': 'eny text'}
         page = 1
         go_on = True
-        full_response = []
-        while 'next' in response.keys():
-            response = get_page_of_commits_by_branch(page)
-            print('-----------------------------hash of commit  ', hash_of_commit)
+
+        # gets all pages of commits and stops when given commit is found
+        while 'next' in response.keys() and go_on:
+            # gets commits by page and by branch)
+            response = self._get_page_of_commits_by_branch(branch_name, page)
+
+            # checks for needed commit, and stops getting commits pages
             if hash_of_commit:
                 for count_commit in range(len(response['values'])):
+                    # makes a partial result of _get_page_of_commits_by_branch to avoid duplicates
                     if response['values'][count_commit]['hash'] == hash_of_commit:
                         response['values'] = response['values'][:count_commit]
                         go_on = False
                         break
-            if not go_on:
-                full_response.extend(response['values'])
-                break
 
+            # extends the overall result to the result of the current page
             full_response.extend(response['values'])
             page += 1
 
+        # parser
         parsed_full_response = [
             {
                 'hash': commit['hash'],
-                # 'author': get_gitname(commit),
-                # 'message': commit['message'],
-                # 'date': str(to_timestamp(commit['date']))
+                'author': get_gitname(commit),
+                'message': commit['message'],
+                'date': str(to_timestamp(commit['date']))
             } for commit in full_response
             ]
+
         return parsed_full_response
 
+    # test mode
+    @try_except_decor
     def get_updated_commits_by_branch(self, branch_name, old_commits):
         """
+            Updates given list of commits by branch,
+            returns list of given commits and all newer
+            commits since last commit in given list of commits
 
-        :param branch_name:
-        :param old_commits:
-        :return:
+        :param branch_name: str
+        :param old_commits: list - list of commits to update
+        :return:list - updated list of commits
         """
+
         hash_of_commit = old_commits[0]['hash']
-        # print(
-        #     'vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv  ',
-        #     hash_of_commit)
-        result = self.get_by_branch_since_hash(branch_name=branch_name,
-                                               hash_of_commit=hash_of_commit)
+        result = old_commits
+        result += self.get_by_branch_since_hash(branch_name=branch_name,
+                                                hash_of_commit=hash_of_commit)
         return result
 
 
