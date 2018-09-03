@@ -45,6 +45,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (getUserRequestsButton){
         getUserRequestsButton.onclick = getUserRequests;
     }
+    var addNewRepoButton = document.getElementById("addNewRepoButton");
+    if (addNewRepoButton){
+        addNewRepoButton.onclick = addNewRepo;
+    }
 });
 
 var BASE_URL = "http://0.0.0.0:8000";
@@ -156,6 +160,8 @@ function saveUserRequests() {
     requestPost('/user/requests', data,
         function (response) {
             console.log(response.body);
+            var body = document.getElementById("repoValues");
+            body.style.display = "none";
         },
         function (badResponse) {
 //            document.getElementById('error').innerText = JSON.stringify(badResponse.body);
@@ -217,4 +223,9 @@ function createTable(data){
             document.getElementById(row_id).appendChild(td);
         }
    }
+}
+
+function addNewRepo(){
+    var body = document.getElementById("repoValues");
+    body.style.display = "block";
 }
