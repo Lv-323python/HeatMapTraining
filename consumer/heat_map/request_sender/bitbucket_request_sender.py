@@ -67,6 +67,33 @@ class BitbucketRequestSender(RequestSender):
 
         return commits_page
 
+    # not tested ! ! !
+    # test mode
+    @try_except_decor
+    def _branch_map(self, branches):
+        repo_commits = {}
+        # get list of commits pages from all branches in repository
+        for branch in branches:
+            list_of_branch_commits = self.get_all_commits_by_branch(branch['name'])
+            if list_of_branch_commits is None:
+                return None
+
+            # adds key 'branches' with branch name in list to every commit in branch,
+            #  or if key 'branches' is existing add branch name to existing branches list
+            for commit_in_branch in list_of_branch_commits:
+                commit = repo_commits.get(commit_in_branch['hash'])
+                if commit:
+                    commit['branches'].append(branch['name'])
+                else:
+                    commit_in_branch['branches'] = [branch['name']]
+                    repo_commits[commit_in_branch['hash']] = commit_in_branch
+            list_of_branch_commits.clear()
+
+        # sorts all commits in repository by date in reverse order
+        sorted_commits = sorted(list(repo_commits.values()), key=lambda x: x['date'], reverse=True)
+
+        return sorted_commits
+
     @try_except_decor
     def get_repo(self):
         """
@@ -363,6 +390,8 @@ class BitbucketRequestSender(RequestSender):
 
         return list(contributors.values())
 
+    ########################################################################################
+
     # test mode
     @try_except_decor
     def get_all_commits_by_branch(self, branch_name):
@@ -459,6 +488,95 @@ class BitbucketRequestSender(RequestSender):
         result = old_commits
         result += self.get_by_branch_since_hash(branch_name=branch_name,
                                                 hash_of_commit=hash_of_commit)
+        return result
+
+    # not tested ! ! !
+    # test mode
+    @try_except_decor
+    def get_all_commits(self):
+        """
+        Gets information about all commits in repository
+        in dict format with response body and status code
+
+        :return: list of dicts
+        :Example:
+        [
+            {
+                "hash": "commit hash",
+                "author": "commit author",
+                "message": "commit message",
+                "date": "date when committed converted to int",
+                "branches": [branches names]
+            },
+            ...
+        ]
+        """
+
+        repo_commits = {}
+
+        # gets all branches in repository
+        branches = self.get_branches()
+        if branches is None:
+            return None
+
+        # get list of commits pages from all branches in repository
+        for branch in branches:
+            list_of_branch_commits = self.get_all_commits_by_branch(branch['name'])
+            if list_of_branch_commits is None:
+                return None
+
+            # adds key 'branches' with branch name in list to every commit in branch,
+            #  or if key 'branches' is existing add branch name to existing branches list
+            for commit_in_branch in list_of_branch_commits:
+                commit = repo_commits.get(commit_in_branch['hash'])
+                if commit:
+                    commit['branches'].append(branch['name'])
+                else:
+                    commit_in_branch['branches'] = [branch['name']]
+                    repo_commits[commit_in_branch['hash']] = commit_in_branch
+            list_of_branch_commits.clear()
+
+        # sorts all commits in repository by date in reverse order
+        sorted_commits = sorted(list(repo_commits.values()), key=lambda x: x['date'], reverse=True)
+
+        return sorted_commits
+
+    # not tested ! ! !
+    # test mode
+    @try_except_decor
+    def get_updated_all_commits(self, old_commits):
+        """
+            Updates given list of commits by branch,
+            returns list of given commits and all newer
+            commits since last commit in given list of commits
+
+        # :param branch_name: str
+        :param old_commits: list - list of commits to update
+        :return:list - updated list of commits
+        """
+
+        last_commit_base = []
+        branches = self.get_branches()
+
+        for commit in old_commits:
+            if not last_commit_base.count(commit['branches'][0]):
+                last_commit_base.extend(
+                    [commit['branches'][0], commit['hash']])  # add check for None ?
+
+            if len(last_commit_base) >= len(branches):
+                break
+
+        new_temp_response = []
+        # for branch_name, commit_hash in last_commit_base:
+        #     new_response.extend(self.get_updated_commits_by_branch(branch_name, commit_hash))
+
+        for args in last_commit_base:
+            new_temp_response.extend(self.get_updated_commits_by_branch(*args))
+
+        new_response = self._branch_map(new_temp_response)
+
+        result = old_commits
+        result += new_response
         return result
 
 
