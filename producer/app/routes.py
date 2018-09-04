@@ -9,7 +9,7 @@ from rabbitmq_helpers.request_sender_client import RequestSenderClient
 from rabbitmq_helpers.request_sender_client_config import HOST, PORT
 from mongodb_helpers.mongo_response_builder import MongoResponseBuilder, HEAT_CHOICES
 from app.models.user import get_user_by_name, get_user_by_email, register_user
-from app.models.user_request import get_user_requests, save_user_requests
+from app.models.user_request import get_repo_info, save_repo_info, delete_repo_info
 from general_helper.logger.log_config import LOG
 
 
@@ -48,7 +48,7 @@ async def getheatdict(request):
         'owner': request.raw_args.get('owner', ""),
         'form_of_date': request.raw_args.get('form_of_date', "")
     }
-    mongo_builder=MongoResponseBuilder()
+    mongo_builder = MongoResponseBuilder()
     return response.json(mongo_builder.build_heat_dict(git_info))
 
 
@@ -108,7 +108,8 @@ async def api_profile(request, user):
 @auth.login_required(user_keyword='user', handle_no_auth=handle_no_auth)
 async def get_repos(request, user):
     if request.method == 'GET':
-        res = [repo.to_dict() for repo in get_user_requests(user.id)]
+        res = [repo.to_dict() for repo in get_repo_info(user.id)]
+        print(res)
         return response.json(res)
 
     data = json.loads(request.body)
@@ -124,7 +125,29 @@ async def get_repos(request, user):
         'action': data.get('action', "")
     }
 
-    save_user_requests(git_info)
+    save_repo_info(git_info)
     return response.json({
         'message': 'saved'
+    }, status=201)
+
+
+@app.route('/table/<id>', methods=['DELETE'])
+@auth.login_required(user_keyword='user', handle_no_auth=handle_no_auth)
+async def delete_row(request, user, id):
+    delete_count = delete_repo_info(id)
+    if delete_count:
+        return response.json({
+            'message': 'deleted'
+        }, status=200)
+    return response.json({
+        'message': 'no such element'
+    }, status=400)
+
+
+@app.route('/table', methods=['PUT'])
+@auth.login_required(user_keyword='user', handle_no_auth=handle_no_auth)
+async def update_row(request, user):
+    delete_repo_info(request.body)
+    return response.json({
+        'message': 'deleted'
     }, status=201)

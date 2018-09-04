@@ -35,20 +35,18 @@ document.addEventListener('DOMContentLoaded', function () {
         getLoginButton.onclick = loginService
     }
 
-    var saveUserRequestsButton = document.getElementById("saveUserRequests");
-    if (saveUserRequestsButton){
-        saveUserRequestsButton.onclick = saveUserRequests;
+    var saveUserRepoInfoButton = document.getElementById("saveUserRepoInfo");
+    if (saveUserRepoInfoButton){
+        saveUserRepoInfoButton.onclick = saveUserRepoInfo;
     }
 
-
-    var getUserRequestsButton = document.getElementById("getUserRequests");
-    if (getUserRequestsButton){
-        getUserRequestsButton.onclick = getUserRequests;
-    }
     var addNewRepoButton = document.getElementById("addNewRepoButton");
     if (addNewRepoButton){
         addNewRepoButton.onclick = addNewRepo;
     }
+
+    getUserRequests();
+
 });
 
 var BASE_URL = "http://0.0.0.0:8000";
@@ -82,6 +80,30 @@ function requestPost(url, data, successCallBack, errorCallBack) {
     var xhr = new XMLHttpRequest();
     xhr.open("POST", url);
     xhr.send(JSON.stringify(data));
+    xhr.onload = function () {
+        var data = {
+            body: JSON.parse(xhr.responseText),
+            status: xhr.status
+        }
+        console.log(data)
+        if (xhr.status >= 400) {
+            if (errorCallBack !== undefined) {
+                errorCallBack(data);
+            } else {
+            }
+        } else {
+            if (successCallBack !== undefined) {
+                successCallBack(data);
+            } else {
+            }
+        }
+    };
+}
+function requestDelete(url, successCallBack, errorCallBack) {
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("DELETE", url);
+    xhr.send();
     xhr.onload = function () {
         var data = {
             body: JSON.parse(xhr.responseText),
@@ -146,7 +168,7 @@ function plotHeatMap(rawData){
     console.log("exit")
 }
 
-function saveUserRequests() {
+function saveUserRepoInfo() {
     var data = {
         "git_client": document.getElementById("git_client").value,
         "version": document.getElementById("version").value,
@@ -162,22 +184,18 @@ function saveUserRequests() {
             console.log(response.body);
             var body = document.getElementById("repoValues");
             body.style.display = "none";
+            getUserRequests();
         },
         function (badResponse) {
 //            document.getElementById('error').innerText = JSON.stringify(badResponse.body);
         }
     )
-
-//    requestGet(url, function (response) {
-//        document.getElementById("response").innerText = JSON.stringify(response.body);
-//    });
 }
 
 
 function getUserRequests(){
     requestGet('/user/requests',
         function (response) {
-//            document.getElementById("response").innerText = JSON.stringify(response.body);
             createTable(response.body);
         },
         function (badResponse) {
@@ -222,10 +240,44 @@ function createTable(data){
             td.appendChild(td_data);
             document.getElementById(row_id).appendChild(td);
         }
+
+        //add edit button
+        var td = document.createElement("TD");
+        var button = document.createElement('INPUT')
+        button.type = "button";
+        button.value = 'Edit';
+        button.class = 'editButton'
+        button.setAttribute("onclick", 'editRepoInfo(' + data[i]["id"] + ')');
+        td.appendChild(button);
+        document.getElementById(row_id).appendChild(td);
+
+        //add delete button
+        var td = document.createElement("TD");
+        var button = document.createElement('INPUT')
+        button.type = "button";
+        button.value = 'Delete';
+        button.class = 'deleteButton'
+        button.setAttribute("onclick", 'deleteRepoInfo(' + data[i]["id"] + ')');
+        td.appendChild(button);
+
+        //add row
+        document.getElementById(row_id).appendChild(td);
    }
 }
 
 function addNewRepo(){
     var body = document.getElementById("repoValues");
     body.style.display = "block";
+}
+
+function deleteRepoInfo(id){
+    var url =  '/table/' + id;
+    requestDelete(url,
+        function (response) {
+            getUserRequests();
+        },
+        function (badResponse) {
+//            document.getElementById('error').innerText = JSON.stringify(badResponse.body);
+        }
+    )
 }
