@@ -6,10 +6,11 @@ import json
 import time
 from ast import literal_eval
 import pika
+import pika.exceptions
 
 from general_helper.logger.log_config import LOG
 from general_helper.logger.log_error_decorators import try_except_decor
-#from helper.redis_request_sender import RedisRequestSender
+# from helper.redis_request_sender import RedisRequestSender
 from helper.mongodb_request_sender import MongoDBRequestSender
 from helper.builder import Builder
 from helper.consumer_config import HOST, PORT, REQUEST_QUEUE, RESPONSE_QUEUE
@@ -25,7 +26,6 @@ and     and sends the result back to the provider
     def __init__(self):
 
         LOG.debug('Connecting to RabbitMQ...')
-
         retries = 30
         while True:
             try:
@@ -37,9 +37,7 @@ and     and sends the result back to the provider
                 channel = connection.channel()
                 break
 
-            # except pika.exceptions.ConnectionClosed as exc:
-            except BaseException as exc:
-
+            except pika.exceptions.ConnectionClosed as exc:
                 if retries == 0:
                     LOG.error('Failed to connect to RabbitMQ...')
                     raise exc

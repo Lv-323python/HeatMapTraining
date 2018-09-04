@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-var BASE_URL = "http://0.0.0.0:8000";
+var BASE_URL = "";
 
 function requestGet(url, successCallBack, errorCallBack) {
 

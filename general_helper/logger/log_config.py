@@ -1,7 +1,7 @@
 """
     config file that declare logging system
      and its handling to Fluend log system.
-     Gives logging object as 'l' to call needed log method, ex:
+     Gives logging object as 'LOG' to call needed log method, ex:
         "Critical, ERROR, WARNING, INFO, DEBUG, NOTSET"
 """
 
