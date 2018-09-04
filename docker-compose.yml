@@ -126,6 +126,29 @@ services:
         window: 120s
 
 
+  traefik:
+    image: traefik
+    # restart: always
+    command: --api --docker
+    ports:
+    - 80:80
+    - 443:443
+    - 8888:8080
+    networks:
+    - heatmap_network
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./traefik/traefik.toml:/traefik.toml
+    - ./traefik/acme.json:/acme.json
+    container_name: traefik
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+
 networks:
   heatmap_network:
     driver: bridge

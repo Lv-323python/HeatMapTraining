@@ -1,0 +1,29 @@
+# defaultEntryPoint = "http"
+defaultEntryPoints = ["http", "https"]
+
+[entryPoints]
+  [entryPoints.http]
+  address = ":80"
+     [entryPoints.http.redirect]
+     entryPoint = "https"
+   [entryPoints.https]
+   address = ":443"
+     [entryPoints.https.tls]
+
+
+ [acme]
+ email = "partsey2412@gmail.com"
+# caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
+ storage = "acme.json"
+ entryPoint = "https"
+ onHostRule = true
+
+ [acme.httpChallenge]
+ entryPoint = "http"
+
+[docker]
+endpoint = "unix:///var/run/docker.sock"
+domain = "heatmap.localhost"
+watch = true
+exposedByDefault = true
+
