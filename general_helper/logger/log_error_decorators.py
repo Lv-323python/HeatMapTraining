@@ -29,7 +29,7 @@ def try_except_decor(func):
         try:
             return func(*args, **kwargs)
 
-        except BaseException as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             LOG.error('message from try_except_decor', exc_info=exc)
             return None
 
