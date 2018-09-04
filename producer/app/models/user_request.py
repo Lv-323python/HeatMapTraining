@@ -42,7 +42,7 @@ class UserRequests(Base):
         }
 
 
-def save_user_requests(body):
+def save_repo_info(body):
     """Save user requests for registered user"""
     with scoped_session() as session:
         user_id = int(body.get('user_id'))
@@ -60,8 +60,13 @@ def save_user_requests(body):
         session.add(user_requsts)
 
 
-
-def get_user_requests(user_id):
+def get_repo_info(user_id):
     """Get user requests for registered user"""
     with scoped_session() as session:
         return session.query(UserRequests).filter_by(user_id=user_id)
+
+
+def delete_repo_info(id):
+    """Delete user requests for registered user"""
+    with scoped_session() as session:
+        return session.query(UserRequests).filter_by(id=id).delete()
