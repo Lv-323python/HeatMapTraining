@@ -67,33 +67,6 @@ class BitbucketRequestSender(RequestSender):
 
         return commits_page
 
-    # not tested ! ! !
-    # test mode
-    @try_except_decor
-    def _branch_map(self, branches):
-        repo_commits = {}
-        # get list of commits pages from all branches in repository
-        for branch in branches:
-            list_of_branch_commits = self.get_all_commits_by_branch(branch['name'])
-            if list_of_branch_commits is None:
-                return None
-
-            # adds key 'branches' with branch name in list to every commit in branch,
-            #  or if key 'branches' is existing add branch name to existing branches list
-            for commit_in_branch in list_of_branch_commits:
-                commit = repo_commits.get(commit_in_branch['hash'])
-                if commit:
-                    commit['branches'].append(branch['name'])
-                else:
-                    commit_in_branch['branches'] = [branch['name']]
-                    repo_commits[commit_in_branch['hash']] = commit_in_branch
-            list_of_branch_commits.clear()
-
-        # sorts all commits in repository by date in reverse order
-        sorted_commits = sorted(list(repo_commits.values()), key=lambda x: x['date'], reverse=True)
-
-        return sorted_commits
-
     @try_except_decor
     def get_repo(self):
         """
@@ -473,7 +446,7 @@ class BitbucketRequestSender(RequestSender):
 
     # test mode
     @try_except_decor
-    def get_updated_commits_by_branch(self, branch_name, old_commits):
+    def get_updated_commits_by_branch(self, branch_name, old_commits, only_new=False):
         """
             Updates given list of commits by branch,
             returns list of given commits and all newer
@@ -484,13 +457,13 @@ class BitbucketRequestSender(RequestSender):
         :return:list - updated list of commits
         """
 
-        hash_of_commit = old_commits[0]['hash']
-        result = old_commits
-        result += self.get_by_branch_since_hash(branch_name=branch_name,
-                                                hash_of_commit=hash_of_commit)
+        hash_of_commit = old_commits[0]['hash'] if old_commits else None
+        result = self.get_by_branch_since_hash(branch_name=branch_name,
+                                               hash_of_commit=hash_of_commit)
+        result += old_commits if old_commits and not only_new else []
+
         return result
 
-    # not tested ! ! !
     # test mode
     @try_except_decor
     def get_all_commits(self):
@@ -500,19 +473,30 @@ class BitbucketRequestSender(RequestSender):
 
         :return: list of dicts
         :Example:
-        [
-            {
-                "hash": "commit hash",
-                "author": "commit author",
-                "message": "commit message",
-                "date": "date when committed converted to int",
-                "branches": [branches names]
-            },
-            ...
-        ]
+        {
+            'data':[
+                        {
+                            "hash": "commit hash",
+                            "author": "commit author",
+                            "message": "commit message",
+                            "date": "date when committed converted to int",
+                            "branches": [branches names]
+                        },
+                        ...
+                    ],
+
+            'metadata':
+                        {
+                            "branch_name": "newest_commit_hash"
+                            ...
+                        }
+        }
         """
 
         repo_commits = {}
+
+        # ex: {'branch_name': 'hash of the newest commit', ...}
+        metadata = {}
 
         # gets all branches in repository
         branches = self.get_branches()
@@ -522,6 +506,7 @@ class BitbucketRequestSender(RequestSender):
         # get list of commits pages from all branches in repository
         for branch in branches:
             list_of_branch_commits = self.get_all_commits_by_branch(branch['name'])
+
             if list_of_branch_commits is None:
                 return None
 
@@ -534,17 +519,22 @@ class BitbucketRequestSender(RequestSender):
                 else:
                     commit_in_branch['branches'] = [branch['name']]
                     repo_commits[commit_in_branch['hash']] = commit_in_branch
+            # metadata[branch['name']] = [list_of_branch_commits[0]]
+
+            # add metadata to method response for further updates by get_updated_all_commits
+            metadata[branch['name']] = list_of_branch_commits[0]
+
             list_of_branch_commits.clear()
 
         # sorts all commits in repository by date in reverse order
         sorted_commits = sorted(list(repo_commits.values()), key=lambda x: x['date'], reverse=True)
 
-        return sorted_commits
+        return {'data': sorted_commits, 'metadata': metadata}
 
     # not tested ! ! !
     # test mode
     @try_except_decor
-    def get_updated_all_commits(self, old_commits):
+    def get_updated_all_commits(self, old_commits):  # pylint: disable=too-many-locals
         """
             Updates given list of commits by branch,
             returns list of given commits and all newer
@@ -555,28 +545,55 @@ class BitbucketRequestSender(RequestSender):
         :return:list - updated list of commits
         """
 
-        last_commit_base = []
-        branches = self.get_branches()
+        newest_branches_names = [branch_info['name'] for branch_info in self.get_branches()]
+        old_branches_names = list(old_commits['metadata'].keys())
+        old_commits_metadata = old_commits['metadata']
+        result = {}
 
-        for commit in old_commits:
-            if not last_commit_base.count(commit['branches'][0]):
-                last_commit_base.extend(
-                    [commit['branches'][0], commit['hash']])  # add check for None ?
+        # delete all items in metadata where branch name is not exist in get_branches response
+        for old_branch_name in old_branches_names:
+            if not newest_branches_names.count(old_branch_name):
+                old_commits_metadata.pop(old_branch_name)
 
-            if len(last_commit_base) >= len(branches):
-                break
+        checked_commits_metadata = old_commits_metadata
+        # add to checked_commits_metadata all metadata that is not exist in old_commits_metadata
+        for branch in newest_branches_names:
+            if not old_branches_names.count(branch):
+                checked_commits_metadata[branch] = None
 
-        new_temp_response = []
-        # for branch_name, commit_hash in last_commit_base:
-        #     new_response.extend(self.get_updated_commits_by_branch(branch_name, commit_hash))
+        repo_commits = {commit['hash']: commit for commit in old_commits['data']}
 
-        for args in last_commit_base:
-            new_temp_response.extend(self.get_updated_commits_by_branch(*args))
+        for branch_name, newest_commit in checked_commits_metadata.copy().items():
+            updated_list_of_branch_commits = \
+                self.get_updated_commits_by_branch(branch_name, newest_commit, only_new=True)
+            if updated_list_of_branch_commits is None:
+                return None
 
-        new_response = self._branch_map(new_temp_response)
+            # adds key 'branches' with branch name in list to every commit in branch,
+            #  or if key 'branches' is existing add branch name to existing branches list
+            for commit_in_branch in updated_list_of_branch_commits:
+                commit = repo_commits.get(commit_in_branch['hash'])
+                if commit:
+                    commit['branches'].append(branch_name)
+                else:
+                    commit_in_branch['branches'] = [branch_name]
+                    repo_commits[commit_in_branch['hash']] = commit_in_branch
 
-        result = old_commits
-        result += new_response
+            # add metadata to method response for further updates by get_updated_all_commits
+            if updated_list_of_branch_commits:
+                checked_commits_metadata[branch_name] = updated_list_of_branch_commits[0]
+            else:
+                checked_commits_metadata[branch_name] = newest_commit[0]
+
+            updated_list_of_branch_commits.clear()
+
+        # sorts all commits in repository by date in reverse order
+        updated_sorted_commits = sorted(list(repo_commits.values()), key=lambda x: x['date'],
+                                        reverse=True)
+
+        result['data'] = updated_sorted_commits
+        result['metadata'] = checked_commits_metadata
+
         return result
 
 
