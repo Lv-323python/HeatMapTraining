@@ -135,6 +135,7 @@ class BitbucketRequestSender(RequestSender):
             'url': repo['links']['self']['href']
         }
 
+    # needs to get all pages
     @try_except_decor
     def get_branches(self):
         """
@@ -433,7 +434,8 @@ class BitbucketRequestSender(RequestSender):
             Gets list of all commits by branch name since given hash of commit
 
         :param branch_name: str
-        :param hash_of_commit: str
+        :param hash_of_commit: str - stop iterations in case
+            all commits newer than given are received
         :return: list - list of since given hash
         """
 
@@ -457,7 +459,7 @@ class BitbucketRequestSender(RequestSender):
                         go_on = False
                         break
 
-            # extends the overall result to the result of the current page
+            # adds the result of the current page to the overall result
             full_response.extend(response['values'])
             page += 1
 
@@ -483,24 +485,34 @@ class BitbucketRequestSender(RequestSender):
 
         :param branch_name: str
         :param old_commits: list - list of commits to update
+        :param only_new: bool - get commits without adding old ones if True
         :return:list - updated list of commits
         """
 
+        # get last commit hash ( to get commits since given hash)
+        # or set None (to get all commits).For updating all commits, when updating
+        #   gives new branch that don't have last commit.
         hash_of_commit = old_commits[0]['hash'] if old_commits else None
+
         result = self.get_by_branch_since_hash(branch_name=branch_name,
                                                hash_of_commit=hash_of_commit)
+
+        # do not add old commits if 'only_new=True' for updating all commits
+        #   where is used mapping by branch,
+        # or add if 'only_new=False'
         result += old_commits if old_commits and not only_new else []
 
         return result
 
     # test mode
+    # has different response format
     @try_except_decor
     def get_all_commits(self):
         """
         Gets information about all commits in repository
         in dict format with response body and status code
 
-        :return: list of dicts
+        :return: dict of list of commits and metadata
         :Example:
         {
             'data':[
@@ -516,15 +528,13 @@ class BitbucketRequestSender(RequestSender):
 
             'metadata':
                         {
-                            "branch_name": "newest_commit_hash"
+                            "branch_name": "newest commit"
                             ...
                         }
         }
         """
 
         repo_commits = {}
-
-        # ex: {'branch_name': 'hash of the newest commit', ...}
         metadata = {}
 
         # gets all branches in repository
@@ -548,7 +558,6 @@ class BitbucketRequestSender(RequestSender):
                 else:
                     commit_in_branch['branches'] = [branch['name']]
                     repo_commits[commit_in_branch['hash']] = commit_in_branch
-            # metadata[branch['name']] = [list_of_branch_commits[0]]
 
             # add metadata to method response for further updates by get_updated_all_commits
             metadata[branch['name']] = list_of_branch_commits[0]
@@ -560,26 +569,30 @@ class BitbucketRequestSender(RequestSender):
 
         return {'data': sorted_commits, 'metadata': metadata}
 
-    # not tested ! ! !
     # test mode
+    # has different response format
     @try_except_decor
     def get_updated_all_commits(self, old_commits):  # pylint: disable=too-many-locals
         """
-            Updates given list of commits by branch,
+            Updates given list of commits by newer list of branches,
             returns list of given commits and all newer
             commits since last commit in given list of commits
 
-        # :param branch_name: str
-        :param old_commits: list - list of commits to update
-        :return:list - updated list of commits
+        :param old_commits: dict - list of commits to update and metadata
+        :return:dict - updated list of commits and metadata
         """
 
+        # get new list of branches
         newest_branches_names = [branch_info['name'] for branch_info in self.get_branches()]
+
+        # get old list of branches from old metadata
         old_branches_names = list(old_commits['metadata'].keys())
+
+        # get old metadata
         old_commits_metadata = old_commits['metadata']
         result = {}
 
-        # delete all items in metadata where branch name is not exist in get_branches response
+        # delete all items in old metadata where branch name is not exist in new list of branches
         for old_branch_name in old_branches_names:
             if not newest_branches_names.count(old_branch_name):
                 old_commits_metadata.pop(old_branch_name)
@@ -590,8 +603,10 @@ class BitbucketRequestSender(RequestSender):
             if not old_branches_names.count(branch):
                 checked_commits_metadata[branch] = None
 
+        # get dict of old commits with key - hash of commit for further mapping by branch
         repo_commits = {commit['hash']: commit for commit in old_commits['data']}
 
+        # get list of new commits from all branches in repository
         for branch_name, newest_commit in checked_commits_metadata.copy().items():
             updated_list_of_branch_commits = \
                 self.get_updated_commits_by_branch(branch_name, newest_commit, only_new=True)
@@ -608,10 +623,11 @@ class BitbucketRequestSender(RequestSender):
                     commit_in_branch['branches'] = [branch_name]
                     repo_commits[commit_in_branch['hash']] = commit_in_branch
 
-            # add metadata to method response for further updates by get_updated_all_commits
+            # add new metadata to method response for further updates by get_updated_all_commits
             if updated_list_of_branch_commits:
                 checked_commits_metadata[branch_name] = updated_list_of_branch_commits[0]
             else:
+                # if given old commit is the newest - add it to new metadata. P.S unnecessary ???
                 checked_commits_metadata[branch_name] = newest_commit[0]
 
             updated_list_of_branch_commits.clear()
