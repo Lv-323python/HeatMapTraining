@@ -5,7 +5,6 @@ Module contains User model definition and helper functions for manipulating with
 from sqlalchemy import Column, String, Integer
 from app.models import Base
 from app import auth
-from app.database import scoped_session
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -92,3 +91,6 @@ def load_user(token):
     """
     if token is not None:
         return get_user_by_name(token['username'])
+
+# because of circular import
+from app.database import scoped_session

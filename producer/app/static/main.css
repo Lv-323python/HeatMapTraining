@@ -1,0 +1,13 @@
+#container {
+    display: flex;
+}
+
+#menu {
+    margin: 10px 10px 10px 10px;
+}
+#body {
+}
+
+#repoValues{
+    display: none;
+}
