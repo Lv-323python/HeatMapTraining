@@ -13,7 +13,7 @@ class RequestSenderClient:
     """
     This is a request sender client class
     """
-    @try_except_decor
+    # @try_except_decor
     def __init__(self, host=HOST, port=PORT):
         self.host = host
         self.port = port
@@ -69,7 +69,7 @@ class RequestSenderClient:
             self.channel.stop_consuming()
             self.channel.basic_ack(delivery_tag=method.delivery_tag)
 
-    @try_except_decor
+    # @try_except_decor
     def call(self, message):
         """
         This is a call method that takes message

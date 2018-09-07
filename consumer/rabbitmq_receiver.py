@@ -4,16 +4,21 @@
 
 import json
 import time
-from ast import literal_eval
 import pika
 import pika.exceptions
+
+# temporary fix import error
+import sys
+sys.path.append('../')
+
 
 from general_helper.logger.log_config import LOG
 from general_helper.logger.log_error_decorators import try_except_decor
 # from helper.redis_request_sender import RedisRequestSender
-from helper.mongodb_request_sender import MongoDBRequestSender
+#from helper.mongodb_request_sender import MongoDBRequestSender
 from helper.builder import Builder
 from helper.consumer_config import HOST, PORT, REQUEST_QUEUE, RESPONSE_QUEUE
+from helper.mongo_helpers import mongo_store
 
 
 class RabbitMQReceiver:
@@ -59,7 +64,8 @@ and     and sends the result back to the provider
 
     @staticmethod
     @try_except_decor
-    def worker(body):
+    @mongo_store
+    def worker(**body):
         """
             Function which takes body of request from 'sender' and
                 returns response from needed API request.
@@ -70,52 +76,29 @@ and     and sends the result back to the provider
         :return: (dict or list) - response to the required API request
         """
 
-        # decode request from provider(sender)
-        body = literal_eval(body.decode())
-        method_name = body['action']
-        hash_of_commit = body.get('hash')
-        branch_of_commit = body.get('branch')
+        action = body.pop('action')
+        commit_hash = body.pop('hash')
+        branch_name = body.pop('branch')
 
-        # If your hash database is Redis
-        # redis_request_sender=RedisRequestSender()
-        # response=redis_request_sender.get_entry(body)
+        with Builder(**body) as obj:
+            methods = {
+                'get_repo': obj.get_repo,
+                'get_branches': obj.get_branches,
+                'get_commits': obj.get_commits,
+                'get_commits_by_branch': obj.get_commits_by_branch,
+                'get_commit_by_hash': obj.get_commit_by_hash,
+                'get_contributors': obj.get_contributors
+            }
+            if action == 'get_commit_by_hash':
+                response = methods[action](commit_hash)
+            elif action == 'get_commits_by_branch':
+                response = methods[action](branch_name)
+            else:
+                response = methods[action]()
+            print('------------response----------------')
+            print(response)
+            print('------------response----------------')
 
-        # If your hash database is MongoDB
-        mongo_request_sender = MongoDBRequestSender()
-        response = mongo_request_sender.get_entry(body)
-
-        if not response:
-            # gets response from API using API object from builder
-            with Builder(**body) as obj:
-
-                # declares object methods dict,  for next choice and ca ll
-                methods = {
-                    'get_repo': obj.get_repo,
-                    'get_branches': obj.get_branches,
-                    'get_commits': obj.get_commits,
-                    'get_commits_by_branch': obj.get_commits_by_branch,
-                    'get_commit_by_hash': obj.get_commit_by_hash,
-                    'get_contributors': obj.get_contributors
-                }
-
-                # check, if request has method, which needs parameter -  call method with parameter.
-                #  Otherwise call method without any parameters
-                if body['action'] == 'get_commit_by_hash':
-                    # call needed method (obj.get_commit_by_hash) from methods dict
-                    #  with 'hash_of_commit' parameter
-                    response = methods[method_name](hash_of_commit)
-
-                elif body['action'] == 'get_commits_by_branch':
-                    # call needed method (obj.get_commits_by_branch)
-                    #  from methods dict with 'branch_of_commit' parameter
-                    response = methods[method_name](branch_of_commit)
-
-                else:
-                    # call needed method from methods dict without any parameter
-                    response = methods[method_name]()
-
-                print('response', response)
-                mongo_request_sender.set_entry(body, response)
         return response
 
     @try_except_decor

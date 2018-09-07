@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <script src="/static/script.js"></script>
     <link rel="stylesheet" href="/static/main.css">
-     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <title>GitHeatMap</title>
 </head>
-<body><div id="container">
+<body>
+<div id="container">
 
     <div id="menu">
         <div>
@@ -61,17 +63,18 @@
                 <option>get_commit_by_hash</option>
                 <option>get_commits_by_branch</option>
             </select>
-            <select id="formOfDate">
+            <select id="date_unit">
                 <option>date</option>
                 <option>hour</option>
                 <option>weekday</option>
             </select>
-        </div >
-        <div id="response"></div>
+        </div>
         <input type="button" id="getInfoButton" value="get info">
         <input type="button" id="saveUserRepoInfo" value="Save requests">
         <input type="button" id="getHeatDictButton" value="Open heat dict">
     </div>
 
-</div> </body>
+</div>
+<div id="response"></div>
+</body>
 </html>

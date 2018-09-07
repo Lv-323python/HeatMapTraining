@@ -8,7 +8,7 @@ import pymongo.errors
 
 from pymongo import MongoClient
 
-MONGO_HOST = 'heatmaptraining_mongo_1'
+MONGO_HOST = 'localhost'  #'heatmaptraining_mongo_1'
 MONGO_PORT = 27017
 
 
@@ -38,14 +38,13 @@ class MongoDBRequestSender:
         # self.hash_collection.drop()
         self.hash_collection.ensure_index("date", expireAfterSeconds=3600)
 
-    def get_entry(self, body):
+    def get_entry(self, key):
         """
         Tries to find response in hash collection in Redis database
         :param body:
         :return:
         """
-        assert isinstance(body, dict), 'MongoDBRequestSender: Inputted "body" type is not dict'
-        key = '-'.join(body.values())
+        assert isinstance(key, str), 'MongoDBRequestSender: Inputted "body" type is not dict'
         try:
             print("MongoDBRequestSender.get_entry: Trying to find in Mongo : " + str(key))
             mongo_response = self.hash_collection.find_one({"key": key})
@@ -60,15 +59,20 @@ class MongoDBRequestSender:
             print(err)
             return None
 
-    def set_entry(self, body, response):
+    def set_entry(self, key, response):
         """
         Adds hash of the request to MongoDB database
         :param body:
         :param response:
         :return:
         """
-        assert isinstance(body, dict), 'Inputted "body" type is not dict'
-        key = '-'.join(body.values())
+        assert isinstance(key, str), 'Inputted "key" type is not dict'
+        print()
+        print()
+        print('inserting into collections with key :')
+        print(key)
+        print()
+        print()
         utc_timestamp = datetime.datetime.utcnow()
         try:
             print("MongoDBRequestSender.set_entry: Inserted into MongoDB hash_id:")

@@ -1,13 +1,12 @@
 """
     Provides class MongoResponseBuilder
 """
-import time
 import datetime
 import pandas as pd
-import pymongo
-import pymongo.errors
+
 
 from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
 
 from mongodb_helpers.mongo_config import MONGO_PORT, MONGO_HOST, HEAT_CHOICES
 
@@ -18,25 +17,20 @@ class MongoResponseBuilder:
     """
 
     def __init__(self):
-        retries = 30
-        while True:
-            try:
-                # declare connection
-                self.client = MongoClient(MONGO_HOST, MONGO_PORT)
-                print(self.client.server_info())
-                break
-            except pymongo.errors.ServerSelectionTimeoutError as err:
-                if retries == 0:
-                    print('Failed to connect MongoDB!')
-                    raise err
-                retries -= 1
-                time.sleep(1)
+        # declare connection
+        self._client = MongoClient(MONGO_HOST, MONGO_PORT)
+        print('connecting to mongo')
+        # connects to mongo for 30 seconds
+        try:
+            # The ismaster command is cheap and does not require auth.
+            self._client.admin.command('ismaster')
+        except ConnectionFailure:
+            print("Server not available")
+
         print('Successfully connected MongoDB!')
-        self.database = self.client.project_database
-        self.hash_collection = self.database.hash_collection
-        # print all in database
-        # cursor = self.hash_collection.find({}, {"key": 1, "_id": 0})
-        # for document in cursor: print(document)
+
+        self._database = self._client.heatmap_db
+        self._collection = self._database.repos_collection
 
     def build_heat_dict(self, git_info):
         """
@@ -44,43 +38,84 @@ class MongoResponseBuilder:
         :param git_info:
         :return:
         """
-        pattern = F"{git_info['git_client']}-{git_info['token']}-" \
-                  F".*-{git_info['repo']}-{git_info['owner']}-.*-.*-get_commits"
-        try:
-            print("ROUTES.getheatdict():Trying to find " + pattern)
-            mongo_response = self.hash_collection \
-                .find_one({"key": {'$regex': pattern, '$options': 's'}}).get('value')
-            print(mongo_response)
-        except AttributeError:
-            print("MongoResponseBuilder.build_heat_dict:"
-                  "Can't find this entry in Mongo or maybe you have problems with MongoDB")
-            return None
-        except pymongo.errors.PyMongoError as err:
-            print("MongoResponseBuilder.build_heat_dict: problems with MongoDB")
-            print(err)
-            return None
+
+        # pop date unit for plotting from git info
+        date_unit = git_info.pop('date_unit')
+
+        key = '-'.join(git_info.values())
+        print("ROUTES.getheatdict():Trying to find " + key)
+
+        # Returns a single document, or None if no matching document is found
+
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        response= self._collection.find_one({"key": key})
+        mongo_response = None
+        start_date_utc = None
+        if response:
+            mongo_response = response['value']['commits']
+            start_date_utc = response['value']['repo']['creation_date']
+        print('---------repo creation date------------------')
+        print(start_date_utc)
+        print('---------------------------------------------')
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+        print('------Response received from mongo----------')
+        print(mongo_response)
+        print('--------------------------------------------')
+
+
+
         if mongo_response:
-            dataf = pd.DataFrame(mongo_response)
-            if git_info['form_of_date'] == HEAT_CHOICES[0]:  # pylint: disable=R1705
-                grouped = dataf.groupby(['author', 'date']) \
-                    .size().reset_index(name='counts').groupby('author')['date', 'counts'] \
-                    .apply(lambda x: x.to_dict('records')).to_dict()
-                return self.build_heat_with_hours(grouped)
-            elif git_info['form_of_date'] == HEAT_CHOICES[1]:
-                dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
-                    .apply(lambda x: str(x.weekday()))
-                grouped = dataf.groupby(['author', 'date']) \
-                    .size().reset_index(name='counts').groupby('author')['date', 'counts'] \
-                    .apply(lambda x: x.to_dict('records')).to_dict()
-                return self.build_heat_with_weekdays(grouped)
-            dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
-                .apply(lambda x: str(x.hour))
-            dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
-                .apply(lambda x: x.date())
-            grouped = dataf.groupby(['author', 'date']) \
-                .size().reset_index(name='counts').groupby('author')['date', 'counts'] \
-                .apply(lambda x: x.to_dict('records')).to_dict()
-            return self.build_heat_with_dates(grouped)
+            df = pd.DataFrame.from_records(mongo_response)
+            df.date = pd.to_datetime(df.date, utc=True, unit='s')
+            df.set_index('date', inplace=True)
+            df.index = df.index.floor('D')
+            start_date = pd.to_datetime(start_date_utc, utc=True, unit='s')  #  1530620138
+            end_date = pd.Timestamp.utcnow()
+
+            date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+            date_range = date_range.floor('D')
+            new_df = pd.DataFrame(index=date_range)
+            # generate date range in days from repo creation date till now
+            # (including repo creation day and today)
+            grouped = df.groupby('author')
+            for name, group in grouped:
+                new_df[name] = group.groupby('date').size()
+            new_df.fillna(0, inplace=True)
+
+            return {
+                'x': new_df.index.strftime('%Y-%m-%d').tolist(),
+                'y': new_df.columns.tolist(),
+                'z': new_df.T.values.astype('int32').tolist()
+            }
+        # generate date range in days from repo creation date till now
+        # (including repo creation day and today)
+
+
+
+        # if mongo_response:
+        #     dataf = pd.DataFrame(mongo_response)
+        #     if git_info['form_of_date'] == HEAT_CHOICES[0]:  # pylint: disable=R1705
+        #         grouped = dataf.groupby(['author', 'date']) \
+        #             .size().reset_index(name='counts').groupby('author')['date', 'counts'] \
+        #             .apply(lambda x: x.to_dict('records')).to_dict()
+        #         return self.build_heat_with_hours(grouped)
+        #     elif git_info['form_of_date'] == HEAT_CHOICES[1]:
+        #         dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
+        #             .apply(lambda x: str(x.weekday()))
+        #         grouped = dataf.groupby(['author', 'date']) \
+        #             .size().reset_index(name='counts').groupby('author')['date', 'counts'] \
+        #             .apply(lambda x: x.to_dict('records')).to_dict()
+        #         return self.build_heat_with_weekdays(grouped)
+        #     dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
+        #         .apply(lambda x: str(x.hour))
+        #     dataf['date'] = pd.to_datetime(dataf['date'], unit='s') \
+        #         .apply(lambda x: x.date())
+        #     grouped = dataf.groupby(['author', 'date']) \
+        #         .size().reset_index(name='counts').groupby('author')['date', 'counts'] \
+        #         .apply(lambda x: x.to_dict('records')).to_dict()
+        #     return self.build_heat_with_dates(grouped)
         return None
 
     def build_heat_with_hours(self, grouped):

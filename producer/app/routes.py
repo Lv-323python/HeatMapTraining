@@ -21,9 +21,10 @@ async def index(request):
 
 
 @app.route("/getinfo")
-@auth.login_required
-async def getinfo(request):
+@auth.login_required(user_keyword='user')
+async def getinfo(request, user):
     git_info = {
+        'username': user.username,
         'git_client': request.raw_args.get('git_client', ""),
         'token': request.raw_args.get('token', ""),
         'version': request.raw_args.get('version', ""),
@@ -39,14 +40,15 @@ async def getinfo(request):
 
 
 @app.route("/getheatdict")
-@auth.login_required
-async def getheatdict(request):
+@auth.login_required(user_keyword='user')
+async def getheatdict(request, user):
     git_info = {
+        'username': user.username,
         'git_client': request.raw_args.get('git_client', ""),
-        'token': request.raw_args.get('token', ""),
+        'version': request.raw_args.get('version', ""),
         'repo': request.raw_args.get('repo', ""),
         'owner': request.raw_args.get('owner', ""),
-        'form_of_date': request.raw_args.get('form_of_date', "")
+        'date_unit': request.raw_args.get('date_unit', "")
     }
     mongo_builder = MongoResponseBuilder()
     return response.json(mongo_builder.build_heat_dict(git_info))

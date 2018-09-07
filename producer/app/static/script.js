@@ -20,10 +20,10 @@ document.addEventListener('DOMContentLoaded', function () {
         getHeatDictButton.onclick = function () {
             var url = BASE_URL + "/getheatdict?"
                 + "git_client=" + document.getElementById("git_client").value
-                + "&token=" + document.getElementById("token").value
+                + "&version=" + document.getElementById("version").value
                 + "&repo=" + document.getElementById("repo").value
                 + "&owner=" + document.getElementById("owner").value
-                + "&form_of_date=" + document.getElementById("formOfDate").value;
+                + "&date_unit=" + document.getElementById("date_unit").value;
             getHeatDict(url);
         }
     }
