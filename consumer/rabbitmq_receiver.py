@@ -80,9 +80,14 @@ and     and sends the result back to the provider
         # redis_request_sender=RedisRequestSender()
         # response=redis_request_sender.get_entry(body)
 
-        # If your hash database is MongoDB
+        # get MongoDB connection service
         mongo_request_sender = MongoDBRequestSender()
-        response = mongo_request_sender.get_entry(body)
+
+        if not body['action'] == 'get_updated_all_commits':
+            # try to get info from MongoDB
+            response = mongo_request_sender.get_entry(body)
+        else:
+            response = None
 
         if not response:
             # gets response from API using API object from builder
@@ -95,7 +100,11 @@ and     and sends the result back to the provider
                     'get_commits': obj.get_commits,
                     'get_commits_by_branch': obj.get_commits_by_branch,
                     'get_commit_by_hash': obj.get_commit_by_hash,
-                    'get_contributors': obj.get_contributors
+                    'get_contributors': obj.get_contributors,
+
+                    # for updating
+                    'get_all_commits': obj.get_all_commits,
+                    'get_updated_all_commits': obj.get_updated_all_commits
                 }
 
                 # check, if request has method, which needs parameter -  call method with parameter.
@@ -110,12 +119,17 @@ and     and sends the result back to the provider
                     #  from methods dict with 'branch_of_commit' parameter
                     response = methods[method_name](branch_of_commit)
 
+                elif body['action'] == 'get_updated_all_commits':
+                    response = methods[method_name](body['old_commits'])
+
                 else:
                     # call needed method from methods dict without any parameter
                     response = methods[method_name]()
 
                 print('response', response)
-                mongo_request_sender.set_entry(body, response)
+                if not body['action'] == 'get_updated_all_commits':
+                    mongo_request_sender.set_entry(body, response)
+
         return response
 
     @try_except_decor
