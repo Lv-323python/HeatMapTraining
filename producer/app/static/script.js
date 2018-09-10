@@ -51,6 +51,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
 var BASE_URL = "";
 
+
+//function _onloadRequest (){
+//    var data = {
+//        body: JSON.parse(xhr.responseText),
+//        status: xhr.status
+//    };
+//    if (xhr.status >= 400) {
+//        if (errorCallBack !== undefined) {
+//            errorCallBack(data);
+//        } else {
+//        }
+//    } else {
+//        if (successCallBack !== undefined) {
+//            successCallBack(data);
+//        } else {
+//        }
+//    }
+//};
+
+
 function requestGet(url, successCallBack, errorCallBack) {
 
     var xhr = new XMLHttpRequest();
@@ -99,6 +119,32 @@ function requestPost(url, data, successCallBack, errorCallBack) {
         }
     };
 }
+
+function requestPut(url, data, successCallBack, errorCallBack) {
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("PUT", url);
+    xhr.send(JSON.stringify(data));
+    xhr.onload = function () {
+        var data = {
+            body: JSON.parse(xhr.responseText),
+            status: xhr.status
+        }
+        console.log(data)
+        if (xhr.status >= 400) {
+            if (errorCallBack !== undefined) {
+                errorCallBack(data);
+            } else {
+            }
+        } else {
+            if (successCallBack !== undefined) {
+                successCallBack(data);
+            } else {
+            }
+        }
+    };
+}
+
 function requestDelete(url, successCallBack, errorCallBack) {
 
     var xhr = new XMLHttpRequest();
@@ -134,6 +180,8 @@ function getHeatDict(url) {
     requestGet(url, function (response) {
         var data = response.body;
         plotHeatMap(data)
+        var container = document.getElementById("repoValues");
+        container.style.display = "none";
     });
 }
 
@@ -250,7 +298,6 @@ function createTable(data){
         button.setAttribute("onclick", 'editRepoInfo(' + data[i]["id"] + ')');
         td.appendChild(button);
         document.getElementById(row_id).appendChild(td);
-
         //add delete button
         var td = document.createElement("TD");
         var button = document.createElement('INPUT')
@@ -268,6 +315,10 @@ function createTable(data){
 function addNewRepo(){
     var body = document.getElementById("repoValues");
     body.style.display = "block";
+    var editUserRepoInfo = document.getElementById("editUserRepoInfo");
+    editUserRepoInfo.style.display = "none";
+    var saveUserRepoInfo = document.getElementById("saveUserRepoInfo");
+    saveUserRepoInfo.style.display = "block";
 }
 
 function deleteRepoInfo(id){
@@ -281,3 +332,55 @@ function deleteRepoInfo(id){
         }
     )
 }
+
+function editRepoInfo(id){
+    var body = document.getElementById("repoValues");
+    body.style.display = "block";
+    var editUserRepoInfo = document.getElementById("editUserRepoInfo");
+    editUserRepoInfo.style.display = "block";
+    var saveUserRepoInfo = document.getElementById("saveUserRepoInfo");
+    saveUserRepoInfo.style.display = "none";
+    var url =  '/table/' + id;
+
+    requestGet(url,
+        function (response) {
+            document.getElementById("git_client").value = response.body['git_client'];
+            document.getElementById("version").value = response.body.version;
+            document.getElementById("repo").value = response.body.repo;
+            document.getElementById("owner").value = response.body.owner;
+            document.getElementById("token").value = response.body.token;
+            document.getElementById("hash").value = response.body.hash;
+            document.getElementById("branch").value = response.body.branch;
+            document.getElementById("action").value = response.body.action;
+        },
+        function (badResponse) {
+//            document.getElementById('error').innerText = JSON.stringify(badResponse.body);
+        }
+    )
+    var button = document.getElementById('editUserRepoInfo');
+    button.setAttribute("onclick", 'editUserRepo(' + id + ')');
+}
+
+function editUserRepo(id){
+     var url = '/table/' + id;
+     var data = {
+        "git_client": document.getElementById("git_client").value,
+        "version": document.getElementById("version").value,
+        "repo": document.getElementById("repo").value,
+        "owner": document.getElementById("owner").value,
+        "token": document.getElementById("token").value,
+        "hash": document.getElementById("hash").value,
+        "branch": document.getElementById("branch").value,
+        "action": document.getElementById("action").value,
+    }
+    requestPut(url, data,
+    function (response) {
+    console.log(response)
+        getUserRequests();
+    },
+    function (badResponse) {
+//            document.getElementById('error').innerText = JSON.stringify(badResponse.body);
+    }
+)
+}
+
