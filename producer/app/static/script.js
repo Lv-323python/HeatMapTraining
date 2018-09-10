@@ -298,7 +298,6 @@ function createTable(data){
         button.setAttribute("onclick", 'editRepoInfo(' + data[i]["id"] + ')');
         td.appendChild(button);
         document.getElementById(row_id).appendChild(td);
-//editUserRepoInfo
         //add delete button
         var td = document.createElement("TD");
         var button = document.createElement('INPUT')
@@ -321,21 +320,6 @@ function addNewRepo(){
     var saveUserRepoInfo = document.getElementById("saveUserRepoInfo");
     saveUserRepoInfo.style.display = "block";
 }
-
-//function editExistingRepo(response){
-//    var body = document.getElementById("repoValues");
-//    body.style.display = "block";
-//
-//
-//    document.getElementById("git_client").value = response.body['git_client'];
-//    document.getElementById("version").value = response.body.version;
-//    document.getElementById("repo").value = response.body.repo;
-//    document.getElementById("owner").value = response.body.owner;
-//    document.getElementById("token").value = response.body.token;
-//    document.getElementById("hash").value = response.body.hash;
-//    document.getElementById("branch").value = response.body.branch;
-//    document.getElementById("action").value = response.body.action;
-//}
 
 function deleteRepoInfo(id){
     var url =  '/table/' + id;
@@ -368,10 +352,6 @@ function editRepoInfo(id){
             document.getElementById("hash").value = response.body.hash;
             document.getElementById("branch").value = response.body.branch;
             document.getElementById("action").value = response.body.action;
-
-//            var button = document.getElementById("editUserRepoInfo")
-
-//            button.setAttribute("onclick", 'editRepoInfo(' + data[i]["id"] + ')');
         },
         function (badResponse) {
 //            document.getElementById('error').innerText = JSON.stringify(badResponse.body);
@@ -396,7 +376,6 @@ function editUserRepo(id){
     requestPut(url, data,
     function (response) {
     console.log(response)
-//        addNewRepo();
         getUserRequests();
     },
     function (badResponse) {
