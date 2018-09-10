@@ -60,13 +60,39 @@ def save_repo_info(body):
         session.add(user_requsts)
 
 
-def get_repo_info(user_id):
-    """Get user requests for registered user"""
+def get_repo_info_row(id):
+    """Get user repo info for registered user"""
     with scoped_session() as session:
-        return session.query(UserRequests).filter_by(user_id=user_id)
+        return session.query(UserRequests).filter_by(id=id).first()
+
+
+def get_repo_info(user_id):
+    """Get user repo info for registered user"""
+    with scoped_session() as session:
+        return session.query(UserRequests).filter_by(user_id=user_id).\
+            order_by(UserRequests.id.asc())
 
 
 def delete_repo_info(id):
-    """Delete user requests for registered user"""
+    """Delete user repo info for registered user"""
     with scoped_session() as session:
         return session.query(UserRequests).filter_by(id=id).delete()
+
+
+def update_repo_info(id, body):
+    """Update user repo info for registered user"""
+    with scoped_session() as session:
+        git_client = str(body.get('git_client'))
+        version = body.get('version')
+        repo = body.get('repo')
+        owner = body.get('owner')
+        token = body.get('token')
+        hash = body.get('hash')
+        branch = body.get('branch')
+        action = body.get('action')
+        return session.query(UserRequests).filter_by(id=id).update({'git_client': git_client,
+                                                                    'version': version,
+                                                                    'repo': repo, 'owner': owner,
+                                                                    'token': token, 'hash': hash,
+                                                                    'branch': branch,
+                                                                    'action': action, })
