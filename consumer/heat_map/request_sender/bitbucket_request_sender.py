@@ -67,6 +67,38 @@ class BitbucketRequestSender(RequestSender):
                 time.sleep(1)
 
     @try_except_decor
+    def _get_page_of_commits_by_branch(self, branch_name='master', page=1):
+        """
+            Gets deserialize list of not parsed commits by page and branch name.
+
+        :param branch_name: str
+        :param page: int - page number
+        :return: list - list of not parsed commits
+        """
+
+        assert isinstance(branch_name, str), 'Inputted "branch_name" type is not str'
+        assert isinstance(page, int), 'Inputted "page" type is not int'
+        branch_commits_endpoint = \
+            f'/repositories/{self.owner}/{self.repo}/commits/{branch_name}'
+
+        filter_param = \
+            {'fields': 'values.hash,values.author,values.message,values.date,next',
+             'page': page}
+
+        response = self._get_request(branch_commits_endpoint, filter_param)
+
+        # guard condition
+        if response.status_code != STATUS_CODE_OK:
+            assert False, \
+                f'Invalid parameter(s) in: owner: {self.owner},' \
+                f' repo: {self.repo}, branch name: {branch_name}, page: {page}'
+
+        # deserialize commit
+        commits_page = response.json()
+
+        return commits_page
+
+    @try_except_decor
     def get_repo(self):
         """
         Gets information about repository
@@ -103,6 +135,7 @@ class BitbucketRequestSender(RequestSender):
             'url': repo['links']['self']['href']
         }
 
+    # needs to get all pages
     @try_except_decor
     def get_branches(self):
         """
@@ -359,6 +392,254 @@ class BitbucketRequestSender(RequestSender):
                 contributors[commit['author']['raw']]['number_of_commits'] += 1
 
         return list(contributors.values())
+
+    ########################################################################################
+
+    # test mode
+    @try_except_decor
+    def get_all_commits_by_branch(self, branch_name):
+        """
+            Gets list of all commits by given branch.
+
+        :param branch_name: str
+        :return: list - list of all commits
+        """
+
+        full_response = []
+        # declare response dict with kay 'next' to enable first iteration
+        response = {'next': 'eny text'}
+        page = 1
+
+        while 'next' in response.keys():
+            response = self._get_page_of_commits_by_branch(branch_name, page)
+            full_response.extend(response['values'])
+            page += 1
+
+        # parser
+        parsed_full_response = [
+            {
+                'hash': commit['hash'],
+                'author': get_gitname(commit),
+                'message': commit['message'],
+                'date': str(to_timestamp(commit['date']))
+            } for commit in full_response
+            ]
+
+        return parsed_full_response
+
+    # test mode
+    @try_except_decor
+    def get_by_branch_since_hash(self, branch_name, hash_of_commit=None):
+        """
+            Gets list of all commits by branch name since given hash of commit
+
+        :param branch_name: str
+        :param hash_of_commit: str - stop iterations in case
+            all commits newer than given are received
+        :return: list - list of since given hash
+        """
+
+        full_response = []
+        # declare response dict with kay 'next' to enable first iteration
+        response = {'next': 'eny text'}
+        page = 1
+        go_on = True
+
+        # gets all pages of commits and stops when given commit is found
+        while 'next' in response.keys() and go_on:
+            # gets commits by page and by branch)
+            response = self._get_page_of_commits_by_branch(branch_name, page)
+
+            # checks for needed commit, and stops getting commits pages
+            if hash_of_commit:
+                for count_commit in range(len(response['values'])):
+                    # makes a partial result of _get_page_of_commits_by_branch to avoid duplicates
+                    if response['values'][count_commit]['hash'] == hash_of_commit:
+                        response['values'] = response['values'][:count_commit]
+                        go_on = False
+                        break
+
+            # adds the result of the current page to the overall result
+            full_response.extend(response['values'])
+            page += 1
+
+        # parser
+        parsed_full_response = [
+            {
+                'hash': commit['hash'],
+                'author': get_gitname(commit),
+                'message': commit['message'],
+                'date': str(to_timestamp(commit['date']))
+            } for commit in full_response
+            ]
+
+        return parsed_full_response
+
+    # test mode
+    @try_except_decor
+    def get_updated_commits_by_branch(self, branch_name, old_commits, only_new=False):
+        """
+            Updates given list of commits by branch,
+            returns list of given commits and all newer
+            commits since last commit in given list of commits
+
+        :param branch_name: str
+        :param old_commits: list - list of commits to update
+        :param only_new: bool - get commits without adding old ones if True
+        :return:list - updated list of commits
+        """
+
+        # get last commit hash ( to get commits since given hash)
+        # or set None (to get all commits).For updating all commits, when updating
+        #   gives new branch that don't have last commit.
+        hash_of_commit = old_commits[0]['hash'] if old_commits else None
+
+        result = self.get_by_branch_since_hash(branch_name=branch_name,
+                                               hash_of_commit=hash_of_commit)
+
+        # do not add old commits if 'only_new=True' for updating all commits
+        #   where is used mapping by branch,
+        # or add if 'only_new=False'
+        result += old_commits if old_commits and not only_new else []
+
+        return result
+
+    # test mode
+    # has different response format
+    @try_except_decor
+    def get_all_commits(self):
+        """
+        Gets information about all commits in repository
+        in dict format with response body and status code
+
+        :return: dict of list of commits and metadata
+        :Example:
+        {
+            'data':[
+                        {
+                            "hash": "commit hash",
+                            "author": "commit author",
+                            "message": "commit message",
+                            "date": "date when committed converted to int",
+                            "branches": [branches names]
+                        },
+                        ...
+                    ],
+
+            'metadata':
+                        {
+                            "branch_name": "newest commit"
+                            ...
+                        }
+        }
+        """
+
+        repo_commits = {}
+        metadata = {}
+
+        # gets all branches in repository
+        branches = self.get_branches()
+        if branches is None:
+            return None
+
+        # get list of commits pages from all branches in repository
+        for branch in branches:
+            list_of_branch_commits = self.get_all_commits_by_branch(branch['name'])
+
+            if list_of_branch_commits is None:
+                return None
+
+            # adds key 'branches' with branch name in list to every commit in branch,
+            #  or if key 'branches' is existing add branch name to existing branches list
+            for commit_in_branch in list_of_branch_commits:
+                commit = repo_commits.get(commit_in_branch['hash'])
+                if commit:
+                    commit['branches'].append(branch['name'])
+                else:
+                    commit_in_branch['branches'] = [branch['name']]
+                    repo_commits[commit_in_branch['hash']] = commit_in_branch
+
+            # add metadata to method response for further updates by get_updated_all_commits
+            metadata[branch['name']] = list_of_branch_commits[0]
+
+            list_of_branch_commits.clear()
+
+        # sorts all commits in repository by date in reverse order
+        sorted_commits = sorted(list(repo_commits.values()), key=lambda x: x['date'], reverse=True)
+
+        return {'data': sorted_commits, 'metadata': metadata}
+
+    # test mode
+    # has different response format
+    @try_except_decor
+    def get_updated_all_commits(self, old_commits):  # pylint: disable=too-many-locals
+        """
+            Updates given list of commits by newer list of branches,
+            returns list of given commits and all newer
+            commits since last commit in given list of commits
+
+        :param old_commits: dict - list of commits to update and metadata
+        :return:dict - updated list of commits and metadata
+        """
+
+        # get new list of branches
+        newest_branches_names = [branch_info['name'] for branch_info in self.get_branches()]
+
+        # get old list of branches from old metadata
+        old_branches_names = list(old_commits['metadata'].keys())
+
+        # get old metadata
+        old_commits_metadata = old_commits['metadata']
+        result = {}
+
+        # delete all items in old metadata where branch name is not exist in new list of branches
+        for old_branch_name in old_branches_names:
+            if not newest_branches_names.count(old_branch_name):
+                old_commits_metadata.pop(old_branch_name)
+
+        checked_commits_metadata = old_commits_metadata
+        # add to checked_commits_metadata all metadata that is not exist in old_commits_metadata
+        for branch in newest_branches_names:
+            if not old_branches_names.count(branch):
+                checked_commits_metadata[branch] = None
+
+        # get dict of old commits with key - hash of commit for further mapping by branch
+        repo_commits = {commit['hash']: commit for commit in old_commits['data']}
+
+        # get list of new commits from all branches in repository
+        for branch_name, newest_commit in checked_commits_metadata.copy().items():
+            updated_list_of_branch_commits = \
+                self.get_updated_commits_by_branch(branch_name, newest_commit, only_new=True)
+            if updated_list_of_branch_commits is None:
+                return None
+
+            # adds key 'branches' with branch name in list to every commit in branch,
+            #  or if key 'branches' is existing add branch name to existing branches list
+            for commit_in_branch in updated_list_of_branch_commits:
+                commit = repo_commits.get(commit_in_branch['hash'])
+                if commit:
+                    commit['branches'].append(branch_name)
+                else:
+                    commit_in_branch['branches'] = [branch_name]
+                    repo_commits[commit_in_branch['hash']] = commit_in_branch
+
+            # add new metadata to method response for further updates by get_updated_all_commits
+            if updated_list_of_branch_commits:
+                checked_commits_metadata[branch_name] = updated_list_of_branch_commits[0]
+            else:
+                # if given old commit is the newest - add it to new metadata. P.S unnecessary ???
+                checked_commits_metadata[branch_name] = newest_commit[0]
+
+            updated_list_of_branch_commits.clear()
+
+        # sorts all commits in repository by date in reverse order
+        updated_sorted_commits = sorted(list(repo_commits.values()), key=lambda x: x['date'],
+                                        reverse=True)
+
+        result['data'] = updated_sorted_commits
+        result['metadata'] = checked_commits_metadata
+
+        return result
 
 
 class BitbucketServerRequestSender(RequestSender):
