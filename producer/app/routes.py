@@ -9,7 +9,8 @@ from rabbitmq_helpers.request_sender_client import RequestSenderClient
 from rabbitmq_helpers.request_sender_client_config import HOST, PORT
 from mongodb_helpers.mongo_response_builder import MongoResponseBuilder, HEAT_CHOICES
 from app.models.user import get_user_by_name, get_user_by_email, register_user
-from app.models.user_request import get_repo_info, save_repo_info, delete_repo_info
+from app.models.user_request import get_repo_info, save_repo_info, delete_repo_info,\
+    update_repo_info, get_repo_info_row
 from general_helper.logger.log_config import LOG
 
 
@@ -111,7 +112,6 @@ async def api_profile(request, user):
 async def get_repos(request, user):
     if request.method == 'GET':
         res = [repo.to_dict() for repo in get_repo_info(user.id)]
-        print(res)
         return response.json(res)
 
     data = json.loads(request.body)
@@ -133,23 +133,40 @@ async def get_repos(request, user):
     }, status=201)
 
 
-@app.route('/table/<id>', methods=['DELETE'])
+@app.route('/table/<id>', methods=['GET', 'DELETE', 'PUT'])
 @auth.login_required(user_keyword='user', handle_no_auth=handle_no_auth)
-async def delete_row(request, user, id):
-    delete_count = delete_repo_info(id)
-    if delete_count:
+async def interaction_with_row(request, user, id):
+    if request.method == 'GET':
+        res = json.dumps(get_repo_info_row(id).to_dict())
+        return response.json(json.loads(res))
+
+    if request.method == 'DELETE':
+        delete_count = delete_repo_info(id)
+        if delete_count:
+            return response.json({
+                'message': 'deleted'
+            }, status=200)
         return response.json({
-            'message': 'deleted'
-        }, status=200)
-    return response.json({
-        'message': 'no such element'
-    }, status=400)
+            'message': 'no such element'
+        }, status=400)
 
-
-@app.route('/table', methods=['PUT'])
-@auth.login_required(user_keyword='user', handle_no_auth=handle_no_auth)
-async def update_row(request, user):
-    delete_repo_info(request.body)
-    return response.json({
-        'message': 'deleted'
-    }, status=201)
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        git_info = {
+            'git_client': data.get('git_client', ""),
+            'token': data.get('token', ""),
+            'version': data.get('version', ""),
+            'repo': data.get('repo', ""),
+            'owner': data.get('owner', ""),
+            'hash': data.get('hash', ""),
+            'branch': data.get('branch', ""),
+            'action': data.get('action', "")
+        }
+        update_count = update_repo_info(id, git_info)
+        if update_count:
+            return response.json({
+                'message': 'updated'
+            }, status=200)
+        return response.json({
+            'message': 'no such element, not updated'
+        }, status=400)

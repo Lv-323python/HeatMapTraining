@@ -16,6 +16,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError, OperationalError as SQLAlchemyConnectionError
 from app import app
+from app.models.user import User
+
 
 DATABASE_URL = app.config['DATABASE_URL']
 ENGINE = create_engine(DATABASE_URL)
@@ -38,12 +40,6 @@ while True:
 print('Successfully connected!')
 CONNECTION.close()
 
-# run migrations
-ALEMBIC_INI_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'alembic.ini')
-ALEMBIC_CONFIG = Config(ALEMBIC_INI_FILE)
-command.upgrade(ALEMBIC_CONFIG, "head")
-
-
 @contextmanager
 def scoped_session():
     session = SESSION()
@@ -55,3 +51,16 @@ def scoped_session():
         raise e
     finally:
         session.close()
+
+# run migrations
+ALEMBIC_INI_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'alembic.ini')
+ALEMBIC_CONFIG = Config(ALEMBIC_INI_FILE)
+command.upgrade(ALEMBIC_CONFIG, "head")
+
+
+# add a temp user with username admin and password admin
+with scoped_session() as session:
+    user = User(username='admin', email='admin@example.com')
+    user.set_password('admin')
+    session.add(user)
+
