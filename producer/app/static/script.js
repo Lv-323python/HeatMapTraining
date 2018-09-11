@@ -173,6 +173,9 @@ function requestDelete(url, successCallBack, errorCallBack) {
 function getRepoData(url) {
     requestGet(url, function (response) {
         document.getElementById("response").innerText = JSON.stringify(response.body);
+    },
+    function (badResponse) {
+        document.getElementById('response').innerText = 'no such repo';
     });
 }
 
@@ -322,6 +325,8 @@ function addNewRepo(){
 }
 
 function deleteRepoInfo(id){
+    var body = document.getElementById("repoValues");
+    body.style.display = "none";
     var url =  '/table/' + id;
     requestDelete(url,
         function (response) {
