@@ -52,7 +52,9 @@ class MongoResponseBuilder:
         mongo_response = None
         start_date_utc = None
         if response:
-            mongo_response = response['value']['commits']
+            print('---------------response------------------')
+            print(response)
+            mongo_response = response['value']['commits']['data']
             start_date_utc = response['value']['repo']['creation_date']
         print('---------repo creation date------------------')
         print(start_date_utc)
@@ -71,7 +73,7 @@ class MongoResponseBuilder:
             df.date = pd.to_datetime(df.date, utc=True, unit='s')
             df.set_index('date', inplace=True)
             df.index = df.index.floor('D')
-            start_date = pd.to_datetime(start_date_utc, utc=True, unit='s')  #  1530620138
+            start_date = pd.to_datetime(1530620138, utc=True, unit='s')  #  1530620138
             end_date = pd.Timestamp.utcnow()
 
             date_range = pd.date_range(start=start_date, end=end_date, freq='D')

@@ -76,23 +76,36 @@ and     and sends the result back to the provider
         :return: (dict or list) - response to the required API request
         """
 
+        print('-----------body-----------')
+        print(body)
+        print('-----------body-----------')
+
         action = body.pop('action')
         commit_hash = body.pop('hash')
         branch_name = body.pop('branch')
+        if action == 'get_updated_all_commits':
+            old_commits = body.pop('old_commits')
 
         with Builder(**body) as obj:
             methods = {
+                # methods available for all git providers
                 'get_repo': obj.get_repo,
                 'get_branches': obj.get_branches,
                 'get_commits': obj.get_commits,
                 'get_commits_by_branch': obj.get_commits_by_branch,
                 'get_commit_by_hash': obj.get_commit_by_hash,
-                'get_contributors': obj.get_contributors
+                'get_contributors': obj.get_contributors,
+                # methods available for Bitbucket only
+                'get_updated_all_commits': obj.get_updated_all_commits if hasattr(obj, 'get_updated_all_commits') else None,
+                'get_all_commits': obj.get_all_commits if hasattr(obj, 'get_all_commits') else None
+
             }
             if action == 'get_commit_by_hash':
                 response = methods[action](commit_hash)
             elif action == 'get_commits_by_branch':
                 response = methods[action](branch_name)
+            elif action == 'get_updated_all_commits':
+                response = methods[action](old_commits)
             else:
                 response = methods[action]()
             print('------------response----------------')
