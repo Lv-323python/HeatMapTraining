@@ -1,22 +1,22 @@
 version: '3.5'
 services:
 
-#  consumer:
-#    build:
-#      context: ./
-#      dockerfile: ./consumer/Dockerfile
-#    image: consumer:latest
-#    depends_on:
-#    - rabbit
-#    - fluentd
-#    networks:
-#    - heatmap_network
-#    deploy:
-#      restart_policy:
-#        condition: on-failure
-#        delay: 5s
-#        max_attempts: 3
-#        window: 120s
+  consumer:
+    build:
+      context: ./
+      dockerfile: ./consumer/Dockerfile
+    image: consumer:latest
+    depends_on:
+    - rabbit
+    - fluentd
+    networks:
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
 
   fluentd:
     image: "fluent/fluentd"
@@ -70,25 +70,25 @@ services:
         window: 120s
 
 
-#  producer:
-#    build:
-#      context: ./
-#      dockerfile: ./producer/Dockerfile
-#    image: producer:latest
-#    ports:
-#    - "8000:8000"
-#    depends_on:
-#    - rabbit
-#    - postgres
-#    - fluentd
-#    networks:
-#    - heatmap_network
-#    deploy:
-#      restart_policy:
-#        condition: on-failure
-#        delay: 5s
-#        max_attempts: 3
-#        window: 120s
+  producer:
+    build:
+      context: ./
+      dockerfile: ./producer/Dockerfile
+    image: producer:latest
+    ports:
+    - "8000:8000"
+    depends_on:
+    - rabbit
+    - postgres
+    - fluentd
+    networks:
+    - heatmap_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
 
   rabbit:
     image: "rabbitmq:3-management"

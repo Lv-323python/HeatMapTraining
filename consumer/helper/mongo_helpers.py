@@ -1,8 +1,20 @@
+"""
+Contains helper functions
+"""
+
 from functools import wraps
 import json
 from helper.mongodb_client import MongoDBClient
 
 def mongo_store(worker_f):
+    """
+    mongo_store decorator
+
+    store worker_f response in db if pull_repo was selected
+
+    :param worker_f:
+    :return:
+    """
 
     @wraps(worker_f)
     def decorator(body):

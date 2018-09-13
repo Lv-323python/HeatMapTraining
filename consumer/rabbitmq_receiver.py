@@ -8,8 +8,8 @@ import pika
 import pika.exceptions
 
 # temporary fix import error
-import sys
-sys.path.append('../')
+# import sys
+# sys.path.append('../')
 
 
 from general_helper.logger.log_config import LOG

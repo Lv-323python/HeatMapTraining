@@ -1,10 +1,11 @@
 """
-    Provides class MongoDBRequestSender
+    Provides class MongoResponseBuilder
 """
-from pymongo.errors import ConnectionFailure
 
 from pymongo import MongoClient
-from helper.mongodb_client_config import MONGO_HOST, MONGO_PORT
+from pymongo.errors import ConnectionFailure
+
+from mongodb_helpers.mongodb_client_config import MONGO_PORT, MONGO_HOST
 
 
 class MongoDBClient:
@@ -38,30 +39,7 @@ class MongoDBClient:
         :return: None or document from mongo
         """
         assert isinstance(key, str), 'MongoDBClient.get_entry(key): key is not of type str'
+        print('Looking for document with key: ', key)
 
         return self._collection.find_one({"key": key})
 
-
-    def set_entry(self, key, entry):
-        """
-        Adds hash of the request to MongoDB database
-        :param body:
-        :param response:
-        :return:
-        """
-        assert isinstance(key, str), 'MongoDBClient.set_entry(key, entry): key is not of type str'
-        assert isinstance(entry, dict), 'MongoDBClient.set_entry(key, entry): entry is not of type dict'
-        print()
-        print('inserting into collections with key :')
-        print(key)
-        print()
-
-        print("Inserted successfully with id:")
-        print(
-            self._collection.insert_one(
-                {
-                    "key": key,
-                    "value": entry
-                }
-            ).inserted_id
-        )
