@@ -15,7 +15,7 @@ import pika.exceptions
 from general_helper.logger.log_config import LOG
 from general_helper.logger.log_error_decorators import try_except_decor
 # from helper.redis_request_sender import RedisRequestSender
-#from helper.mongodb_request_sender import MongoDBRequestSender
+# from helper.mongodb_request_sender import MongoDBRequestSender
 from helper.builder import Builder
 from helper.consumer_config import HOST, PORT, REQUEST_QUEUE, RESPONSE_QUEUE
 from helper.mongo_helpers import mongo_store
@@ -95,8 +95,12 @@ and     and sends the result back to the provider
                 'get_commits_by_branch': obj.get_commits_by_branch,
                 'get_commit_by_hash': obj.get_commit_by_hash,
                 'get_contributors': obj.get_contributors,
+
                 # methods available for Bitbucket only
-                'get_updated_all_commits': obj.get_updated_all_commits if hasattr(obj, 'get_updated_all_commits') else None,
+                'get_updated_all_commits':
+                    obj.get_updated_all_commits if
+                    hasattr(obj, 'get_updated_all_commits') else None,
+
                 'get_all_commits': obj.get_all_commits if hasattr(obj, 'get_all_commits') else None
 
             }
@@ -129,7 +133,7 @@ and     and sends the result back to the provider
 
         # uses 'worker' function to get API response
         # and sends it to provider(sender)
-        response = self.worker(body)
+        response = self.worker(body)  # pylint: disable = too-many-function-args
 
         # Sends the result back to the sender
         channel.basic_publish(exchange='',

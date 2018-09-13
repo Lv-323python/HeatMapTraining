@@ -6,6 +6,7 @@ from functools import wraps
 import json
 from helper.mongodb_client import MongoDBClient
 
+
 def mongo_store(worker_f):
     """
     mongo_store decorator
@@ -18,6 +19,11 @@ def mongo_store(worker_f):
 
     @wraps(worker_f)
     def decorator(body):
+        """
+            wrapper for decorator
+        :param body:
+        :return:
+        """
 
         body = json.loads(body)
 
@@ -50,7 +56,6 @@ def mongo_store(worker_f):
                                     ('get_all_commits', 'commits'),
                                     ('get_branches', 'branches'),
                                     ('get_contributors', 'contributors')]:
-
                     body['action'] = action
                     mongo_response[key] = worker_f(**body)
                 response = {'message': f'Successfully pulled repository down!'}
@@ -63,7 +68,3 @@ def mongo_store(worker_f):
         return response
 
     return decorator
-
-
-
-

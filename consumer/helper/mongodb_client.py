@@ -41,7 +41,6 @@ class MongoDBClient:
 
         return self._collection.find_one({"key": key})
 
-
     def set_entry(self, key, entry):
         """
         Adds hash of the request to MongoDB database
@@ -50,7 +49,9 @@ class MongoDBClient:
         :return:
         """
         assert isinstance(key, str), 'MongoDBClient.set_entry(key, entry): key is not of type str'
-        assert isinstance(entry, dict), 'MongoDBClient.set_entry(key, entry): entry is not of type dict'
+        assert isinstance(entry, dict), 'MongoDBClient.set_entry(key, entry):' \
+                                        ' entry is not of type dict'
+
         print()
         print('inserting into collections with key :')
         print(key)

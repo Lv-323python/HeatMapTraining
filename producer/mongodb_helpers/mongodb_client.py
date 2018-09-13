@@ -42,4 +42,3 @@ class MongoDBClient:
         print('Looking for document with key: ', key)
 
         return self._collection.find_one({"key": key})
-

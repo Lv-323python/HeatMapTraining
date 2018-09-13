@@ -10,6 +10,7 @@ class CommitsHeatmap:
     """
     CommitsHeatmap class
     """
+
     def __init__(self, commits, start_date, end_date=pd.Timestamp.utcnow(), date_unit='D'):
         """
         Constructor
@@ -38,7 +39,7 @@ class CommitsHeatmap:
         print(self.commits)
         print('--------------------------------------------')
 
-        df = pd.DataFrame.from_records(self.commits)
+        df = pd.DataFrame.from_records(self.commits)  # pylint: disable=invalid-name
         df.date = pd.to_datetime(df.date, utc=True, unit='s')
         df.set_index('date', inplace=True)
         df.index = df.index.floor('D')
