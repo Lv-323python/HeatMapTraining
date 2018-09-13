@@ -38,6 +38,10 @@ async def getinfo(request, user):
     }
     request_sender_rpc = RequestSenderClient(host=HOST, port=PORT)
     data = request_sender_rpc.call(json.dumps(git_info))
+    if json.loads(data) == None:
+        return response.json({
+            'message': 'no such url'
+        }, status=400)
     return response.json(json.loads(data))
 
 
