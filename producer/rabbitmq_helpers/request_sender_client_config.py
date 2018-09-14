@@ -1,8 +1,8 @@
 """
 Contains configuration variables for RequestSenderClient
 """
-HOST = 'heatmaptraining_rabbit_1'
-PORT = 5672
+HOST = 'heatmaptraining_rabbit_1'  # 'localhost'
+PORT = 5672  # 8080
 RPC_QUEUE = 'request'
 CALLBACK_QUEUE = 'response'
 REQUEST_SENDER_CHOICES = {

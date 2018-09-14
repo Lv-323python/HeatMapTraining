@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
-    var getInfoButton = document.getElementById("getInfoButton");
-    if (getInfoButton) {
-        getInfoButton.onclick = function () {
+    var executeButton = document.getElementById("executeButton");
+    if (executeButton) {
+        executeButton.onclick = function () {
             var url = BASE_URL + "/getinfo?"
                 + "git_client=" + document.getElementById("git_client").value
                 + "&token=" + document.getElementById("token").value
@@ -15,15 +15,29 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // var pullButton = document.getElementById('pullButton');
+    // if (pullButton){
+    //     pullButton.onclick = function () {
+    //         var url = BASE_URL + "/getinfo?"
+    //             + ""
+    //             + "git_client=" + document.getElementById("git_client").value
+    //             + "&token=" + document.getElementById("token").value
+    //             + "&version=" + document.getElementById("version").value
+    //             + "&repo=" + document.getElementById("repo").value
+    //             + "&owner=" + document.getElementById("owner").value;
+    //         getRepoData(url);
+    //     }
+    // }
+
     var getHeatDictButton = document.getElementById("getHeatDictButton");
     if (getHeatDictButton) {
         getHeatDictButton.onclick = function () {
             var url = BASE_URL + "/getheatdict?"
                 + "git_client=" + document.getElementById("git_client").value
-                + "&token=" + document.getElementById("token").value
+                + "&version=" + document.getElementById("version").value
                 + "&repo=" + document.getElementById("repo").value
                 + "&owner=" + document.getElementById("owner").value
-                + "&form_of_date=" + document.getElementById("formOfDate").value;
+                + "&date_unit=" + document.getElementById("date_unit").value;
             getHeatDict(url);
         }
     }

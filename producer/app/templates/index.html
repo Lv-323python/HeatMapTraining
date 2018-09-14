@@ -7,7 +7,8 @@
      <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <title>GitHeatMap</title>
 </head>
-<body><div id="container">
+<body>
+<div id="container">
 
     <div id="menu">
         <div>
@@ -54,26 +55,30 @@
             <input type="text" id="branch"><br>
             Action:<br>
             <select id="action">
-                <option>get_repo</option>
-                <option>get_branches</option>
-                <option>get_commits</option>
-                <option>get_contributors</option>
-                <option>get_commit_by_hash</option>
-                <option>get_commits_by_branch</option>
+                <option value="pull_repo">pull repo</option>
+                <option value="get_repo">get repo info</option>
+                <option value="get_branches">get branches</option>
+                <option value="get_commits">get commits</option>
+                <option value="get_contributors">get contributors</option>
+                <option value="get_commit_by_hash">get commit by hash</option>
+                <option value="get_commits_by_branch">get commits by branch</option>
+                <option value="get_commits_by_branch">get commits by branch</option>
             </select>
-            <select id="formOfDate">
+            <select id="date_unit">
                 <option>date</option>
                 <option>hour</option>
                 <option>weekday</option>
             </select>
-             <input type="button" id="getInfoButton" value="get info">
+            <input type="button" id="executeButton" value="Execute">
             <input type="button" id="saveUserRepoInfo" value="Save requests">
             <input type="button" id="editUserRepoInfo" value="Save change">
             <input type="button" id="getHeatDictButton" value="Open heat dict">
-        </div >
-        <div id="response"></div>
-
+            <!--<input type="button" id="pullButton" value="pull">-->
+            <!--<input type="button" id="fetchButton" value="fetch">-->
+        </div>
     </div>
 
-</div> </body>
+</div>
+<div id="response"></div>
+</body>
 </html>

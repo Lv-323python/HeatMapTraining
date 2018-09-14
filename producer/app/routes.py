@@ -7,7 +7,8 @@ from app.helpers.template import render_template
 from sanic import response
 from rabbitmq_helpers.request_sender_client import RequestSenderClient
 from rabbitmq_helpers.request_sender_client_config import HOST, PORT
-from mongodb_helpers.mongo_response_builder import MongoResponseBuilder, HEAT_CHOICES
+from mongodb_helpers.mongodb_client import MongoDBClient
+from plot_herpers.heatmap import CommitsHeatmap
 from app.models.user import get_user_by_name, get_user_by_email, register_user
 from app.models.user_request import get_repo_info, save_repo_info, delete_repo_info,\
     update_repo_info, get_repo_info_row
@@ -22,9 +23,10 @@ async def index(request):
 
 
 @app.route("/getinfo")
-@auth.login_required
-async def getinfo(request):
+@auth.login_required(user_keyword='user')
+async def getinfo(request, user):
     git_info = {
+        'username': user.username,
         'git_client': request.raw_args.get('git_client', ""),
         'token': request.raw_args.get('token', ""),
         'version': request.raw_args.get('version', ""),
@@ -44,17 +46,28 @@ async def getinfo(request):
 
 
 @app.route("/getheatdict")
-@auth.login_required
-async def getheatdict(request):
-    git_info = {
+@auth.login_required(user_keyword='user')
+async def getheatdict(request, user):
+    date_unit = 'D' or request.raw_args.get('date_unit', "")
+
+    key_nodes = {
+        'username': user.username,
         'git_client': request.raw_args.get('git_client', ""),
-        'token': request.raw_args.get('token', ""),
+        'version': request.raw_args.get('version', ""),
         'repo': request.raw_args.get('repo', ""),
-        'owner': request.raw_args.get('owner', ""),
-        'form_of_date': request.raw_args.get('form_of_date', "")
+        'owner': request.raw_args.get('owner', "")
     }
-    mongo_builder = MongoResponseBuilder()
-    return response.json(mongo_builder.build_heat_dict(git_info))
+    mongo_key = '-'.join(key_nodes.values())
+
+    mongo_client = MongoDBClient()
+    repository_document = mongo_client.get_entry(mongo_key)
+
+    data_dict = None
+    if repository_document:
+        commits_heatmap = CommitsHeatmap.from_repository_doc(repository_document, date_unit)
+        data_dict = commits_heatmap.get_data_dict()
+
+    return response.json(data_dict)
 
 
 @app.route('/login', methods=['GET', 'POST'])

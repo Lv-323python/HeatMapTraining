@@ -6,14 +6,17 @@ import uuid
 import pika
 from rabbitmq_helpers.request_sender_client_config import HOST, PORT, RPC_QUEUE, CALLBACK_QUEUE
 from general_helper.logger.log_config import LOG
-from general_helper.logger.log_error_decorators import try_except_decor
+
+
+# from general_helper.logger.log_error_decorators import try_except_decor
 
 
 class RequestSenderClient:
     """
     This is a request sender client class
     """
-    @try_except_decor
+
+    # @try_except_decor
     def __init__(self, host=HOST, port=PORT):
         self.host = host
         self.port = port
@@ -69,7 +72,7 @@ class RequestSenderClient:
             self.channel.stop_consuming()
             self.channel.basic_ack(delivery_tag=method.delivery_tag)
 
-    @try_except_decor
+    # @try_except_decor
     def call(self, message):
         """
         This is a call method that takes message

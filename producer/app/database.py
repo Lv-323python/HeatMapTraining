@@ -60,7 +60,8 @@ command.upgrade(ALEMBIC_CONFIG, "head")
 
 # add a temp user with username admin and password admin
 with scoped_session() as session:
-    user = User(username='admin', email='admin@example.com')
-    user.set_password('admin')
-    session.add(user)
+    if not session.query(User).filter_by(email='admin@example.com').first():
+        user = User(username='admin', email='admin@example.com')
+        user.set_password('admin')
+        session.add(user)
 

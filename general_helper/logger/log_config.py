@@ -8,7 +8,7 @@
 import logging
 from fluent import handler
 
-HOST = 'heatmaptraining_fluentd_1'
+HOST = 'localhost'  #'heatmaptraining_fluentd_1'
 PORT = 24224
 LOGGING_LEVEL = logging.DEBUG
 
