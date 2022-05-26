@@ -14,7 +14,7 @@ Sanic-Auth==0.2.0
 sanic-session==0.4.1
 six==1.11.0
 SQLAlchemy==1.2.10
-ujson==1.35
+ujson==5.2.0
 uvloop==0.11.2
 websockets==6.0
 Werkzeug==0.14.1
